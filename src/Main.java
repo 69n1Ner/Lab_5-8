@@ -1,26 +1,43 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 
+class InputManager{
+
+}
+
 public class Main {
+    private Map history = new HashMap();
 
     public static void main(String[] args) {
 
         // 1 как считать с консоли?
         Scanner sc = new Scanner(System.in);
-        while (true){
-            String input = sc.nextLine();
+        Invoker invoker = new Invoker();
 
-            if (input.equals("help")){
-                System.out.println("helping...");
-                break;
-            }
-            else {
-                System.out.println("wrong line");
-            }
+        invoker.registerCommand("help", new HelpCommand("help"));
+
+
+        Main main  = new Main();
+        while (true){
+            String commandName
+
+
 
 
         }
     }
 }
+
+class Invoker {
+    private Map<String, HelpCommand> commandMap = new  HashMap();
+
+    public void registerCommand(String string,HelpCommand helpCommand){
+
+    }
+}
+
 // Main
 // Invoker (вызов команд)
 // Command (пусть интерфейс, Add, Help...)
