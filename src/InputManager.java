@@ -2,13 +2,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InputManager {
+    Invoker invoker;
     private String command;
     private List<String> arguments;
 
-    public InputManager() {
+    public InputManager(Invoker invoker) {
         this.arguments = new ArrayList<>();
+        this.invoker = invoker;
     }
     public void separate(String input) {
+        if (input == null || input.isEmpty()){
+            throw new InvalidInput("Пустая команда");
+        }
+
         int start = 0;
         int end;
         boolean wordFlag = false;
@@ -16,12 +22,11 @@ public class InputManager {
         List<String> wordList = new ArrayList<>();
         String word;
         for (int i = 0; i < input.length(); i++) {
-            input = input.strip();
+            input = input.trim().toLowerCase();
             if (input.charAt(i) == ' ' && start<i) {
                 start = i;
             } else {
                 end = i + 1;
-                word = input.substring(start, end);
                 try {
                     if (input.charAt(end) == ' ') {
                         wordFlag = true;
@@ -30,6 +35,7 @@ public class InputManager {
                     catchFlag = true;
                 } finally {
                     if (wordFlag || catchFlag) {
+                        word = input.substring(start, end);
                         if (!word.isEmpty())
                         wordList.add(word);
                         start = end+1;
@@ -41,6 +47,7 @@ public class InputManager {
         }
 
         this.command = wordList.get(0);
+
         if (wordList.size()>1){
             wordList.remove(0);
             this.arguments = new ArrayList<>(wordList);
@@ -48,11 +55,25 @@ public class InputManager {
     }
 
     public boolean isValid(String input){
-        if (input == null || input.isEmpty()){
-            return false;
+        String specialSymbols = "!@#$%^&*()+\"';:./?,`~№\\=<>[]{}йцукенгшщзхъфывапролджэячсмитьбю";
+        for (int i =0; i<input.length();i++){
+            if (specialSymbols.indexOf(input.charAt(i)) != -1){
+                throw new InvalidInput("Строка содержит недопустимый символ: "+ input.charAt(i));
+            }
         }
-        input = input.strip();
 
+        if (!invoker.contains(input)){
+            String commandList = "";
+            for (String command: invoker.allCommands()){
+                commandList += command + "\n";
+            }
+
+           throw new InvalidInput("Неверная команда: "+ input + "\n"+ "Доступные команды:" + "\n" + commandList);
+        }
+
+        if (input.length()>255){
+            throw new InvalidInput("Слишком длинная строка! Максимальная длина 255");
+        }
 
 
         return true;

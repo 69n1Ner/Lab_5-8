@@ -10,19 +10,24 @@ public class Main {
         // 1 как считать с консоли?
         Scanner sc = new Scanner(System.in);
         Invoker invoker = new Invoker();
-        InputManager inputManager = new InputManager();
-
         invoker.setCommand(new HelpCommand("help"));
+        invoker.setCommand(new HelpCommand("help2"));
+        invoker.setCommand(new HelpCommand("help3"));
+//        InputManager inputManager = new InputManager();
 
-        inputManager.separate("help help");
-        String s = inputManager.getCommand();
-        System.out.println(s);
-        System.out.println(inputManager.getArguments());
+//        inputManager.separate("help    help2   ");
+//        String s = inputManager.getCommand();
+//        System.out.println(s);
+//        System.out.println(inputManager.getArguments());
 
         while (true){
             System.out.print("terminal $user:");
             String input = sc.nextLine();
-            invoker.defineCommand(input).execute();
+            try {
+                invoker.defineCommand(input).execute();
+            } catch (InvalidInput e){
+                System.out.println(e.getMessage());
+            }
 
 
 
