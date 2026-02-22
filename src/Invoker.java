@@ -18,7 +18,7 @@ public class Invoker {
 
         String stringCommand = inputManager.getCommand();
 
-        System.out.println(stringCommand);
+        System.out.println(inputManager.getCommand());
 
         return commandHashMap.get(stringCommand);
     }

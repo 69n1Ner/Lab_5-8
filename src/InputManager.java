@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class InputManager {
@@ -9,7 +8,6 @@ public class InputManager {
     public InputManager() {
         this.arguments = new ArrayList<>();
     }
-    //todo сделать сепарацию
     public void separate(String input) {
         int start = 0;
         int end = 1;
@@ -18,12 +16,12 @@ public class InputManager {
         List<String> wordList = new ArrayList<>();
         String word = "";
         for (int i = 0; i < input.length(); i++) {
-            char ch = input.charAt(i);
-            if (ch == ' ') {
+            input = input.strip();
+            if (input.charAt(i) == ' ' && start<i) {
                 start = i;
             } else {
                 end = i + 1;
-                word = input.substring(start + 1, end);
+                word = input.substring(start, end);
                 try {
                     if (input.charAt(end) == ' ') {
                         wordFlag = true;
@@ -33,13 +31,14 @@ public class InputManager {
                 } finally {
                     if (wordFlag || catchFlag) {
                         wordList.add(word);
-                        start = end;
+                        start = end+1;
                         wordFlag = false;
                         catchFlag = false;
                     }
                 }
             }
         }
+
         this.command = wordList.get(0);
         if (wordList.size()>1){
             wordList.remove(0);

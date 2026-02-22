@@ -14,7 +14,7 @@ public class Main {
 
         invoker.setCommand(new HelpCommand("help"));
 
-        inputManager.separate("  help  help2");
+        inputManager.separate("help help");
         String s = inputManager.getCommand();
         System.out.println(s);
         System.out.println(inputManager.getArguments());
