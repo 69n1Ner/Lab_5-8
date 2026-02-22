@@ -1,28 +1,28 @@
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
-class InputManager{
 
-}
 
 public class Main {
-    private Map history = new HashMap();
+    private TreeSet history = new TreeSet();
 
     public static void main(String[] args) {
 
         // 1 как считать с консоли?
         Scanner sc = new Scanner(System.in);
         Invoker invoker = new Invoker();
+        InputManager inputManager = new InputManager();
 
-        invoker.registerCommand("help", new HelpCommand("help"));
+        invoker.setCommand(new HelpCommand("help"));
 
+        inputManager.separate("  help  help2");
+        String s = inputManager.getCommand();
+        System.out.println(s);
+        System.out.println(inputManager.getArguments());
 
-        Main main  = new Main();
         while (true){
-            String commandName
-
+            System.out.print("terminal $user:");
+            String input = sc.nextLine();
+            invoker.defineCommand(input).execute();
 
 
 
@@ -30,20 +30,20 @@ public class Main {
     }
 }
 
-class Invoker {
-    private Map<String, HelpCommand> commandMap = new  HashMap();
-
-    public void registerCommand(String string,HelpCommand helpCommand){
-
-    }
-}
+//class Invoker {
+//    private Map<String, HelpCommand> commandMap = new  HashMap();
+//
+//    public void registerCommand(String string,HelpCommand helpCommand){
+//
+//    }
+//}
 
 // Main
 // Invoker (вызов команд)
 // Command (пусть интерфейс, Add, Help...)
 // FileProducer, FileValidator(считывание можно через библу, но нельзя валидировать), FileUploader
 // Validation
-// Model (Cords, StudyGroup...)
+// Model (Cords, Organization...)
 //
 
 /// ///HELP
