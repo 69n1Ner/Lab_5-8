@@ -10,11 +10,11 @@ public class InputManager {
     }
     public void separate(String input) {
         int start = 0;
-        int end = 1;
+        int end;
         boolean wordFlag = false;
         boolean catchFlag = false;
         List<String> wordList = new ArrayList<>();
-        String word = "";
+        String word;
         for (int i = 0; i < input.length(); i++) {
             input = input.strip();
             if (input.charAt(i) == ' ' && start<i) {
@@ -30,6 +30,7 @@ public class InputManager {
                     catchFlag = true;
                 } finally {
                     if (wordFlag || catchFlag) {
+                        if (!word.isEmpty())
                         wordList.add(word);
                         start = end+1;
                         wordFlag = false;
@@ -44,6 +45,17 @@ public class InputManager {
             wordList.remove(0);
             this.arguments = new ArrayList<>(wordList);
         }
+    }
+
+    public boolean isValid(String input){
+        if (input == null || input.isEmpty()){
+            return false;
+        }
+        input = input.strip();
+
+
+
+        return true;
     }
 
     public void clear() {
