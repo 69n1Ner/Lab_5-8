@@ -10,9 +10,9 @@ public class Main {
         // 1 как считать с консоли?
         Scanner sc = new Scanner(System.in);
         Invoker invoker = new Invoker();
-        invoker.setCommand(new HelpCommand("help"));
-        invoker.setCommand(new HelpCommand("help2"));
-        invoker.setCommand(new HelpCommand("help3"));
+        invoker.setCommand(new HelpCommand("help",invoker));
+        invoker.setCommand(new HelpCommand("help2",invoker));
+        invoker.setCommand(new HelpCommand("help3",invoker));
 //        InputManager inputManager = new InputManager();
 
 //        inputManager.separate("help    help2   ");

@@ -1,20 +1,19 @@
-public class HelpCommand implements ICommand{
-    private String name; // непонятно зачем нужно
-    private int id; // для отслеживания последовательности команд
+public class HelpCommand extends ICommand{
 
-
-    public HelpCommand(String name){
-        this.name = name;
-        
+    public HelpCommand(String name, Invoker invokerFather){
+        this.setName(name);
+        setInvokerFather(invokerFather);
     }
 
     @Override
-    public void execute(){
-        System.out.println("Help done");
+    public void execute() {
+        if (this.isValid(this.getInvokerFather().lastCall())) {
+            for (String command : this.getInvokerFather().allCommands()) {
+                System.out.println(command);
+            }
+        }
     }
 
-    @Override
-    public String getName(){
-        return name;
-    }
+
+
 }

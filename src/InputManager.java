@@ -55,7 +55,7 @@ public class InputManager {
     }
 
     public boolean isValid(String input){
-        String specialSymbols = "!@#$%^&*()+\"';:./?,`~№\\=<>[]{}йцукенгшщзхъфывапролджэячсмитьбю";
+        String specialSymbols = "!@#$%^&*()+\"';:./?,`~№\\=<>[]{}";
         for (int i =0; i<input.length();i++){
             if (specialSymbols.indexOf(input.charAt(i)) != -1){
                 throw new InvalidInput("Строка содержит недопустимый символ: "+ input.charAt(i));
@@ -63,11 +63,10 @@ public class InputManager {
         }
 
         if (!invoker.contains(input)){
-            String commandList = "";
+            String commandList = "";        //идея заменить на исполнение HelpCommand не получается
             for (String command: invoker.allCommands()){
                 commandList += command + "\n";
             }
-
            throw new InvalidInput("Неверная команда: "+ input + "\n"+ "Доступные команды:" + "\n" + commandList);
         }
 

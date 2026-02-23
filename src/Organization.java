@@ -20,7 +20,73 @@ public class Organization {
         this.postalAddress = postalAddress;
         this.type = type;
     }
-    public Organization(String string){
+
+    public Organization(Long id){
         super();
+        this.id = id;
+    }
+
+    public int getAnnualTurnover() {
+        return annualTurnover;
+    }
+
+    public void setAnnualTurnover(int annualTurnover) {
+        this.annualTurnover = annualTurnover;
+    }
+
+    public Coordinates getCoordinates() {
+        return coordinates;
+    }
+
+    public void setCoordinates(Coordinates coordinates) {
+        this.coordinates = coordinates;
+    }
+
+    public LocalDate getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDate creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public long getEmployeesCount() {
+        return employeesCount;
+    }
+
+    public void setEmployeesCount(long employeesCount) {
+        this.employeesCount = employeesCount;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Address getPostalAddress() {
+        return postalAddress;
+    }
+
+    public void setPostalAddress(Address postalAddress) {
+        this.postalAddress = postalAddress;
+    }
+
+    public OrganizationType getType() {
+        return type;
+    }
+
+    public void setType(OrganizationType type) {
+        this.type = type;
     }
 }
