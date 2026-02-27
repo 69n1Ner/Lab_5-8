@@ -1,0 +1,15 @@
+lab_5to8\Coordinates.class
+lab_5to8\Location.class
+lab_5to8\Main.class
+lab_5to8\Container.class
+lab_5to8\HelpCommand.class
+lab_5to8\ICommand.class
+lab_5to8\SortById.class
+lab_5to8\UpdateCommand.class
+lab_5to8\Address.class
+lab_5to8\Organization.class
+lab_5to8\InvalidInput.class
+lab_5to8\InputManager.class
+lab_5to8\OrganizationType.class
+lab_5to8\Parser.class
+lab_5to8\Invoker.class
