@@ -120,6 +120,111 @@ public class InputManager {
         return true;
     }
 
+    public boolean isValidCommand(String command) {
+        if (!invoker.contains(command)) {
+            return false;
+        }
+        return isValid(command);
+    }
+
+    public String separateAttribute(String input) {
+        return input.trim();
+    }
+
+    public Organization inputOrganization(boolean inputType) {
+        if (br == null) {
+            br = new BufferedReader(new InputStreamReader(System.in));
+        }
+        System.out.print("Введите название организации");
+        String name = getValueOf(String.class, inputType);
+        OrganizationType type = getValueOf(OrganizationType.class);
+        Coordinates coordinates = new Coordinates(
+                (long) getValueOf(Long.class),
+                getValueOf(Double.class)
+        );
+        Address address = new Address(
+                getValueOf(String.class),
+                new Location(
+                        getValueOf(String.class),
+                        getValueOf(Float.class),
+                        getValueOf(Integer.class),
+                        getValueOf(Integer.class))
+        );
+        long employeesCount = getValueOf(Long.class);
+        int annualTurnover = getValueOf(Integer.class);
+        Organization organization = new Organization(
+                name,
+                annualTurnover,
+                coordinates,
+                employeesCount,
+                address,
+                type
+        );
+
+        return organization;
+    }
+
+    private Object oneMoreTime(Class<?> type) {
+        System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
+        try {
+            String sa = separateAttribute(br.readLine());
+            if (isValid(sa)) {
+                var method = type.getMethod("valueOf", String.class);
+                return method.invoke(null, sa);
+            }
+        } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            System.err.println("Ошибка " + e.getMessage());
+        } catch (InvalidInput e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
+
+
+    private <T> T getValueOf(Class<T> classType){
+        return getValueOf(classType,false);
+    }
+
+    private <T> T getValueOf(Class<T> classType, boolean inputType) {
+        System.out.println(" [" + classType.getSimpleName() + "]");
+        try {
+            String sa = separateAttribute(br.readLine());
+            if (isValid(sa)) {
+                var method = classType.getMethod("valueOf", String.class);
+                if (classType.isEnum()) {
+                    return (T) Enum.valueOf((Class<Enum>) classType, sa);
+                }
+                return (T) method.invoke(null, sa);
+            }
+        } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            System.err.println("Ошибка " + e.getMessage());
+        } catch (InvalidInput e) {
+            if (inputType) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+//    private String getString(boolean inputType) {
+//        System.out.println(" [String]");
+//        try {
+//            String sa = separateAttribute(br.readLine());
+//            if (isValid(sa)) {
+//                return sa;
+//            }
+//        } catch (InvalidInput e) {
+//            if (inputType) {
+//                return null;
+//            }
+//            return (String) oneMoreTime(String.class);
+//        } catch (IOException e) {
+//            System.err.println("Ошибка " + e.getMessage());
+//        }
+//        return "";
+//    }
+
+
     public void clear() {
         this.command = null;
         this.mainArgument = null;
