@@ -1,11 +1,9 @@
-package Main;
+package MainProg;
 
 import Commands.Command;
-import Commands.HelpCommand;
+import IO.InputManager;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class Invoker {
     private HashMap<String , Command> commandHashMap = new HashMap<>();

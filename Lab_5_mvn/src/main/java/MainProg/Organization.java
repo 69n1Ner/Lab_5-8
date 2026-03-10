@@ -1,16 +1,15 @@
-package Main;
+package MainProg;
 
 import jakarta.xml.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.*;
 
 import static java.lang.Math.abs;
 import static java.util.Objects.checkFromToIndex;
 import static java.util.Objects.hash;
-
-@XmlRootElement(name = "Organization")
+//todo пройтись по ограничениям
+@XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Organization {
     @XmlAttribute(name = "id")
@@ -19,7 +18,7 @@ public class Organization {
     private String name; //Поле не может быть null, Строка не может быть пустой
     @XmlElement(name = "coordinates")
     private Coordinates coordinates; //Поле не может быть null
-    @XmlAttribute(name = "creationDate")
+    @XmlElement(name = "creationDate")
     private java.time.LocalDate creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
     @XmlElement(name = "annualTurnover")
     private int annualTurnover; //Значение поля должно быть больше 0
@@ -31,20 +30,24 @@ public class Organization {
     private Address postalAddress; //Поле не может быть null
 
     public Organization(String name,
-                        int annualTurnover,
+                        Integer annualTurnover,
                         Coordinates coordinates,
-                        long employeesCount,
+                        Long employeesCount,
                         Address postalAddress,
                         OrganizationType type) {
-        this.annualTurnover = annualTurnover;
+        this.annualTurnover = annualTurnover != null ? annualTurnover : 0;
         this.coordinates = coordinates;
-        this.employeesCount = employeesCount;
-        this.name = name;
+        this.employeesCount = employeesCount != null ? employeesCount : 0;
+        this.name = name != null ? name : "";
         this.postalAddress = postalAddress;
         this.type = type;
     }
 
     public Organization() {
+        this.name = "";
+        this.coordinates = new Coordinates();
+        this.postalAddress = new Address();
+        this.postalAddress.setTown(new Location());
     }
 
     @Override
@@ -61,12 +64,13 @@ public class Organization {
     }
 
     // этот метод вызывать, при добавлении элемента в коллекцию
-    public void generateId(){
-        id = (long) abs(hash(ZonedDateTime.now()) + hashCode());
+
+    public LocalDate getCreationDate() {
+        return creationDate;
     }
 
-    public void generateDate(){
-        creationDate = LocalDate.now();
+    public void setCreationDate(LocalDate creationDate) {
+        this.creationDate = creationDate;
     }
 
     public Long getId() {

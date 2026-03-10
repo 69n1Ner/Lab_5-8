@@ -1,4 +1,4 @@
-package Main;
+package MainProg;
 
 import Commands.AddCommand;
 import Commands.HelpCommand;
@@ -39,7 +39,7 @@ public class Main {
             }catch (NoSuchCommandException e){
                 System.out.println(e.getMessage());
                 invoker.allCommands().get("help").execute();
-            } catch (RuntimeException|  IOException e){
+            } catch (  IOException e){
                 System.out.println(e.getMessage());
             }
 

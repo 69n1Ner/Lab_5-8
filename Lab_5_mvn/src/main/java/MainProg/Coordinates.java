@@ -1,11 +1,8 @@
-package Main;
+package MainProg;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Coordinates {
@@ -24,8 +21,24 @@ public class Coordinates {
                 "\n\t\ty: " + y;
     }
 
-    public Coordinates(long x, Double y) {
+    public Coordinates(Long x, Double y) {
+        this.x = x != null ? x : 0;
+        this.y = y;
+    }
+
+    public long getX() {
+        return x;
+    }
+
+    public Double getY() {
+        return y;
+    }
+
+    public void setX(long x) {
         this.x = x;
+    }
+
+    public void setY(Double y) {
         this.y = y;
     }
 
@@ -34,6 +47,7 @@ public class Coordinates {
     }
 
     public void setX(String  x) {
-        this.x = Long.parseLong(x);
+        Long tmpX = Long.parseLong(x);
+        this.x = tmpX <= 623 ? tmpX : 623;
     }
 }

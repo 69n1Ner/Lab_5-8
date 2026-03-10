@@ -1,22 +1,20 @@
-package Main;
+package MainProg;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Address {
     @XmlElement
     private String zipCode; //Длина строки должна быть не меньше 4, Поле может быть null
-    @XmlElementWrapper
     @XmlElement
     private Location town; //Поле не может быть null
 
-    public Address(){}
+    public Address(){
+        this.zipCode = "";
+    }
 
     public Address(String zipCode, Location town) {
         this.zipCode = zipCode;
@@ -34,11 +32,23 @@ public class Address {
         this(address.zipCode, address.town);
     }
 
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public Location getTown() {
+        return town;
+    }
+
     public void setTown(Location town) {
         this.town = town;
     }
 
     public void setZipCode(String zipCode) {
-        this.zipCode = zipCode;
+        if (zipCode.length() >= 4) {
+            this.zipCode = zipCode;
+        } else {
+            this.zipCode = null;
+        }
     }
 }

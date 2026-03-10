@@ -1,11 +1,8 @@
-package Main;
+package MainProg;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Location {
@@ -24,6 +21,10 @@ public class Location {
         this.z = z;
         this.name = name;
     }
+
+    public Location(){
+        this.name = "";
+    }
     //todo переделать
     @Override
     public String toString() {
@@ -35,7 +36,40 @@ public class Location {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if (name == null){
+            this.name = null;
+        }
+        if (name != null && !name.isEmpty()) {
+            this.name = name;
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Float getX() {
+        return x;
+    }
+
+    public Integer getY() {
+        return y;
+    }
+
+    public Integer getZ() {
+        return z;
+    }
+
+    public void setX(Float x) {
+        this.x = x;
+    }
+
+    public void setY(Integer y) {
+        this.y = y;
+    }
+
+    public void setZ(Integer z) {
+        this.z = z;
     }
 
     public void setX(String  x) throws NumberFormatException{

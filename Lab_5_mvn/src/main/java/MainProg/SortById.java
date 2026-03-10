@@ -1,6 +1,7 @@
-package Main;
+package MainProg;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 public class SortById implements Comparator<Organization> {
 
@@ -8,7 +9,7 @@ public class SortById implements Comparator<Organization> {
     public int compare(Organization o1, Organization o2) {
         if (o1.getId() < o2.getId()){
             return -1;
-        } else if ( o1.getId() == o2.getId()){
+        } else if (Objects.equals(o1.getId(), o2.getId())){
             return 0;
         } else return 1;
     }

@@ -1,7 +1,6 @@
 package Commands;
 
-import Main.InputManager;
-import Main.Invoker;
+import MainProg.Invoker;
 
 public class HelpCommand extends Command {
 
