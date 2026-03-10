@@ -1,7 +1,13 @@
-package lab_5to8;
+package Main;
 
-import jakarta.xml.bind.Marshaller;
+import Commands.AddCommand;
+import Commands.HelpCommand;
+import Commands.ShowCommand;
+import Commands.UpdateCommand;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 
@@ -11,10 +17,13 @@ public class Main {
     public static void main(String[] args) {
 
         // 1 как считать с консоли?
-        Scanner sc = new Scanner(System.in);
-        Invoker invoker = new Invoker();
+        BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));
+        Container<Organization> container = new Container<Organization>();
+        Invoker invoker = new Invoker(container);
         invoker.setCommand(new HelpCommand("help",invoker));
         invoker.setCommand(new UpdateCommand("update",invoker));
+        invoker.setCommand(new AddCommand("add",invoker));
+        invoker.setCommand(new ShowCommand("show",invoker));
         //        lab_5to8.InputManager inputManager = new lab_5to8.InputManager();
 
 //        inputManager.separate("help    help2   ");
@@ -24,10 +33,13 @@ public class Main {
 
         while (true){
             System.out.print("$user: ");
-            String input = sc.nextLine();
             try {
+                String input = rd.readLine();
                 invoker.defineCommand(input).execute();
-            } catch (IllegalArgumentException e){
+            }catch (NoSuchCommandException e){
+                System.out.println(e.getMessage());
+                invoker.allCommands().get("help").execute();
+            } catch (RuntimeException|  IOException e){
                 System.out.println(e.getMessage());
             }
 

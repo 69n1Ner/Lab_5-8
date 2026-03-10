@@ -1,4 +1,4 @@
-package lab_5to8;
+package Main;
 
 import java.util.Comparator;
 
