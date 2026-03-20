@@ -1,5 +1,7 @@
 package MainProg;
 
+import Sorts.SortById;
+
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -7,33 +9,25 @@ import java.util.*;
 import static java.lang.Math.abs;
 import static java.util.Objects.hash;
 
+
 public class Container<T extends Organization> {
     private TreeSet<T> container;
+    private LocalDate creationDate;
 
     public Container(){
+        this.creationDate = LocalDate.now();
         this.container = new TreeSet<>(new SortById());
     }
 
-    //todo добавить ошибку на наличие элемента
-    public Organization getById(Long id){
-        Organization comparingOrganization = new Organization();
-        comparingOrganization.setId(id);
-
-        Organization possibleOrg = container.ceiling((T) comparingOrganization);
-        if (possibleOrg != null){
-            return possibleOrg;
-        } else {
-            throw new NullPointerException("Такой организации не существует");
-        }
+    public Organization getById(Long id) throws NullPointerException{
+        return container.stream()
+                .filter(org -> Objects.equals(org.getId(), id))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Такой организации не существует"));
     }
 
     public Long getIdBy(Organization organization){
-        Organization possibleOrg = container.ceiling((T) organization);
-        if (possibleOrg != null){
-            return possibleOrg.getId();
-        } else {
-            throw new NullPointerException("Такой организации не существует");
-        }
+        return organization.getId();
     }
 
     private void setParamsTo(Organization newOrg,Organization oldOrg){
@@ -48,7 +42,7 @@ public class Container<T extends Organization> {
         }
 
         oldOrg.setEmployeesCount( newOrg.getEmployeesCount() > 0 ? newOrg.getEmployeesCount() : oldOrg.getEmployeesCount());
-        oldOrg.setName(newOrg.getName() != null ? newOrg.getName() : oldOrg.getName());
+        oldOrg.setName((newOrg.getName() != null && !newOrg.getName().isEmpty()) ? newOrg.getName() : oldOrg.getName());
 
         String zip = newOrg.getPostalAddress().getZipCode();
         Float xL = newOrg.getPostalAddress().getTown().getX();
@@ -74,9 +68,13 @@ public class Container<T extends Organization> {
         oldOrg.setType(newOrg.getType() != null ? newOrg.getType() : oldOrg.getType());
     }
 
-    public Organization generateFields(Organization organization){
-        organization.setId((long) abs(hash(ZonedDateTime.now()) + hashCode()));
-        organization.setCreationDate(LocalDate.now());
+    public Organization generateFields(Organization organization, boolean isReadFile){
+        if (!isReadFile){
+            if (organization.getId() == null || organization.getId() <= 0){
+                organization.setId((long) abs(hash(ZonedDateTime.now()) + hashCode()));
+            }
+            organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
+        }
 
         if (organization.getAnnualTurnover() == 0){
             organization.setAnnualTurnover(1);
@@ -143,6 +141,38 @@ public class Container<T extends Organization> {
         return organization;
     }
 
+    public Address generateAddress(Address address){
+
+        String zip = address.getZipCode();
+        Float xL = address.getTown().getX();
+        Integer yL = address.getTown().getY();
+        Integer zL = address.getTown().getZ();
+        String name = address.getTown().getName();
+        if (zip == null || zip.isEmpty() || zip.length() < 4){
+            address.setZipCode("0000");
+            System.out.println("Значение почтового индекса получило базовое значение (0000)");
+
+        }
+        if (xL == null){
+            address.getTown().setX(1F);
+            System.out.println("Значение координаты X города получило базовое значение (1F)");
+        }
+        if (yL == null){
+            address.getTown().setY(1);
+            System.out.println("Значение координаты Y города получило базовое значение (1)");
+        }
+        if (zL == null){
+            address.getTown().setZ(1);
+            System.out.println("Значение координаты Z города получило базовое значение (1)");
+        }
+        if (name.isEmpty()){
+            address.getTown().setName("Town"+(long) abs(hash(ZonedDateTime.now()) + hashCode()));
+            System.out.println("Значение названия города получило базовое значение ("+address.getTown().getName()+")");
+        }
+
+        return address;
+    }
+
 
     //TODO Доделать после создания команды update
     public void add(T newOrganization) {
@@ -161,12 +191,64 @@ public class Container<T extends Organization> {
         return new ArrayList<>(container);
     }
 
+    public int size(){
+        return container.size();
+    }
+
     public void removeById(Long id){
         this.container.remove(this.getById(id));
     }
 
+//    public void removeGreaterOrganizations(Organization organization) throws NoSuchElementException{
+//        Iterator<T> iterator = container.iterator();
+//        int removedCount = 0;
+//
+//        while (iterator.hasNext()) {
+//            T org = iterator.next();
+//            if (org.compareTo(organization) > 0) {
+//                iterator.remove();
+//                System.out.println("Организация с ID " + org.getId() + " удалена");
+//                removedCount++;
+//            }
+//        }
+//
+//        if (removedCount == 0) {
+//            throw new  NoSuchElementException("Нет организаций, больших заданной");
+//        }
+//    }
+
+//    public void removeLowerOrganizations(Organization organization){
+//        Iterator<T> iterator = container.iterator();
+//        int removedCount = 0;
+//
+//        while (iterator.hasNext()) {
+//            T org = iterator.next();
+//            if (org.compareTo(organization) < 0) {
+//                iterator.remove();
+//                System.out.println("Организация с ID " + org.getId() + " удалена");
+//                removedCount++;
+//            }
+//        }
+//
+//        if (removedCount == 0) {
+//            throw new  NoSuchElementException("Нет организаций, меньше заданной");
+//        }
+//    }
+
+//    public void sumOfEmployeesOfAll(){
+//        long total= 0;
+//        for (Organization org:container){
+//            total+= org.getEmployeesCount();
+//        }
+//        System.out.println("Количество сотрудников во всех организациях: "+ total);
+//    }
+
     public void clear(){
         this.container.clear();
+    }
+
+    public LocalDate getCreationDate(){
+        return creationDate;
     }
 
 

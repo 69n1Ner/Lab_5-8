@@ -1,4 +1,6 @@
-package MainProg;
+package Sorts;
+
+import MainProg.Organization;
 
 import java.util.Comparator;
 import java.util.Objects;

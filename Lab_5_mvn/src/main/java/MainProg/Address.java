@@ -6,8 +6,8 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Address {
-    @XmlElement
+public class Address implements Comparable {
+    @XmlElement(name = "zip_code")
     private String zipCode; //Длина строки должна быть не меньше 4, Поле может быть null
     @XmlElement
     private Location town; //Поле не может быть null
@@ -50,5 +50,13 @@ public class Address {
         } else {
             this.zipCode = null;
         }
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o== null){
+            return 1;
+        }
+        return zipCode.compareTo(((Address) o).getZipCode());
     }
 }

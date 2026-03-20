@@ -18,7 +18,7 @@
                     <archive>
                         <manifest>
                             <!-- Укажите полный путь к вашему классу с main() -->
-                            <mainClass>lab_5to8.Main</mainClass>
+                            <mainClass>MainProg.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -116,7 +116,7 @@ public class InputManager {
         return true;
     }
 
-    public boolean isValidCommand(String command) {
+    public boolean isValidCommand(String command) throws InvalidInput {
         if (!invoker.contains(command)) {
             return false;
         }
@@ -127,7 +127,7 @@ public class InputManager {
         return input.trim();
     }
 
-    public Organization inputOrganization(boolean isUpdate) {
+    public Organization inputOrganization(boolean isUpdate) throws InvalidInput, IOException {
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
@@ -147,9 +147,8 @@ public class InputManager {
         Coordinates coordinates = new Coordinates(xC,yC);
 
         System.out.println("Введите адрес");
-        //todo недоработка
         System.out.print("Почтовый индекс (минимум 4 символа)");
-        String zip = getValueOf(String.class, isUpdate);
+        String zip = getZipCode();
         System.out.print("Название города");
         String city = getValueOf(String.class, isUpdate);
         System.out.print("Координата x");
@@ -177,7 +176,28 @@ public class InputManager {
         return organization;
     }
 
-    private <T> T oneMoreTime(Class<T> type, boolean positive) {
+    public Address inputAddress() throws IOException, InvalidInput {
+        if (br == null) {
+            br = new BufferedReader(new InputStreamReader(System.in));
+        }
+        System.out.println("Введите адрес");
+        //todo недоработка
+        System.out.print("Почтовый индекс (минимум 4 символа)");
+        String zip = getZipCode();
+        System.out.print("Название города");
+        String city = getValueOf(String.class, false);
+        System.out.print("Координата x");
+        Float xL = getValueOf(Float.class, false);
+        System.out.print("Координата y");
+        Integer yL = getValueOf(Integer.class, false);
+        System.out.print("Координата z");
+        Integer zL = getValueOf(Integer.class, false);
+
+        Address address = new Address( zip,new Location(city,xL,yL,zL));
+        return this.invoker.getContainer().generateAddress(address);
+    }
+
+    private <T> T oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
         //todo лучше переделать
         if (type.isEnum()) {
@@ -225,11 +245,11 @@ public class InputManager {
 
 
 
-    private <T> T getValueOf(Class<T> classType, boolean isUpdate){
+    private <T> T getValueOf(Class<T> classType, boolean isUpdate) throws InvalidInput {
         return getValueOf(classType,isUpdate,false);
     }
 
-    private <T> T getValueOf(Class<T> classType, boolean isUpdate, boolean positive) {
+    private <T> T getValueOf(Class<T> classType, boolean isUpdate, boolean positive) throws InvalidInput {
         System.out.println(" [" + classType.getSimpleName() + "]");
         if (classType.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
@@ -273,6 +293,27 @@ public class InputManager {
         return null;
     }
 
+    private String getZipCode() throws IOException, InvalidInput {
+        System.out.println(" [String]");
+        String sa = separateAttribute(br.readLine());
+        if (isValid(sa) && sa.length() >=4){
+            return sa;
+        }else{
+            return oneMoreTimeZipCode();
+        }
+    }
+
+    private String oneMoreTimeZipCode() throws IOException, InvalidInput {
+        System.out.println("Введите еще раз " + "[String]");
+        String sa = separateAttribute(br.readLine());
+        if (isValid(sa) && sa.length() >=4){
+            return sa;
+        }else{
+            return null;
+        }
+    }
+
+
     public void clear() {
         this.command = null;
         this.mainArgument = null;
@@ -289,5 +330,9 @@ public class InputManager {
 
     public String getCommand() {
         return command;
+    }
+
+    public Invoker getInvoker() {
+        return invoker;
     }
 }

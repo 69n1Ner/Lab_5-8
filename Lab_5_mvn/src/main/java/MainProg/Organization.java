@@ -1,6 +1,8 @@
 package MainProg;
 
+import IO.LocalDateAdapter;
 import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -11,22 +13,23 @@ import static java.util.Objects.hash;
 //todo пройтись по ограничениям
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Organization {
-    @XmlAttribute(name = "id")
+public class Organization implements Comparable {
+    @XmlElement(name = "id")
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     @XmlElement(name = "name")
     private String name; //Поле не может быть null, Строка не может быть пустой
     @XmlElement(name = "coordinates")
     private Coordinates coordinates; //Поле не может быть null
-    @XmlElement(name = "creationDate")
-    private java.time.LocalDate creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
-    @XmlElement(name = "annualTurnover")
+    @XmlElement(name = "creation_date")
+    @XmlJavaTypeAdapter(LocalDateAdapter.class)
+    private LocalDate creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
+    @XmlElement(name = "annual_turnover")
     private int annualTurnover; //Значение поля должно быть больше 0
-    @XmlElement(name = "employeesCount")
+    @XmlElement(name = "employees_count")
     private long employeesCount; //Значение поля должно быть больше 0
     @XmlElement(name = "type")
     private OrganizationType type; //Поле может быть null
-    @XmlElement(name = "postalAddress")
+    @XmlElement(name = "postal_address")
     private Address postalAddress; //Поле не может быть null
 
     public Organization(String name,
@@ -127,5 +130,29 @@ public class Organization {
 
     public void setAnnualTurnover(int annualTurnover) {
         this.annualTurnover = annualTurnover;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o == null){
+            return 1;
+        } else {
+            Organization other = (Organization) o;
+
+            if (other.annualTurnover == 0 || other.employeesCount == 0){
+                return 1;
+            }
+
+            int C1 = Integer.compare(annualTurnover,other.annualTurnover);
+            int C2 = Long.compare(employeesCount,other.employeesCount);
+            if (C1!= 0){
+                return C1;
+            }
+            if (C2 != 0){
+                return C2;
+            }
+            return 0;
+        }
+
     }
 }

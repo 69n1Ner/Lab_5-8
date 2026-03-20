@@ -9,7 +9,7 @@ public enum OrganizationType {
     PUBLIC("Публичная"),
     @XmlEnumValue("government")
     GOVERNMENT("Государственная"),
-    @XmlEnumValue("open-joint-stock-company")
+    @XmlEnumValue("open_joint_stock_company")
     OPEN_JOINT_STOCK_COMPANY("Открытая совместная складская");
 
     private String name;

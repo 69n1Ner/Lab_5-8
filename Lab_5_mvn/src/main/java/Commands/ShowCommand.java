@@ -1,5 +1,6 @@
 package Commands;
 
+import MainProg.InvalidInput;
 import MainProg.Invoker;
 
 public class ShowCommand extends Command{
@@ -11,11 +12,11 @@ public class ShowCommand extends Command{
 
     @Override
     public String describe() {
-        return "show";
+        return "show : вывести все элементы коллекции";
     }
 
     @Override
-    public void execute() throws NullPointerException{
+    public void execute() throws NullPointerException, InvalidInput {
         if (isValid(getInvokerFather().getInputManager()) && !getInvokerFather().getContainer().getAll().isEmpty()){
             System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
             for (Object org: getInvokerFather().getContainer().getAll()){

@@ -1,8 +1,10 @@
 package Commands;
 
-import Main.InputManager;
-import Main.InvalidInput;
-import Main.Invoker;
+import IO.InputManager;
+import MainProg.InvalidInput;
+import MainProg.Invoker;
+
+import java.io.IOException;
 
 public abstract class Command {
     private Invoker invokerFather;
@@ -24,23 +26,31 @@ public abstract class Command {
         return this.name;
     }
 
-    public abstract void execute();
+    public abstract void execute() throws InvalidInput, IOException;
 
     public abstract String describe();
 
-    public boolean isValid(InputManager inputManager){
+    public boolean isValid(InputManager inputManager) throws InvalidInput{
         if (inputManager.getMainArgument() != null || inputManager.getXmlArgument() != null){
             throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
         }
         return true;
     }
 
-    public boolean isXmlValid(InputManager inputManager){
-        if ((inputManager.getXmlArgument() == null || !inputManager.getXmlArgument().equals("ERR"))) {
-            return true;
-        } else {
-            throw new InvalidInput("Часть xml задана неверно");
+    public static boolean isXmlNotValid(InputManager inputManager) throws InvalidInput {
+        if (inputManager.getXmlArgument() != null) {
+            boolean ERR = inputManager.getXmlArgument().equals("ERR");
+            boolean isName = inputManager.getXmlArgument().matches(".*<name>[^<]+</name>.*");
+            boolean isDate = inputManager.getXmlArgument().matches(".*<creation_date>[^<]+</creation_date>.*");
+            if (isDate && isName && !ERR){
+                return false;
+            } else {
+                throw new InvalidInput("command Неверный XML");
+            }
         }
+
+        return true;
+
     }
 
 

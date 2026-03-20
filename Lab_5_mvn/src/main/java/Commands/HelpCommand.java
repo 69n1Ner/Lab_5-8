@@ -1,5 +1,6 @@
 package Commands;
 
+import MainProg.InvalidInput;
 import MainProg.Invoker;
 
 public class HelpCommand extends Command {
@@ -15,7 +16,7 @@ public class HelpCommand extends Command {
     }
 
     @Override
-    public void execute() {
+    public void execute() throws InvalidInput {
         if (isValid(getInvokerFather().getInputManager())) {
             System.out.println("Доступные команды:\n" +
                     "-------------------------------------------------------------------------------------");

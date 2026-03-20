@@ -1,8 +1,10 @@
 package IO;
 
 
+import MainProg.Address;
 import MainProg.Container;
 import MainProg.Organization;
+import MainProg.OrganizationType;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -15,28 +17,22 @@ import java.util.TreeSet;
 
 public class XmlUtil {
 
-    // ==================== ЗАПИСЬ (Marshalling) ====================
 
-    /**
-     * Записывает список организаций в XML-файл
-     */
-    public static void writeListToFile(TreeSet<Organization> list, String filename) {
+    public static void writeListToFile(ArrayList<Organization> list, String filename) {
+
+
         try {
-            // 1. Создаем обертку и помещаем в нее список
-            Container<Organization> wrapper = new Container<>();
-            wrapper.getAll().addAll(list);
+            ContainerWrapper wrapper = new ContainerWrapper();
+            wrapper.getOrganizations().addAll(list);
 
-            // 2. Создаем контекст для обертки
-            JAXBContext context = JAXBContext.newInstance(Container.class);
+            JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
 
-            // 3. Создаем Marshaller
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
-            // 4. Записываем в файл
             marshaller.marshal(wrapper, new File(filename));
 
-            System.out.println("Список записан в файл: " + filename);
+            System.out.println("Коллекция записана в файл: " + filename);
 
         } catch (JAXBException e) {
             System.err.println("Ошибка при записи: " + e.getMessage());
@@ -44,25 +40,29 @@ public class XmlUtil {
         }
     }
 
-    // ==================== ЧТЕНИЕ (Unmarshalling) ====================
 
-    /**
-     * Читает список организаций из XML-файла
-     */
     public static ArrayList<Organization> readListFromFile(String filename) {
-        try {
-            // 1. Создаем контекст для обертки
-            JAXBContext context = JAXBContext.newInstance(Container.class);
+        File file = new File(filename);
 
-            // 2. Создаем Unmarshaller
+        if (!file.exists()) {
+            System.err.println("Файл не найден: " + file.getAbsolutePath());
+            return new ArrayList<>();
+        }
+
+        if (!file.isFile()) {
+            System.err.println("Указанный путь не является файлом: " + file.getAbsolutePath());
+            return new ArrayList<>();
+        }
+
+        try {
+            JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
+
             Unmarshaller unmarshaller = context.createUnmarshaller();
 
-            // 3. Читаем файл в обертку
-            Container<Organization> wrapper = (Container<Organization>) unmarshaller.unmarshal(new File(filename));
+            ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(new File(filename));
 
-            // 4. Возвращаем список из обертки
             System.out.println("Список прочитан из файла: " + filename);
-            return new ArrayList<>(wrapper.getAll());
+            return new ArrayList<>(wrapper.getOrganizations());
 
         } catch (JAXBException e) {
             System.err.println("Ошибка при чтении: " + e.getMessage());
@@ -71,17 +71,36 @@ public class XmlUtil {
         }
     }
 
-    /**
-     * Читает объект из XML-строки (текста)
-     */
     public static Organization readObjectFromString(String xmlString) {
+        if (xmlString == null || xmlString.trim().isEmpty()) {
+            System.err.println("Пустая XML-строка");
+            return null;
+        }
+
         try {
             JAXBContext context = JAXBContext.newInstance(Organization.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-
             return (Organization) unmarshaller.unmarshal(new StringReader(xmlString));
+
         } catch (JAXBException e) {
-            e.printStackTrace();
+            System.err.println("Ошибка чтения XML"+ e.getCause().getMessage());;
+            return null;
+        }
+    }
+
+    public static Address readAddressFromString(String xmlString){
+        if (xmlString == null || xmlString.trim().isEmpty()) {
+            System.err.println("Пустая XML-строка");
+            return null;
+        }
+
+        try {
+            JAXBContext context = JAXBContext.newInstance(Address.class);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            return (Address) unmarshaller.unmarshal(new StringReader(xmlString));
+
+        } catch (JAXBException e) {
+            System.err.println("Ошибка чтения XML"+ e.getCause().getMessage());;
             return null;
         }
     }

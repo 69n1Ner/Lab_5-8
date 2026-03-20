@@ -1,6 +1,6 @@
 package MainProg;
 
-public class InvalidInput extends IllegalArgumentException {
+public class InvalidInput extends Exception {
     public InvalidInput(String message) {
         super(message);
     }
