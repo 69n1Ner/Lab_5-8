@@ -1,6 +1,6 @@
 ### IntelliJ IDEA ###
 out/
-Lab_5_mvn/target
+**/target
 !**/src/main/**/out/
 !**/src/test/**/out/
 .kotlin
