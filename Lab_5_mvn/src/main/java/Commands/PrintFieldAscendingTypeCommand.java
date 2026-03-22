@@ -2,13 +2,12 @@ package Commands;
 
 import IO.InputManager;
 import MainProg.Container;
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
-import MainProg.Organization;
+import OrganizationObject.Organization;
 import Sorts.SortByType;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class PrintFieldAscendingTypeCommand extends Command{
 
@@ -18,27 +17,33 @@ public class PrintFieldAscendingTypeCommand extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute() {
         Invoker invokerFather = getInvokerFather();
         Container container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
-        if (isValid(inputManager)){
-            if (!container.getAll().isEmpty()) {
-                ArrayList<Organization> sortedOrgs = new ArrayList<>(container.getAll());
-                sortedOrgs.sort(new SortByType());
-                System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
-                for (Organization org: sortedOrgs){
-                    System.out.println(org);
+
+        try {
+
+            if (isValid(inputManager)){
+                if (!container.getAll().isEmpty()) {
+                    ArrayList<Organization> sortedOrgs = new ArrayList<>(container.getAll());
+                    sortedOrgs.sort(new SortByType());
                     System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
+                    for (Organization org: sortedOrgs){
+                        System.out.println(org);
+                        System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
 
-                }
+                    }
 
-            } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+                } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            }
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "print_field_ascending_type ";
+        return "print_field_ascending_type : вывести значения поля type всех элементов в порядке возрастания";
     }
 }

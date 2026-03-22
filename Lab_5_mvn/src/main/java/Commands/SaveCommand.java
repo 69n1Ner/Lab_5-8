@@ -2,9 +2,9 @@ package Commands;
 
 import IO.InputManager;
 import IO.XmlUtil;
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
-import MainProg.Organization;
+import OrganizationObject.Organization;
 
 import java.util.ArrayList;
 
@@ -16,18 +16,24 @@ public class SaveCommand extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute() {
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        if (isValid(inputMan)){
-            XmlUtil.writeListToFile((ArrayList<Organization>) invokerFather.getContainer().getAll(),"collection"+getCounter()+".xml");
-            SaveCommand.addCounter();
+
+        try {
+
+            if (isValid(inputMan)){
+                XmlUtil.writeListToFile((ArrayList<Organization>) invokerFather.getContainer().getAll(),"collection"+getCounter()+".xml");
+                SaveCommand.addCounter();
+            }
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "save";
+        return "save : сохранить коллекцию в файл";
     }
 
     public static int getCounter(){

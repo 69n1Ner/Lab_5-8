@@ -1,4 +1,4 @@
-package MainProg;
+package OrganizationObject;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -29,10 +29,10 @@ public class Location {
     @Override
     public String toString() {
         return "Расположение:" +
-                "\n\t\t\tГород: '" + name +'\'' +
-                "\n\t\t\tx: " + x +
-                "\n\t\t\ty: " + y +
-                "\n\t\t\tz: " + z;
+                "\n   Город: '" + name +'\'' +
+                "\n   x: " + x +
+                "\n   y: " + y +
+                "\n   z: " + z;
     }
 
     public void setName(String name) {

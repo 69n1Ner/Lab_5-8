@@ -1,7 +1,7 @@
 package Commands;
 
 import IO.InputManager;
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
 
 public class ClearCommand extends Command{
@@ -12,17 +12,22 @@ public class ClearCommand extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute() {
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        if (isValid(inputMan)){
-            invokerFather.getContainer().clear();
-            System.out.println("~~Коллекция успешно удалена~~");
+        try {
+
+            if (isValid(inputMan)){
+                invokerFather.getContainer().clear();
+                System.out.println("~~Коллекция успешно удалена~~");
+            }
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "clear";
+        return "clear : очистить коллекцию";
     }
 }

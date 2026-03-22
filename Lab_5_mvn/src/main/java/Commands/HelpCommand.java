@@ -1,7 +1,10 @@
 package Commands;
 
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class HelpCommand extends Command {
 
@@ -16,14 +19,23 @@ public class HelpCommand extends Command {
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute(){
+
+        try {
         if (isValid(getInvokerFather().getInputManager())) {
-            System.out.println("Доступные команды:\n" +
-                    "-------------------------------------------------------------------------------------");
-            for (Command command : this.getInvokerFather().allCommands().values()) {
+            System.out.println("-------------------------------------------------------------------------------------");
+            for (Command command : this.getInvokerFather()
+                    .allCommands()
+                    .values()
+                    .stream()
+                    .sorted(Comparator.comparing(Command::getName,String.CASE_INSENSITIVE_ORDER))
+                    .toList()) {
                 System.out.println(command.describe());
             }
             System.out.println("-------------------------------------------------------------------------------------");
+        }
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 

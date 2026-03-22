@@ -1,10 +1,11 @@
-package MainProg;
+package OrganizationObject;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement(name = "postal_address")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Address implements Comparable {
     @XmlElement(name = "zip_code")
@@ -24,8 +25,8 @@ public class Address implements Comparable {
     @Override
     public String toString() {
         return "Адрес:" +
-                "\n\t\t" + town +
-                "\n\t\tПочтовый индекс: '" + zipCode +'\'';
+                "\n  " + town +
+                "\n  Почтовый индекс: '" + zipCode +'\'';
     }
 
     public Address(Address address){

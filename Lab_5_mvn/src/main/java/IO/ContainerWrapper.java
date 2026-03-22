@@ -1,6 +1,6 @@
 package IO;
 
-import MainProg.Organization;
+import OrganizationObject.Organization;
 import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;

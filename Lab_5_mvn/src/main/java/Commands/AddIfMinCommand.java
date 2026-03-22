@@ -1,8 +1,11 @@
 package Commands;
 
+import Exceptions.InvalidInput;
+import Exceptions.SameObjectExistsException;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.*;
+import OrganizationObject.Organization;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -24,62 +27,47 @@ public class AddIfMinCommand extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput, IOException {
+    public void execute() throws IOException {
         Invoker invokerFather = getInvokerFather();
         Container container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
-        if (isValid(inputManager)) {
+        try {
             if (!container.getAll().isEmpty()) {
-
-                if (isXmlNotValid(inputManager)) {
-                    Organization newOrganization = inputManager.inputOrganization(false);
-                    try {
-                        container.getById(newOrganization.getId());
-                        throw new SameObjectExistsException("Такой объект уже есть");
-                    } catch (NoSuchElementException e) {
-
-                        Organization minOrg = (Organization) container.getAll().stream()
-                                .min(Comparator.naturalOrder())
-                                .orElse(null);
-
-                        if (minOrg.compareTo(newOrganization) > 0) {
-                            container.add(container.generateFields(newOrganization, false));
-
-                            System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
-                        } else throw new InvalidInput("Сравнимая организация больше или равно мин. элемента");
-                    }
-
+                Organization newOrganization;
+                if (!isValidForScript(inputManager)) {
+                    newOrganization = inputManager.inputOrganization(false);
                 } else {
-                    Organization newOrganization = XmlUtil.readObjectFromString(inputManager.getXmlArgument());
-                    if (newOrganization != null) {
-                        if (newOrganization.getId() == null || newOrganization.getCreationDate() == null) {
-                            throw new InvalidInput("Не указан ID или дата создания объекта");
-                        }
-                        try {
-                            container.getById(newOrganization.getId());
-                            throw new SameObjectExistsException("Такой объект уже есть");
-                        } catch (NoSuchElementException e) {
+                    newOrganization = XmlUtil.readObjectFromString(inputManager.getXmlArgument());
+                }
 
-                            Organization minOrg = (Organization) container.getAll().stream()
-                                    .min(Comparator.naturalOrder())
-                                    .orElse(null);
+                try {
+                    container.getById(newOrganization.getId());
+                    throw new SameObjectExistsException("Такой объект уже есть");
+                } catch (NoSuchElementException e) {
 
-                            if (minOrg.compareTo(newOrganization) > 0) {
-                                container.add(container.generateFields(newOrganization, false));
+                    Organization minOrg = (Organization) container
+                            .getAll().stream()
+                            .min(Comparator.naturalOrder())
+                            .orElse(null);
 
-                                System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
-                            } else throw new InvalidInput("Сравнимая организация больше или равно мин. элемента");
-                        }
+                    if (minOrg.compareTo(newOrganization) > 0) {
+                        container.add(container.generateFields(newOrganization, false));
+                        System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
+                    } else {
+                        throw new NoSuchElementException("Нет организаций, меньше заданной");
                     }
                 }
             } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+
+        } catch (InvalidInput e){
+            System.err.println("!! "+e.getMessage()+" !!");
         }
 
     }
 
     @Override
     public String describe() {
-        return "add_if_min";
+        return "add_if_min {element} : добавить новый элемент в коллекцию, если его значение меньше, чем у наименьшего элемента этой коллекции. Сравнение идет по выручке количеству сотрудников";
     }
 }

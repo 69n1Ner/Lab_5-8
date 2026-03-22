@@ -1,15 +1,20 @@
 package MainProg;
 
 import Commands.Command;
+import Exceptions.InvalidInput;
+import Exceptions.NoSuchCommandException;
+import Exceptions.RecursionLimitReached;
 import IO.InputManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Invoker {
     private HashMap<String , Command> commandHashMap = new HashMap<>();
     private Container container;
-    //todo сделать из стека обычный "последний" InputManager
     private InputManager inputManager;
+    private final int recursionLimit = 1;
+    private int currentRecursion = 0;
 
     public Invoker(Container container){
         this.container = container;
@@ -19,14 +24,28 @@ public class Invoker {
         this.commandHashMap.put(command.getName(), command);
     }
 
+    public void decrementCurrentRecursion() {
+        if (currentRecursion > 0) {
+            currentRecursion -= 1;
+        }
+    }
 
-    public Command defineCommand(String string) throws InvalidInput, NoSuchCommandException{
-        this.inputManager = new InputManager(this);
+    public void incrementCurrentRecursion() {
+        if (currentRecursion < recursionLimit) {
+            currentRecursion += 1;
+        } else {
+            throw new RecursionLimitReached("!! Достигнут предел рекурсии: " + recursionLimit+ " !!");
+        }
+    }
+
+    public int getCurrentRecursion() {
+        return currentRecursion;
+    }
+
+    public Command defineCommand(String string, boolean isScript) throws InvalidInput, NoSuchCommandException {
+        this.inputManager = new InputManager(this, isScript);
         inputManager.separate(string);
-        if (inputManager.isValidCommand(inputManager.getCommand())) { //валидация для команды
-
-            //todo нужна валидация отдельно для команды и аргументов, для каждой команды свой валидатор
-            //todo нужны валидации отдельно для единичных аргументов, а также отдельные для RunTime
+        if (inputManager.isValidCommand(inputManager.getCommand())) {
             return commandHashMap.get(inputManager.getCommand());
         }
         throw new NoSuchCommandException("Такой команды не существует");

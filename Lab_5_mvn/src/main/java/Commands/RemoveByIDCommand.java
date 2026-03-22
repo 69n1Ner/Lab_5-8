@@ -33,6 +33,6 @@ public class RemoveByIDCommand extends Command{
 
     @Override
     public String describe() {
-        return "remove_by_id";
+        return "remove_by_id id : удалить элемент из коллекции по его id";
     }
 }

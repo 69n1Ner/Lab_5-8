@@ -1,5 +1,8 @@
 package MainProg;
 
+import OrganizationObject.Address;
+import OrganizationObject.Organization;
+import OrganizationObject.OrganizationType;
 import Sorts.SortById;
 
 import java.time.LocalDate;
@@ -110,7 +113,7 @@ public class Container<T extends Organization> {
         Integer yL = organization.getPostalAddress().getTown().getY();
         Integer zL = organization.getPostalAddress().getTown().getZ();
         String name = organization.getPostalAddress().getTown().getName();
-        if (zip.isEmpty() || zip.length() < 4){
+        if (zip == null || zip.isEmpty() || zip.length() < 4){
             organization.getPostalAddress().setZipCode("0000");
             System.out.println("Значение почтового индекса получило базовое значение (0000)");
 

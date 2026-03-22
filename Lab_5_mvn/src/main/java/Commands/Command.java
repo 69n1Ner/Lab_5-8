@@ -1,7 +1,7 @@
 package Commands;
 
 import IO.InputManager;
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ public abstract class Command {
         return this.name;
     }
 
-    public abstract void execute() throws InvalidInput, IOException;
+    public abstract void execute() throws IOException;
 
     public abstract String describe();
 
@@ -37,22 +37,33 @@ public abstract class Command {
         return true;
     }
 
-    public static boolean isXmlNotValid(InputManager inputManager) throws InvalidInput {
-        if (inputManager.getXmlArgument() != null) {
-            boolean ERR = inputManager.getXmlArgument().equals("ERR");
-            boolean isName = inputManager.getXmlArgument().matches(".*<name>[^<]+</name>.*");
-            boolean isDate = inputManager.getXmlArgument().matches(".*<creation_date>[^<]+</creation_date>.*");
-            if (isDate && isName && !ERR){
-                return false;
-            } else {
-                throw new InvalidInput("command Неверный XML");
-            }
-        }
-
-        return true;
-
+    public boolean isValidForScript(InputManager inputManager) throws InvalidInput{
+        if (inputManager.getMainArgument() == null){
+            if (inputManager.isScript()){
+                if (inputManager.getXmlArgument() != null) {
+                    return isXmlHasIdAndDate(inputManager);
+                } throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
+            } return false;
+        } throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
     }
 
+    public static boolean isXmlHasIdAndDate(InputManager inputManager) throws InvalidInput {
+        if (inputManager.getXmlArgument() != null) {
+            boolean ERR = inputManager.getXmlArgument().equals("ERR");
+            boolean isId = inputManager.getXmlArgument().matches(".*<id>[^<]+</id>.*");
+            boolean isDate = inputManager.getXmlArgument().matches(".*<creation_date>[^<]+</creation_date>.*");
+            if (!ERR) {
+                if (isDate) {
+                    if (isId) {
+                        return true;
+                    }throw new InvalidInput("XML не имеет ID");
+                }throw new InvalidInput("XML не имеет даты создания");
+            }throw new InvalidInput("Неверная XML строка");
+
+
+        }
+        return false;
+    }
 
 //    void unexecute();
 }

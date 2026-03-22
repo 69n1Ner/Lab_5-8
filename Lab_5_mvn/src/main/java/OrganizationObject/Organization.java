@@ -1,15 +1,14 @@
-package MainProg;
+package OrganizationObject;
 
 import IO.LocalDateAdapter;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 
 import static java.lang.Math.abs;
 import static java.util.Objects.checkFromToIndex;
-import static java.util.Objects.hash;
+
 //todo пройтись по ограничениям
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -56,14 +55,14 @@ public class Organization implements Comparable {
     @Override
     public String toString() {
         return "Organization:" +
-                "\n\tId: " + id +
-                "\n\tДата создания объекта: " + creationDate +
-                "\n\tНазвание: '" + name + '\'' +
-                "\n\tТип организации: " + type.getName() +
-                "\n\t" + coordinates +
-                "\n\t" + postalAddress +
-                "\n\tКоличество сотрудников: " + employeesCount +
-                "\n\tГодовая выручка: " + annualTurnover;
+                "\n Id: " + id +
+                "\n Дата создания объекта: " + creationDate +
+                "\n Название: '" + name + '\'' +
+                "\n Тип организации: " + type.getName() +
+                "\n " + coordinates +
+                "\n " + postalAddress +
+                "\n Количество сотрудников: " + employeesCount +
+                "\n Годовая выручка: " + annualTurnover;
     }
 
     // этот метод вызывать, при добавлении элемента в коллекцию

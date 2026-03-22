@@ -1,6 +1,6 @@
 package Sorts;
 
-import MainProg.Organization;
+import OrganizationObject.Organization;
 
 import java.util.Comparator;
 import java.util.Objects;

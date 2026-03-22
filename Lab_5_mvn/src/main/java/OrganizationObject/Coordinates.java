@@ -1,4 +1,4 @@
-package MainProg;
+package OrganizationObject;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -17,8 +17,8 @@ public class Coordinates {
     @Override
     public String toString() {
         return "Координаты:" +
-                "\n\t\tx: " + x +
-                "\n\t\ty: " + y;
+                "\n  x: " + x +
+                "\n  y: " + y;
     }
 
     public Coordinates(Long x, Double y) {

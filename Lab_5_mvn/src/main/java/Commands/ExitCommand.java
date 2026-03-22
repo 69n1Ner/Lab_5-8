@@ -1,6 +1,6 @@
 package Commands;
 
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
 
 public class ExitCommand extends Command{
@@ -11,14 +11,18 @@ public class ExitCommand extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute(){
+        try {
         if (isValid(getInvokerFather().getInputManager())) {
             System.exit(0);
+        }
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "exit";
+        return "exit : завершить программу (без сохранения в файл)";
     }
 }

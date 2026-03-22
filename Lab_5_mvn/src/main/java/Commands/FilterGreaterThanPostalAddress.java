@@ -1,13 +1,15 @@
 package Commands;
 
+import Exceptions.InvalidInput;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.*;
+import OrganizationObject.Address;
+import OrganizationObject.Organization;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.TreeMap;
 
 public class FilterGreaterThanPostalAddress extends Command{
 
@@ -17,20 +19,33 @@ public class FilterGreaterThanPostalAddress extends Command{
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public boolean isValidForScript(InputManager inputManager) throws InvalidInput {
+        if (inputManager.getMainArgument() == null){
+            if (inputManager.isScript()){
+                if (inputManager.getXmlArgument() != null) {
+                    return true;
+                } throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
+            } return false;
+        } throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
+    }
+
+    @Override
+    public void execute() throws IOException{
         Invoker invokerFather = getInvokerFather();
         Container container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
-        if (isValid(inputManager)) {
+        try {
             if (!container.getAll().isEmpty()) {
                 Address address;
-                try {
+                if (!isValidForScript(inputManager)) {
+
                     address = inputManager.inputAddress();
-                    address = container.generateAddress(address);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                }else {
+                    address = XmlUtil.readAddressFromString(inputManager.getXmlArgument());
                 }
+                address = container.generateAddress(address);
+
                 Organization organization = new Organization();
                 organization.setPostalAddress(address);
 
@@ -56,12 +71,14 @@ public class FilterGreaterThanPostalAddress extends Command{
                 if (showedCount == 0) {
                     throw new NoSuchElementException("Нет организаций, с большим адресом");
                 }
-            } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            }else throw new NullPointerException("Список пуст, не с чем сравнивать");
+        }catch (InvalidInput e){
+            System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "filter_greater_than_postal_address";
+        return "filter_greater_than_postal_address {postalAddress} : вывести элементы, значение поля postalAddress которых больше заданного. Сравнение идет по почтовому индексу";
     }
 }

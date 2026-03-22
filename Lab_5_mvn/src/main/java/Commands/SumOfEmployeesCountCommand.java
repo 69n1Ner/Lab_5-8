@@ -2,9 +2,9 @@ package Commands;
 
 import IO.InputManager;
 import MainProg.Container;
-import MainProg.InvalidInput;
+import Exceptions.InvalidInput;
 import MainProg.Invoker;
-import MainProg.Organization;
+import OrganizationObject.Organization;
 
 public class SumOfEmployeesCountCommand extends Command {
 
@@ -14,22 +14,27 @@ public class SumOfEmployeesCountCommand extends Command {
     }
 
     @Override
-    public void execute() throws InvalidInput {
+    public void execute() {
         Invoker invokerFather = getInvokerFather();
         Container container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
-        if (isValid(inputManager)){
-            long total= 0;
-            for (Object org: container.getAll()){
-                total+= ((Organization) org).getEmployeesCount();
+        try {
+
+            if (isValid(inputManager)){
+                long total= 0;
+                for (Object org: container.getAll()){
+                    total+= ((Organization) org).getEmployeesCount();
+                }
+                System.out.println("Количество сотрудников во всех организациях: "+ total);
             }
-            System.out.println("Количество сотрудников во всех организациях: "+ total);
+        }catch (InvalidInput e){
+        System.err.println(e.getMessage());
         }
     }
 
     @Override
     public String describe() {
-        return "sum_of_employees_count";
+        return "sum_of_employees_count : вывести сумму значений поля employeesCount для всех элементов коллекции";
     }
 }

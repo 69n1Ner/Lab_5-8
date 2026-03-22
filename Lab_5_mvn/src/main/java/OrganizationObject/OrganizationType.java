@@ -1,4 +1,4 @@
-package MainProg;
+package OrganizationObject;
 
 import jakarta.xml.bind.annotation.*;
 

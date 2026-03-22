@@ -1,19 +1,18 @@
 package IO;
 
 
-import MainProg.Address;
-import MainProg.Container;
-import MainProg.Organization;
-import MainProg.OrganizationType;
+import OrganizationObject.Address;
+import OrganizationObject.Organization;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 public class XmlUtil {
 
@@ -32,7 +31,7 @@ public class XmlUtil {
 
             marshaller.marshal(wrapper, new File(filename));
 
-            System.out.println("Коллекция записана в файл: " + filename);
+            System.out.println("Коллекция записана в файл: " + System.getProperty("user.dir")+"\\"+filename);
 
         } catch (JAXBException e) {
             System.err.println("Ошибка при записи: " + e.getMessage());
@@ -41,39 +40,34 @@ public class XmlUtil {
     }
 
 
-    public static ArrayList<Organization> readListFromFile(String filename) {
-        File file = new File(filename);
+    public static ArrayList<Organization> readListFromFile(String resourceName) {
+        InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(resourceName);
 
-        if (!file.exists()) {
-            System.err.println("Файл не найден: " + file.getAbsolutePath());
-            return new ArrayList<>();
-        }
-
-        if (!file.isFile()) {
-            System.err.println("Указанный путь не является файлом: " + file.getAbsolutePath());
+        if (inputStream == null) {
+            System.err.println("!! Коллекция не загружена. Поставьте значение PLAB5_8 = 'initial_collection.xml' !!");
             return new ArrayList<>();
         }
 
         try {
             JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
-
             Unmarshaller unmarshaller = context.createUnmarshaller();
-
-            ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(new File(filename));
-
-            System.out.println("Список прочитан из файла: " + filename);
+            ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
+            System.out.println("Загружено из JAR: " + wrapper.getOrganizations().size());
             return new ArrayList<>(wrapper.getOrganizations());
-
         } catch (JAXBException e) {
-            System.err.println("Ошибка при чтении: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("!! Ошибка парсинга XML: " + e.getMessage()+" !!");
             return new ArrayList<>();
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+            }
         }
     }
 
     public static Organization readObjectFromString(String xmlString) {
         if (xmlString == null || xmlString.trim().isEmpty()) {
-            System.err.println("Пустая XML-строка");
+            System.err.println("!! Пустая XML-строка !!");
             return null;
         }
 
@@ -83,14 +77,14 @@ public class XmlUtil {
             return (Organization) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            System.err.println("Ошибка чтения XML"+ e.getCause().getMessage());;
+            System.err.println("!! Ошибка чтения XML"+ e.getMessage()+" !!");;
             return null;
         }
     }
 
     public static Address readAddressFromString(String xmlString){
         if (xmlString == null || xmlString.trim().isEmpty()) {
-            System.err.println("Пустая XML-строка");
+            System.err.println("!! Пустая XML-строка !!");
             return null;
         }
 
@@ -100,7 +94,7 @@ public class XmlUtil {
             return (Address) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            System.err.println("Ошибка чтения XML"+ e.getCause().getMessage());;
+            System.err.println("!! Ошибка чтения XML"+ e.getMessage()+" !!");;
             return null;
         }
     }

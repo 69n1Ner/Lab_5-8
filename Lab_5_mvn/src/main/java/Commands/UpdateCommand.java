@@ -1,8 +1,10 @@
 package Commands;
 
+import Exceptions.InvalidInput;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.*;
+import OrganizationObject.Organization;
 
 import java.io.IOException;
 
@@ -18,41 +20,47 @@ public class UpdateCommand extends Command {
                 " Поля без значения не будут изменены.";
     }
 
-    //todo добавить ошибку на наличие элемента
+
     @Override
-    public boolean isValid(InputManager inputManager) throws NullPointerException {
-        try {
-            getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
-            return true;
-        } catch (NumberFormatException e) {
-            System.err.println("Неверно задан id");
-        }
-        return false;
+    public boolean isValidForScript(InputManager inputManager) throws InvalidInput{
+        if (inputManager.isScript()){
+            if (inputManager.getXmlArgument() != null) {
+                try {
+                    getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
+                    return true;
+                } catch (NumberFormatException e) {
+                    System.err.println("Неверно задан id");
+                }
+                return false;
+            }throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
+        } return false;
     }
 
     @Override
-    public void execute() throws IOException, InvalidInput {
+    public void execute() throws IOException{
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        if (isValid(inputMan)) {
-            if (isXmlNotValid(inputMan)) {
-                Organization oldOrg = invokerFather.getContainer().getById(Long.parseLong(inputMan.getMainArgument()));
-                Organization parametrizedOrg = inputMan.inputOrganization(true);
+        Container container = invokerFather.getContainer();
 
-                invokerFather.getContainer().update(parametrizedOrg,oldOrg);
-                System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
-            }else {
-                Long ID = Long.parseLong(inputMan.getMainArgument());
-                Organization oldOrg = invokerFather.getContainer().getById(ID);
-                Organization parametrizedOrg = XmlUtil.readObjectFromString(inputMan.getXmlArgument());
-                parametrizedOrg.setId(ID);
-                invokerFather.getContainer().update(parametrizedOrg, oldOrg);
-                System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
-            }
-        }else {
-            System.out.println("update Ничего не произошло");
+        try {
+            if (!container.getAll().isEmpty()) {
+                Organization oldOrg;
+                Organization parametrizedOrg;
+                if (!isValidForScript(inputMan)) {
+                    oldOrg = invokerFather.getContainer().getById(Long.parseLong(inputMan.getMainArgument()));
+                    parametrizedOrg = inputMan.inputOrganization(true);
+                }else {
+                    Long ID = Long.parseLong(inputMan.getMainArgument());
+                    oldOrg = invokerFather.getContainer().getById(ID);
+                    parametrizedOrg = XmlUtil.readObjectFromString(inputMan.getXmlArgument());
+                    parametrizedOrg.setId(ID);
+                }
+                    invokerFather.getContainer().update(parametrizedOrg, oldOrg);
+                    System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
+            } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+        }catch (InvalidInput e){
+            System.err.println("!! "+e.getMessage()+" !!");
         }
-
     }
 
 }

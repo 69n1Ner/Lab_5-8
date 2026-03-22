@@ -1,6 +1,9 @@
 package IO;
 
+import Exceptions.InvalidInput;
+import Exceptions.NoSuchCommandException;
 import MainProg.*;
+import OrganizationObject.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,11 +19,13 @@ public class InputManager {
     private String mainArgument;
     private String xmlArgument;
     private BufferedReader br;
-    private String orgArgument;
+    //todo использовать в нужных командах с вводом
+    private boolean isScript;
 
     //TODO как то обработать ошибки сканера по типу Ctrl+D
-    public InputManager(Invoker invoker) {
+    public InputManager(Invoker invoker,boolean isScript) {
         this.invoker = invoker;
+        this.isScript = isScript;
     }
 
 
@@ -62,6 +67,7 @@ public class InputManager {
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
                     this.xmlArgument = input.substring(end);
+                    isScript = true;
                 } else {
                     this.xmlArgument = "ERR";
                 }
@@ -157,7 +163,7 @@ public class InputManager {
         Integer yL = getValueOf(Integer.class, isUpdate);
         System.out.print("Координата z");
         Integer zL = getValueOf(Integer.class, isUpdate);
-        Address address = new Address( zip,new Location(city,xL,yL,zL));
+        Address address = new Address(zip, new Location(city,xL,yL,zL));
 
         System.out.print("Введите количество сотрудников");
         Long employeesCount = getValueOf(Long.class, isUpdate,true);
@@ -334,5 +340,9 @@ public class InputManager {
 
     public Invoker getInvoker() {
         return invoker;
+    }
+
+    public boolean isScript() {
+        return isScript;
     }
 }

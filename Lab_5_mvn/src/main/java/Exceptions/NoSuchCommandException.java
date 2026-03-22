@@ -1,4 +1,4 @@
-package MainProg;
+package Exceptions;
 
 public class NoSuchCommandException extends RuntimeException {
     public NoSuchCommandException(String message) {
