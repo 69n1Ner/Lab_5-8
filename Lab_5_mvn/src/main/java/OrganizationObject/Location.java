@@ -25,7 +25,6 @@ public class Location {
     public Location(){
         this.name = "";
     }
-    //todo переделать
     @Override
     public String toString() {
         return "Расположение:" +

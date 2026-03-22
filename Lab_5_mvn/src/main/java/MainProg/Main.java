@@ -3,6 +3,7 @@ package MainProg;
 import Commands.*;
 import Exceptions.InvalidInput;
 import Exceptions.NoSuchCommandException;
+import Exceptions.NullCommandException;
 import Exceptions.SameObjectExistsException;
 import IO.XmlUtil;
 import OrganizationObject.Organization;
@@ -62,7 +63,8 @@ public class Main {
         if (path == null) {
             run(invoker, new BufferedReader(new InputStreamReader(System.in, UTF_8)),false);
         } else {
-            try (BufferedReader br = Files.newBufferedReader(Path.of(path), UTF_8)) {
+            try  {
+                BufferedReader br = Files.newBufferedReader(Path.of(path), UTF_8);
                 run(invoker, br,true);
             } catch (IOException e) {
                 System.err.println("Файл не найден: "+e.getMessage());
@@ -88,10 +90,11 @@ public class Main {
                     if (input.trim().isEmpty()) {
                         continue;
                     }
+                    //showing what command was
                     System.out.println(input);
                 }
 
-                invoker.defineCommand(input,isScript).execute();
+                invoker.defineCommand(input, isScript).execute();
 
             } catch (NoSuchCommandException e) {
                 System.err.println("!! " + e.getMessage() + " !!");
@@ -103,6 +106,7 @@ public class Main {
                 }
 
             } catch (NoSuchElementException |
+                     NullCommandException |
                      SameObjectExistsException |
                      NullPointerException |
                      InvalidInput |

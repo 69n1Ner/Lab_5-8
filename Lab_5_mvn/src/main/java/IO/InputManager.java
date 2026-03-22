@@ -2,6 +2,7 @@ package IO;
 
 import Exceptions.InvalidInput;
 import Exceptions.NoSuchCommandException;
+import Exceptions.NullCommandException;
 import MainProg.*;
 import OrganizationObject.*;
 
@@ -19,10 +20,8 @@ public class InputManager {
     private String mainArgument;
     private String xmlArgument;
     private BufferedReader br;
-    //todo использовать в нужных командах с вводом
     private boolean isScript;
 
-    //TODO как то обработать ошибки сканера по типу Ctrl+D
     public InputManager(Invoker invoker,boolean isScript) {
         this.invoker = invoker;
         this.isScript = isScript;
@@ -30,9 +29,43 @@ public class InputManager {
 
 
     public void separate(String input) {
+
+
         if (input == null || input.isEmpty()) {
-            throw new NoSuchCommandException("Пустая команда");
+            throw new NullCommandException("Пустая строка");
         }
+            //Ctrl+D
+        if (input.contains("\u0004") ){
+            throw new NullCommandException(
+                    """
+                            
+                            ░░░░░░░██████╗░███████╗██████╗░░
+                            ░░██╗░░██╔══██╗██╔════╝██╔══██╗░
+                            ██████╗██████╔╝█████╗░░██████╔╝░
+                            ╚═██╔═╝██╔══██╗██╔══╝░░██╔═══╝░░
+                            ░░╚═╝░░██║░░██║███████╗██║░░░░░░
+                            ░░░░░░░╚═╝░░╚═╝╚══════╝╚═╝░░░░░░
+                            """);
+            //Ctrl+Z
+        } else if (input.contains("\u001A")){
+            throw new NullCommandException("""
+                    
+                    /﹋\\
+                    (҂`_´)
+                    ︻╦╤─ ҉ -- - - -- - --
+                    /﹋\\
+                    """);
+
+            //Ctrl+C (doesn't catch)
+        } else if (input.contains("\u0003")) {
+            throw new NullCommandException("""
+                    
+                    ▒█░▒█ █▀▀█ ▀█░█▀ █▀▀ 　 █▀▀█ 　 █▀▀▄ ░▀░ █▀▀ █▀▀ 　 █░░░█ █▀▀ █▀▀ █░█ █
+                    ▒█▀▀█ █▄▄█ ░█▄█░ █▀▀ 　 █▄▄█ 　 █░░█ ▀█▀ █░░ █▀▀ 　 █▄█▄█ █▀▀ █▀▀ █▀▄ ▀
+                    ▒█░▒█ ▀░░▀ ░░▀░░ ▀▀▀ 　 ▀░░▀ 　 ▀░░▀ ▀▀▀ ▀▀▀ ▀▀▀ 　 ░▀░▀░ ▀▀▀ ▀▀▀ ▀░▀ ▄
+                    """);
+        }
+
         /* todo <ОТВЕРГНУТО> сделать обработку строки с выбором:
             1. если введена строка только с нужным количеством параметров),
              то пропускать на дальнейшее считывание параметров (интерактивный режим)
@@ -74,7 +107,6 @@ public class InputManager {
                 continue;
 
             }
-
             if (input.charAt(i) == ' ' && start < i) {
                 start = i;
             } else if (input.charAt(i) == '<') {
@@ -108,7 +140,6 @@ public class InputManager {
             this.mainArgument = wordList.get(1);
         }
     }
-
     public boolean isValid(String input) throws InvalidInput {
         String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
         for (int i = 0; i < input.length(); i++) {
@@ -187,7 +218,6 @@ public class InputManager {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
         System.out.println("Введите адрес");
-        //todo недоработка
         System.out.print("Почтовый индекс (минимум 4 символа)");
         String zip = getZipCode();
         System.out.print("Название города");
@@ -205,7 +235,6 @@ public class InputManager {
 
     private <T> T oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
-        //todo лучше переделать
         if (type.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
             System.out.println(en);

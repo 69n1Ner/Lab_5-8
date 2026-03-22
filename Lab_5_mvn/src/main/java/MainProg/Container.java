@@ -177,7 +177,6 @@ public class Container<T extends Organization> {
     }
 
 
-    //TODO Доделать после создания команды update
     public void add(T newOrganization) {
         this.container.add(newOrganization);
     }

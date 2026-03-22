@@ -9,18 +9,15 @@
     <version>1.0-SNAPSHOT</version>
 
     <build>
+        <finalName>lab5_8</finalName>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <!-- Укажите полный путь к вашему классу с main() -->
-                            <mainClass>MainProg.Main</mainClass>
-                        </manifest>
-                    </archive>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
 
@@ -30,6 +27,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>

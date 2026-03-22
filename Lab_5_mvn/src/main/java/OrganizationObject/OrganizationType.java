@@ -4,7 +4,6 @@ import jakarta.xml.bind.annotation.*;
 
 @XmlEnum
 public enum OrganizationType {
-    //todo добавить перевод
     @XmlEnumValue("public")
     PUBLIC("Публичная"),
     @XmlEnumValue("government")

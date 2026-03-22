@@ -21,7 +21,6 @@ public class Address implements Comparable {
         this.zipCode = zipCode;
         this.town = town;
     }
-    //todo переделать
     @Override
     public String toString() {
         return "Адрес:" +

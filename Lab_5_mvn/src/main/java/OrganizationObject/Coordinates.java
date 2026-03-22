@@ -13,7 +13,6 @@ public class Coordinates {
 
     public Coordinates(){}
 
-    //todo переделать
     @Override
     public String toString() {
         return "Координаты:" +

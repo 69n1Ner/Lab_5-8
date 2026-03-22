@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import static java.lang.Math.abs;
 import static java.util.Objects.checkFromToIndex;
 
-//todo пройтись по ограничениям
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Organization implements Comparable {
