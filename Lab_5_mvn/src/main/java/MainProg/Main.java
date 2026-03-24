@@ -1,17 +1,11 @@
 package MainProg;
 
 import Commands.*;
-import Exceptions.InvalidInput;
-import Exceptions.NoSuchCommandException;
-import Exceptions.NullCommandException;
-import Exceptions.SameObjectExistsException;
+import Exceptions.*;
 import IO.XmlUtil;
 import OrganizationObject.Organization;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,8 +57,8 @@ public class Main {
         if (path == null) {
             run(invoker, new BufferedReader(new InputStreamReader(System.in, UTF_8)),false);
         } else {
-            try  {
-                BufferedReader br = Files.newBufferedReader(Path.of(path), UTF_8);
+            try (FileInputStream file = new FileInputStream(path)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(file, UTF_8));
                 run(invoker, br,true);
             } catch (IOException e) {
                 System.err.println("Файл не найден: "+e.getMessage());
@@ -108,11 +102,11 @@ public class Main {
             } catch (NoSuchElementException |
                      NullCommandException |
                      SameObjectExistsException |
-                     NullPointerException |
                      InvalidInput |
+                     EmptyContainerException |
+                     NoFileNameException |
                      IOException e) {
                 System.err.println("!! " + e.getMessage() + " !!");
-
 
 
             } catch (RuntimeException e) {
