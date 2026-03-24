@@ -27,8 +27,7 @@ public class Location {
     }
     @Override
     public String toString() {
-        return "Расположение:" +
-                "\n   Город: '" + name +'\'' +
+        return  "\n   Город: " + name +
                 "\n   x: " + x +
                 "\n   y: " + y +
                 "\n   z: " + z;

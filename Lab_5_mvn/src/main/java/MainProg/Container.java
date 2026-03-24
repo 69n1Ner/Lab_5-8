@@ -22,7 +22,7 @@ public class Container<T extends Organization> {
         this.container = new TreeSet<>(new SortById());
     }
 
-    public Organization getById(Long id) throws NullPointerException{
+    public Organization getById(Long id){
         return container.stream()
                 .filter(org -> Objects.equals(org.getId(), id))
                 .findFirst()
@@ -79,102 +79,82 @@ public class Container<T extends Organization> {
             organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
         }
 
-        if (organization.getAnnualTurnover() == 0){
-            organization.setAnnualTurnover(1);
-            System.out.println("Значение годовой выручки получило базовое значение (1)");
-        }
-
+//        if (organization.getAnnualTurnover() == 0){
+//            organization.setAnnualTurnover(1);
+//            System.out.println("Значение годовой выручки получило базовое значение (1)");
+//        }
+//
         Long xC = organization.getCoordinates().getX();
-        Double yC = organization.getCoordinates().getY();
-        if (xC == null || xC == 0){
-            organization.getCoordinates().setX(1);
-            System.out.println("Значение координаты X организации получило базовое значение (1)");
-        } else if (xC > 623) {
+//        Double yC = organization.getCoordinates().getY();
+//        if (xC == null || xC == 0){
+//            organization.getCoordinates().setX(1);
+//            System.out.println("Значение координаты X организации получило базовое значение (1)");
+//        } else
+        if (xC > 623) {
             organization.getCoordinates().setX(623);
             System.out.println("Значение координаты X организации получило максимальное значение (623)");
         }
-        if (yC== null){
-            organization.getCoordinates().setY(1.0);
-            System.out.println("Значение координаты Y организации получило базовое значение (1.0)");
-        }
-
-        if ( organization.getEmployeesCount() == 0){
-            organization.setEmployeesCount(1);
-            System.out.println("Значение количества сотрудников получило базовое значение (1)");
-        }
-
-        if (organization.getName().isEmpty()){
-            organization.setName("Organization"+organization.getId());
-            System.out.println("Значение названия организации получило базовое значение ("+organization.getName()+")");
-        }
-
-        String zip = organization.getPostalAddress().getZipCode();
-        Float xL = organization.getPostalAddress().getTown().getX();
-        Integer yL = organization.getPostalAddress().getTown().getY();
-        Integer zL = organization.getPostalAddress().getTown().getZ();
-        String name = organization.getPostalAddress().getTown().getName();
-        if (zip == null || zip.isEmpty() || zip.length() < 4){
-            organization.getPostalAddress().setZipCode("0000");
-            System.out.println("Значение почтового индекса получило базовое значение (0000)");
-
-        }
-        if (xL == null){
-            organization.getPostalAddress().getTown().setX(1F);
-            System.out.println("Значение координаты X города получило базовое значение (1F)");
-        }
-        if (yL == null){
-            organization.getPostalAddress().getTown().setY(1);
-            System.out.println("Значение координаты Y города получило базовое значение (1)");
-        }
-        if (zL == null){
-            organization.getPostalAddress().getTown().setZ(1);
-            System.out.println("Значение координаты Z города получило базовое значение (1)");
-        }
-        if (name.isEmpty()){
-            organization.getPostalAddress().getTown().setName("Town"+organization.getId());
-            System.out.println("Значение названия города получило базовое значение ("+organization.getPostalAddress().getTown().getName()+")");
-        }
-
-        organization.setType(organization.getType() == null ? OrganizationType.PUBLIC : organization.getType());
-        if (organization.getType() == null){
-            organization.setType(OrganizationType.PUBLIC);
-            System.out.println("Значение типа организации получило базовое значение (Публичная)");
-        }
+//        if (yC== null){
+//            organization.getCoordinates().setY(1.0);
+//            System.out.println("Значение координаты Y организации получило базовое значение (1.0)");
+//        }
+//
+//        if ( organization.getEmployeesCount() == 0){
+//            organization.setEmployeesCount(1);
+//            System.out.println("Значение количества сотрудников получило базовое значение (1)");
+//        }
+//
+//        if (organization.getName().isEmpty()){
+//            organization.setName("Organization"+organization.getId());
+//            System.out.println("Значение названия организации получило базовое значение ("+organization.getName()+")");
+//        }
+//
+//        String zip = organization.getPostalAddress().getZipCode();
+//        Float xL = organization.getPostalAddress().getTown().getX();
+//        Integer yL = organization.getPostalAddress().getTown().getY();
+//        Integer zL = organization.getPostalAddress().getTown().getZ();
+//        String name = organization.getPostalAddress().getTown().getName();
+//        if (zip == null || zip.isEmpty() || zip.length() < 4){
+//            organization.getPostalAddress().setZipCode("0000");
+//            System.out.println("Значение почтового индекса получило базовое значение (0000)");
+//
+//        }
+//        if (xL == null){
+//            organization.getPostalAddress().getTown().setX(1F);
+//            System.out.println("Значение координаты X города получило базовое значение (1F)");
+//        }
+//        if (yL == null){
+//            organization.getPostalAddress().getTown().setY(1);
+//            System.out.println("Значение координаты Y города получило базовое значение (1)");
+//        }
+//        if (zL == null){
+//            organization.getPostalAddress().getTown().setZ(1);
+//            System.out.println("Значение координаты Z города получило базовое значение (1)");
+//        }
+//        if (name.isEmpty()){
+//            organization.getPostalAddress().getTown().setName("Town"+organization.getId());
+//            System.out.println("Значение названия города получило базовое значение ("+organization.getPostalAddress().getTown().getName()+")");
+//        }
+//
+//        organization.setType(organization.getType() == null ? OrganizationType.PUBLIC : organization.getType());
+//        if (organization.getType() == null){
+//            organization.setType(OrganizationType.PUBLIC);
+//            System.out.println("Значение типа организации получило базовое значение (Публичная)");
+//        }
 
         return organization;
     }
 
-    public Address generateAddress(Address address){
-
-        String zip = address.getZipCode();
-        Float xL = address.getTown().getX();
-        Integer yL = address.getTown().getY();
-        Integer zL = address.getTown().getZ();
-        String name = address.getTown().getName();
-        if (zip == null || zip.isEmpty() || zip.length() < 4){
-            address.setZipCode("0000");
-            System.out.println("Значение почтового индекса получило базовое значение (0000)");
-
-        }
-        if (xL == null){
-            address.getTown().setX(1F);
-            System.out.println("Значение координаты X города получило базовое значение (1F)");
-        }
-        if (yL == null){
-            address.getTown().setY(1);
-            System.out.println("Значение координаты Y города получило базовое значение (1)");
-        }
-        if (zL == null){
-            address.getTown().setZ(1);
-            System.out.println("Значение координаты Z города получило базовое значение (1)");
-        }
-        if (name.isEmpty()){
-            address.getTown().setName("Town"+(long) abs(hash(ZonedDateTime.now()) + hashCode()));
-            System.out.println("Значение названия города получило базовое значение ("+address.getTown().getName()+")");
-        }
-
-        return address;
-    }
+//    public Address generateAddress(Address address){
+//
+//        String zip = address.getZipCode();
+//        if (zip == null) {
+//            System.out.println("ZIP "+zip);
+//            address.setZipCode("");
+//            System.out.println("NZIP "+ address.getZipCode());
+//        }
+//        return address;
+//    }
 
 
     public void add(T newOrganization) {

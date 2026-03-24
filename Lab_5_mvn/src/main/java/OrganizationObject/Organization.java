@@ -4,7 +4,12 @@ import IO.LocalDateAdapter;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.abs;
 import static java.util.Objects.checkFromToIndex;
@@ -14,21 +19,21 @@ import static java.util.Objects.checkFromToIndex;
 public class Organization implements Comparable {
     @XmlElement(name = "id")
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
-    @XmlElement(name = "name")
-    private String name; //Поле не может быть null, Строка не может быть пустой
-    @XmlElement(name = "coordinates")
-    private Coordinates coordinates; //Поле не может быть null
     @XmlElement(name = "creation_date")
     @XmlJavaTypeAdapter(LocalDateAdapter.class)
     private LocalDate creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
-    @XmlElement(name = "annual_turnover")
-    private int annualTurnover; //Значение поля должно быть больше 0
-    @XmlElement(name = "employees_count")
-    private long employeesCount; //Значение поля должно быть больше 0
+    @XmlElement(name = "name")
+    private String name; //Поле не может быть null, Строка не может быть пустой
     @XmlElement(name = "type")
     private OrganizationType type; //Поле может быть null
+    @XmlElement(name = "coordinates")
+    private Coordinates coordinates; //Поле не может быть null
     @XmlElement(name = "postal_address")
     private Address postalAddress; //Поле не может быть null
+    @XmlElement(name = "employees_count")
+    private long employeesCount; //Значение поля должно быть больше 0
+    @XmlElement(name = "annual_turnover")
+    private int annualTurnover; //Значение поля должно быть больше 0
 
     public Organization(String name,
                         Integer annualTurnover,
@@ -53,15 +58,40 @@ public class Organization implements Comparable {
 
     @Override
     public String toString() {
-        return "Organization:" +
-                "\n Id: " + id +
-                "\n Дата создания объекта: " + creationDate +
-                "\n Название: '" + name + '\'' +
-                "\n Тип организации: " + type.getName() +
-                "\n " + coordinates +
-                "\n " + postalAddress +
-                "\n Количество сотрудников: " + employeesCount +
-                "\n Годовая выручка: " + annualTurnover;
+
+        List<String> fieldsToPrint = new ArrayList<>(List.of(
+                "\n Id: ",
+                "\n Дата создания объекта: ",
+                "\n Название: " ,
+                "\n Тип организации: " ,
+                "\n Координаты: " ,
+                "\n Адрес: " ,
+                "\n Количество сотрудников: " ,
+                "\n Годовая выручка: "));
+        Field[] fields = this.getClass().getDeclaredFields();
+
+        for (int i = 0; i < fieldsToPrint.size(); i++){
+            Field field = fields[i];
+            String fieldToPrint = fieldsToPrint.get(i);
+
+            field.setAccessible(true);
+            try {
+                Object value = field.get(this);
+
+                if (value == null || (field.getType() == String.class && value.equals(""))) {
+                    fieldsToPrint.set(i, fieldToPrint + "null");
+                }else {
+                    fieldsToPrint.set(i,fieldToPrint + value);
+                }
+
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return  "Organization:" +
+                String.join("", fieldsToPrint);
+
     }
 
     // этот метод вызывать, при добавлении элемента в коллекцию

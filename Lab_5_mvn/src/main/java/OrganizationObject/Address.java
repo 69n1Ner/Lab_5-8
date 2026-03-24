@@ -23,9 +23,8 @@ public class Address implements Comparable {
     }
     @Override
     public String toString() {
-        return "Адрес:" +
-                "\n  " + town +
-                "\n  Почтовый индекс: '" + zipCode +'\'';
+        return  "\n  Расположение: " + town +
+                "\n  Почтовый индекс: " + zipCode;
     }
 
     public Address(Address address){
@@ -45,11 +44,7 @@ public class Address implements Comparable {
     }
 
     public void setZipCode(String zipCode) {
-        if (zipCode.length() >= 4) {
-            this.zipCode = zipCode;
-        } else {
-            this.zipCode = null;
-        }
+        this.zipCode = zipCode;
     }
 
     @Override
