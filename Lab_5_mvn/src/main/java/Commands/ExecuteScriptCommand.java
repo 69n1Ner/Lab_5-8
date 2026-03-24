@@ -1,6 +1,7 @@
 package Commands;
 
 import Exceptions.InvalidInput;
+import Exceptions.NoFileNameException;
 import Exceptions.RecursionLimitReached;
 import IO.InputManager;
 import MainProg.Invoker;
@@ -20,7 +21,7 @@ public class ExecuteScriptCommand extends Command{
         if (inputManager.getMainArgument() != null){
             return true;
         } else {
-            throw new NullPointerException("Нет имени файла");
+            throw new NoFileNameException("Нет имени файла");
         }
     }
 

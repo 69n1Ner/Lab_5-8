@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import Exceptions.InvalidInput;
 import Exceptions.SameObjectExistsException;
 import IO.InputManager;
@@ -58,7 +59,7 @@ public class AddIfMinCommand extends Command{
                         throw new NoSuchElementException("Нет организаций, меньше заданной");
                     }
                 }
-            } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
 
         } catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");

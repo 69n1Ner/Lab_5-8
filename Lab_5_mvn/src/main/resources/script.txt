@@ -1,28 +1,37 @@
 add
+add <organization><id>1234</id><creation_date>11-03-2026</creation_date></organization>
 add <organization><id>1334871783</id><name>5</name><coordinates><x>5</x><y>5.0</y></coordinates><creation_date>11-03-2026</creation_date><annual_turnover>5</annual_turnover><employees_count>5</employees_count><type>government</type><postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address></organization>
+show
 
 update 1334871783
 update 1334871783 <organization><id>1</id><name>asd</name><creation_date></creation_date></organization>
-
+show
 
 add_if_min 
 add_if_min <organization><id>2</id><name>5</name><coordinates><x>5</x><y>5.0</y></coordinates><creation_date>11-03-2026</creation_date><annual_turnover>5</annual_turnover><employees_count>1</employees_count><type>government</type><postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address></organization>
+print_field_ascending_type
+show
 
 remove_greater 
 remove_greater <organization><id>1334871783</id><name>5</name><coordinates><x>5</x><y>5.0</y></coordinates><creation_date>11-03-2026</creation_date><annual_turnover>5</annual_turnover><employees_count>1</employees_count><type>government</type><postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address></organization>
+show
 
 add <organization><id>13</id><name>5</name><coordinates><x>5</x><y>5.0</y></coordinates><creation_date>11-03-2026</creation_date><annual_turnover>5</annual_turnover><employees_count>5</employees_count><type>government</type><postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address></organization>
+show
+
+ filter_greater_than_postal_address <postal_address><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address>
+
 
 remove_lower 
 remove_lower <organization><id>1334871783</id><name>5</name><coordinates><x>5</x><y>5.0</y></coordinates><creation_date>11-03-2026</creation_date><annual_turnover>5</annual_turnover><employees_count>10</employees_count><type>government</type><postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address></organization>
+show
 
- filter_greater_than_postal_address <postal_address><zip_code>0000</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address>
+ filter_greater_than_postal_address <postal_address><zip_code>00</zip_code><town><x>5.0</x><y>5</y><z>5</z><name>5</name></town></postal_address>
 
 help
 info
 print_field_ascending_type 1334871783
 save
-show
 sum_of_employees_count
 clear
 remove_by_id 

@@ -136,7 +136,7 @@ public class InputManager {
 
         this.command = wordList.get(0);
 
-        if (wordList.size() == 2) {
+        if (wordList.size() >= 2) {
             this.mainArgument = wordList.get(1);
         }
     }
@@ -183,24 +183,14 @@ public class InputManager {
         Double yC = getValueOf(Double.class, isUpdate);
         Coordinates coordinates = new Coordinates(xC,yC);
 
-        System.out.println("Введите адрес");
-        System.out.print("Почтовый индекс (минимум 4 символа)");
-        String zip = getZipCode();
-        System.out.print("Название города");
-        String city = getValueOf(String.class, isUpdate);
-        System.out.print("Координата x");
-        Float xL = getValueOf(Float.class, isUpdate);
-        System.out.print("Координата y");
-        Integer yL = getValueOf(Integer.class, isUpdate);
-        System.out.print("Координата z");
-        Integer zL = getValueOf(Integer.class, isUpdate);
-        Address address = new Address(zip, new Location(city,xL,yL,zL));
+
+        Address address = inputAddress();
 
         System.out.print("Введите количество сотрудников");
-        Long employeesCount = getValueOf(Long.class, isUpdate,true);
+        Long employeesCount = getValueOf(Long.class, isUpdate,isUpdate);
 
         System.out.print("Введите годовую выручку");
-        Integer annualTurnover = getValueOf(Integer.class, isUpdate,true);
+        Integer annualTurnover = getValueOf(Integer.class, isUpdate,isUpdate);
 
         Organization organization = new Organization(
                 name,
@@ -229,15 +219,13 @@ public class InputManager {
         System.out.print("Координата z");
         Integer zL = getValueOf(Integer.class, false);
 
-        Address address = new Address( zip,new Location(city,xL,yL,zL));
-        return this.invoker.getContainer().generateAddress(address);
+        return new Address( zip,new Location(city,xL,yL,zL));
     }
 
     private <T> T oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
         if (type.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
-            System.out.println(en);
             }
         }
 
@@ -267,11 +255,9 @@ public class InputManager {
         catch (IOException |
                NoSuchMethodException |
                IllegalAccessException  e) {
-            System.out.println("3");
             e.printStackTrace();
 
         }catch (RuntimeException e){
-            System.out.println("4");
             e.printStackTrace();
         }
 
@@ -288,7 +274,7 @@ public class InputManager {
         System.out.println(" [" + classType.getSimpleName() + "]");
         if (classType.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
-                System.out.println(en);
+                System.out.println(en.name());
             }
         }
 

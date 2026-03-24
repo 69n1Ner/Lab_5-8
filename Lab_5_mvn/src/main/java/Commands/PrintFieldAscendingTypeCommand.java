@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import IO.InputManager;
 import MainProg.Container;
 import Exceptions.InvalidInput;
@@ -35,7 +36,7 @@ public class PrintFieldAscendingTypeCommand extends Command{
 
                     }
 
-                } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+                } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
             }
         }catch (InvalidInput e){
             System.err.println(e.getMessage());

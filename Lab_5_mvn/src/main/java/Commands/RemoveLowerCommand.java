@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.Container;
@@ -51,7 +52,7 @@ public class RemoveLowerCommand extends Command{
                 if (removedCount == 0) {
                     throw new NoSuchElementException("Нет организаций, меньше заданной");
                 }
-            }else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");
         }

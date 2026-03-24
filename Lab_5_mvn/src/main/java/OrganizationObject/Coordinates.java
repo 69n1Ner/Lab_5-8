@@ -15,8 +15,7 @@ public class Coordinates {
 
     @Override
     public String toString() {
-        return "Координаты:" +
-                "\n  x: " + x +
+        return  "\n  x: " + x +
                 "\n  y: " + y;
     }
 

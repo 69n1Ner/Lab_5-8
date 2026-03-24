@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import Exceptions.InvalidInput;
 import IO.InputManager;
 import IO.XmlUtil;
@@ -44,34 +45,49 @@ public class FilterGreaterThanPostalAddress extends Command{
                 }else {
                     address = XmlUtil.readAddressFromString(inputManager.getXmlArgument());
                 }
-                address = container.generateAddress(address);
+//                address = container.generateAddress(address);
 
                 Organization organization = new Organization();
                 organization.setPostalAddress(address);
+                Address addr1 = organization.getPostalAddress();
 
                 Iterator<Organization> iterator = container.getAll().iterator();
                 int showedCount = 0;
 
-                boolean capFlag = true;
+                boolean hatFlag = true;
+                boolean printThis = false;
+                boolean printAll = false;
+
+                if (addr1.getZipCode() == null){
+                    printAll = true;
+                }
+
                 while (iterator.hasNext()) {
                     Organization org = iterator.next();
                     Address addr = org.getPostalAddress();
-                    if (addr.compareTo(organization.getPostalAddress()) > 0) {
-                        if (capFlag){
+                    if (addr != null && addr.getZipCode() != null &&
+                            addr1 != null && addr1.getZipCode() != null &&
+                            addr.compareTo(addr1) > 0) {
+                        printThis = true;
+                    }
+                    if (printThis || printAll) {
+                        printThis = false;
+                        if (hatFlag) {
                             System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
-                            capFlag = false;
+                            hatFlag = false;
                         }
                         System.out.println(org);
                         System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
                         showedCount++;
                     }
+
                 }
 
 
                 if (showedCount == 0) {
                     throw new NoSuchElementException("Нет организаций, с большим адресом");
                 }
-            }else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println(e.getMessage());
         }
