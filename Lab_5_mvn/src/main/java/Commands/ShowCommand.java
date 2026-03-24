@@ -21,8 +21,12 @@ public class ShowCommand extends Command{
         try {
         //todo пофиксить вывод первой строки
         if (isValid(getInvokerFather().getInputManager()) && !getInvokerFather().getContainer().getAll().isEmpty()){
-            System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
+            boolean hatFlag = true;
             for (Object org: getInvokerFather().getContainer().getAll()){
+                if (hatFlag) {
+                    System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
+                    hatFlag = false;
+                }
                 System.out.println(org.toString());
                 System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
             }
