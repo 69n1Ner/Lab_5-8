@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import Exceptions.InvalidInput;
 import IO.InputManager;
 import IO.XmlUtil;
@@ -52,7 +53,7 @@ public class RemoveGreaterCommand extends Command {
                 if (removedCount == 0) {
                     throw new NoSuchElementException("Нет организаций, больших заданной");
                 }
-            }else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");
         }

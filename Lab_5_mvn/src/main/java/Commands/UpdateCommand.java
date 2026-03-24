@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import Exceptions.InvalidInput;
 import IO.InputManager;
 import IO.XmlUtil;
@@ -57,7 +58,7 @@ public class UpdateCommand extends Command {
                 }
                     invokerFather.getContainer().update(parametrizedOrg, oldOrg);
                     System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
-            } else throw new NullPointerException("Список пуст, не с чем сравнивать");
+            } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");
         }

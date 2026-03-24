@@ -11,7 +11,7 @@ public class RemoveByIDCommand extends Command{
     }
 
     @Override
-    public boolean isValid(InputManager inputManager) throws NullPointerException {
+    public boolean isValid(InputManager inputManager) {
         try {
             getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
             return true;

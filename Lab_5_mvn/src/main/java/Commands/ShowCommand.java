@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import Exceptions.InvalidInput;
 import MainProg.Invoker;
 
@@ -16,9 +17,9 @@ public class ShowCommand extends Command{
     }
 
     @Override
-    public void execute() throws NullPointerException {
+    public void execute() {
         try {
-
+        //todo пофиксить вывод первой строки
         if (isValid(getInvokerFather().getInputManager()) && !getInvokerFather().getContainer().getAll().isEmpty()){
             System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
             for (Object org: getInvokerFather().getContainer().getAll()){
@@ -26,7 +27,7 @@ public class ShowCommand extends Command{
                 System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
             }
         } else {
-            throw new NullPointerException("Пустой контейнер");
+            throw new EmptyContainerException("Пустой контейнер");
         }
         }catch (InvalidInput e){
             System.err.println(e.getMessage());
