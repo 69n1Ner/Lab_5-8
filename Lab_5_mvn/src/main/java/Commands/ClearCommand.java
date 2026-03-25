@@ -1,7 +1,7 @@
 package Commands;
 
 import IO.InputManager;
-import Exceptions.InvalidInput;
+import ExceptionsL5.InvalidInput;
 import MainProg.Invoker;
 
 public class ClearCommand extends Command{

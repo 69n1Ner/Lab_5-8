@@ -1,4 +1,4 @@
-package Exceptions;
+package ExceptionsL5;
 
 public class SameObjectExistsException extends RuntimeException {
     public SameObjectExistsException(String message) {

@@ -1,8 +1,7 @@
 package IO;
 
-import Exceptions.InvalidInput;
-import Exceptions.NoSuchCommandException;
-import Exceptions.NullCommandException;
+import ExceptionsL5.InvalidInput;
+import ExceptionsL5.NullCommandException;
 import MainProg.*;
 import OrganizationObject.*;
 
@@ -21,10 +20,14 @@ public class InputManager {
     private String xmlArgument;
     private BufferedReader br;
     private boolean isScript;
+    private List<Character> asciiChars = new ArrayList<>();
 
     public InputManager(Invoker invoker,boolean isScript) {
         this.invoker = invoker;
         this.isScript = isScript;
+        for (int code = 0; code <= 31; code++) {
+            asciiChars.add((char) code);
+        }
     }
 
 
@@ -34,21 +37,14 @@ public class InputManager {
         if (input == null || input.isEmpty()) {
             throw new NullCommandException("Пустая строка");
         }
-            //Ctrl+D
-        if (input.contains("\u0004") ){
-            throw new NullCommandException(
-                    """
-                            
-                            ░░░░░░░██████╗░███████╗██████╗░░
-                            ░░██╗░░██╔══██╗██╔════╝██╔══██╗░
-                            ██████╗██████╔╝█████╗░░██████╔╝░
-                            ╚═██╔═╝██╔══██╗██╔══╝░░██╔═══╝░░
-                            ░░╚═╝░░██║░░██║███████╗██║░░░░░░
-                            ░░░░░░░╚═╝░░╚═╝╚══════╝╚═╝░░░░░░
-                            """);
+
+
+
+        for (Character asciiChar: asciiChars){
+
             //Ctrl+Z
-        } else if (input.contains("\u001A")){
-            throw new NullCommandException("""
+            if (input.contains("\u001A")){
+                throw new NullCommandException("""
                     
                     /﹋\\
                     (҂`_´)
@@ -56,15 +52,33 @@ public class InputManager {
                     /﹋\\
                     """);
 
-            //Ctrl+C (doesn't catch)
-        } else if (input.contains("\u0003")) {
-            throw new NullCommandException("""
+                //Ctrl+C (doesn't catch)
+            } else if (input.contains(String.valueOf(asciiChar))){
+//            } else if (input.contains("\u0004") ||
+//                    input.contains("\t") ||
+//                    input.contains("\f") ||
+//                    input.contains("\u000B") ||
+//                    input.contains("\u0007")){
+                throw new NullCommandException(
+                        """
+                                
+                                ░░░░░░░██████╗░███████╗██████╗░░
+                                ░░██╗░░██╔══██╗██╔════╝██╔══██╗░
+                                ██████╗██████╔╝█████╗░░██████╔╝░
+                                ╚═██╔═╝██╔══██╗██╔══╝░░██╔═══╝░░
+                                ░░╚═╝░░██║░░██║███████╗██║░░░░░░
+                                ░░░░░░░╚═╝░░╚═╝╚══════╝╚═╝░░░░░░
+                                """);
+            }  else if (input.contains("\u0003")) {
+                throw new NullCommandException("""
                     
                     ▒█░▒█ █▀▀█ ▀█░█▀ █▀▀ 　 █▀▀█ 　 █▀▀▄ ░▀░ █▀▀ █▀▀ 　 █░░░█ █▀▀ █▀▀ █░█ █
                     ▒█▀▀█ █▄▄█ ░█▄█░ █▀▀ 　 █▄▄█ 　 █░░█ ▀█▀ █░░ █▀▀ 　 █▄█▄█ █▀▀ █▀▀ █▀▄ ▀
                     ▒█░▒█ ▀░░▀ ░░▀░░ ▀▀▀ 　 ▀░░▀ 　 ▀░░▀ ▀▀▀ ▀▀▀ ▀▀▀ 　 ░▀░▀░ ▀▀▀ ▀▀▀ ▀░▀ ▄
                     """);
+            }
         }
+
 
         /* todo <ОТВЕРГНУТО> сделать обработку строки с выбором:
             1. если введена строка только с нужным количеством параметров),

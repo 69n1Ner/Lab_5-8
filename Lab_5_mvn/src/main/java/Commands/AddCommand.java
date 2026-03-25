@@ -1,7 +1,7 @@
 package Commands;
 
-import Exceptions.InvalidInput;
-import Exceptions.SameObjectExistsException;
+import ExceptionsL5.InvalidInput;
+import ExceptionsL5.SameObjectExistsException;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.*;
