@@ -3,7 +3,6 @@ package Commands;
 import Exceptions.InvalidInput;
 import MainProg.Invoker;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 
 public class HelpCommand extends Command {

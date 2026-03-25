@@ -1,7 +1,6 @@
 package Commands;
 
-import Exceptions.EmptyContainerException;
-import Exceptions.InvalidInput;
+import Exceptions.*;
 import IO.InputManager;
 import IO.XmlUtil;
 import MainProg.*;
