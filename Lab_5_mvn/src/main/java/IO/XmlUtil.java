@@ -52,7 +52,7 @@ public class XmlUtil {
             JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
-            System.out.println("Загружено из JAR: " + wrapper.getOrganizations().size());
+            System.out.println("Загружено из "+ resourceName +": " + wrapper.getOrganizations().size()+ " организаций");
             return new ArrayList<>(wrapper.getOrganizations());
         } catch (JAXBException e) {
             System.err.println("!! Ошибка парсинга XML: " + e.getMessage()+" !!");
