@@ -1,0 +1,7 @@
+Exceptions\NullCommandException.class
+Exceptions\SameObjectExistsException.class
+Exceptions\RecursionLimitReached.class
+Exceptions\InvalidInput.class
+Exceptions\EmptyContainerException.class
+Exceptions\NoSuchCommandException.class
+Exceptions\NoFileNameException.class

@@ -38,8 +38,7 @@ public class InputManager {
             throw new NullCommandException("Пустая строка");
         }
 
-
-
+        int charNum = 0;
         for (Character asciiChar: asciiChars){
 
             //Ctrl+Z
@@ -54,29 +53,16 @@ public class InputManager {
 
                 //Ctrl+C (doesn't catch)
             } else if (input.contains(String.valueOf(asciiChar))){
-//            } else if (input.contains("\u0004") ||
-//                    input.contains("\t") ||
-//                    input.contains("\f") ||
-//                    input.contains("\u000B") ||
-//                    input.contains("\u0007")){
-                throw new NullCommandException(
-                        """
-                                
-                                ░░░░░░░██████╗░███████╗██████╗░░
-                                ░░██╗░░██╔══██╗██╔════╝██╔══██╗░
-                                ██████╗██████╔╝█████╗░░██████╔╝░
-                                ╚═██╔═╝██╔══██╗██╔══╝░░██╔═══╝░░
-                                ░░╚═╝░░██║░░██║███████╗██║░░░░░░
-                                ░░░░░░░╚═╝░░╚═╝╚══════╝╚═╝░░░░░░
-                                """);
-            }  else if (input.contains("\u0003")) {
-                throw new NullCommandException("""
-                    
-                    ▒█░▒█ █▀▀█ ▀█░█▀ █▀▀ 　 █▀▀█ 　 █▀▀▄ ░▀░ █▀▀ █▀▀ 　 █░░░█ █▀▀ █▀▀ █░█ █
-                    ▒█▀▀█ █▄▄█ ░█▄█░ █▀▀ 　 █▄▄█ 　 █░░█ ▀█▀ █░░ █▀▀ 　 █▄█▄█ █▀▀ █▀▀ █▀▄ ▀
-                    ▒█░▒█ ▀░░▀ ░░▀░░ ▀▀▀ 　 ▀░░▀ 　 ▀░░▀ ▀▀▀ ▀▀▀ ▀▀▀ 　 ░▀░▀░ ▀▀▀ ▀▀▀ ▀░▀ ▄
-                    """);
+                String asciiPrint =Integer.toHexString(charNum);
+                if (asciiPrint.length() == 1){
+                    asciiPrint = "\\u000" + asciiPrint.toUpperCase();
+                } else {
+                    asciiPrint ="\\u00" + asciiPrint.toUpperCase();
+                }
+                throw new NullCommandException("Найден спец символ: "+ asciiPrint);
             }
+
+            ++charNum;
         }
 
 

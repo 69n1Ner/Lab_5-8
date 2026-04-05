@@ -30,10 +30,10 @@ public class Invoker {
     }
 
     public void incrementCurrentRecursion() {
-        if (currentRecursion < recursionLimit) {
+        if (currentRecursion <= recursionLimit) {
             currentRecursion += 1;
         } else {
-            throw new RecursionLimitReached("!! Достигнут предел рекурсии: " + recursionLimit+ " !!");
+            throw new RecursionLimitReached("Достигнут предел рекурсии: " + recursionLimit);
         }
     }
 
