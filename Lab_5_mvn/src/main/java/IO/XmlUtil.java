@@ -1,6 +1,7 @@
 package IO;
 
 
+import Exceptions.XmlUtilException;
 import OrganizationObject.Address;
 import OrganizationObject.Organization;
 import jakarta.xml.bind.JAXBContext;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class XmlUtil {
 
@@ -34,8 +36,8 @@ public class XmlUtil {
             System.out.println("Коллекция записана в файл: " + System.getProperty("user.dir")+"\\"+filename);
 
         } catch (JAXBException e) {
-            System.err.println("Ошибка при записи: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException(Arrays.toString(e.getStackTrace()).replace(",","\n"));
+
         }
     }
 
@@ -44,8 +46,7 @@ public class XmlUtil {
         InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(resourceName);
 
         if (inputStream == null) {
-            System.err.println("!! Коллекция не загружена. Поставьте значение PLAB5_8 = 'initial_collection.xml' !!");
-            return new ArrayList<>();
+            throw new XmlUtilException("Коллекция не загружена. Поставьте значение LAB5_8 = 'initial_collection.xml'");
         }
 
         try {
@@ -55,8 +56,7 @@ public class XmlUtil {
             System.out.println("Загружено из "+ resourceName +": " + wrapper.getOrganizations().size()+ " организаций");
             return new ArrayList<>(wrapper.getOrganizations());
         } catch (JAXBException e) {
-            System.err.println("!! Ошибка парсинга XML: " + e.getMessage()+" !!");
-            return new ArrayList<>();
+            throw new XmlUtilException("Ошибка парсинга XML: " + e.getMessage());
         } finally {
             try {
                 inputStream.close();
@@ -67,8 +67,7 @@ public class XmlUtil {
 
     public static Organization readObjectFromString(String xmlString) {
         if (xmlString == null || xmlString.trim().isEmpty()) {
-            System.err.println("!! Пустая XML-строка !!");
-            return null;
+            throw new XmlUtilException("Пустая XML-строка");
         }
 
         try {
@@ -77,15 +76,13 @@ public class XmlUtil {
             return (Organization) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            System.err.println("!! Ошибка чтения XML"+ e.getMessage()+" !!");;
-            return null;
+            throw new XmlUtilException("Ошибка чтения XML"+ e.getMessage());
         }
     }
 
     public static Address readAddressFromString(String xmlString){
         if (xmlString == null || xmlString.trim().isEmpty()) {
-            System.err.println("!! Пустая XML-строка !!");
-            return null;
+            throw new XmlUtilException("Пустая XML-строка");
         }
 
         try {
@@ -94,8 +91,7 @@ public class XmlUtil {
             return (Address) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            System.err.println("!! Ошибка чтения XML"+ e.getMessage()+" !!");;
-            return null;
+            throw new XmlUtilException("Ошибка чтения XML "+ e.getMessage());
         }
     }
 }

@@ -89,7 +89,7 @@ public class FilterGreaterThanPostalAddress extends Command{
                 }
             }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 

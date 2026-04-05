@@ -34,7 +34,7 @@ public class HelpCommand extends Command {
             System.out.println("-------------------------------------------------------------------------------------");
         }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 

@@ -14,7 +14,6 @@ public class Address implements Comparable {
     private Location town; //Поле не может быть null
 
     public Address(){
-        this.zipCode = "";
     }
 
     public Address(String zipCode, Location town) {

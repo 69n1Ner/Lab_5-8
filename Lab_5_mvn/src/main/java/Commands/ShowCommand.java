@@ -34,7 +34,7 @@ public class ShowCommand extends Command{
             throw new EmptyContainerException("Пустой контейнер");
         }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 }

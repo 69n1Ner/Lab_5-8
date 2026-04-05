@@ -1,2 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<collection/>
+<collection>
+    <organization>
+        <id>1752976856</id>
+        <creation_date>05-04-2026</creation_date>
+        <name>123</name>
+        <type>government</type>
+        <coordinates>
+            <x>123</x>
+            <y>1.0</y>
+        </coordinates>
+        <postal_address>
+            <town>
+                <x>3.0</x>
+                <y>3</y>
+                <z>3</z>
+                <name>3</name>
+            </town>
+        </postal_address>
+        <employees_count>4</employees_count>
+        <annual_turnover>324</annual_turnover>
+    </organization>
+</collection>

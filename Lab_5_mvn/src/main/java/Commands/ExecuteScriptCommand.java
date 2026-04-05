@@ -58,7 +58,7 @@ public class ExecuteScriptCommand extends Command{
                 Main.programExecute(invokerFather,inputMan.getMainArgument());
             }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         } finally {
             decrementCurrentRecursion();
         }

@@ -17,7 +17,7 @@ public class ExitCommand extends Command{
             System.exit(0);
         }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 

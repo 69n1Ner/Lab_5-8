@@ -29,9 +29,8 @@ public class UpdateCommand extends Command {
                     getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
                     return true;
                 } catch (NumberFormatException e) {
-                    System.err.println("Неверно задан id");
+                    throw new InvalidInput("Неверно задан id");
                 }
-                return false;
             }throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
         } return false;
     }
@@ -55,8 +54,10 @@ public class UpdateCommand extends Command {
                     parametrizedOrg = XmlUtil.readObjectFromString(inputMan.getXmlArgument());
                     parametrizedOrg.setId(ID);
                 }
+
                     invokerFather.getContainer().update(parametrizedOrg, oldOrg);
                     System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
+
             } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");

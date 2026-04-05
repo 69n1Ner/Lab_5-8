@@ -23,13 +23,15 @@ public class InfoCommand extends Command{
         try{
 
             if (isValid(inputMan)){
+                System.out.println("-------------------------------------------------------------------------------------");
                 System.out.println("Информация: "+
                         "\n-Тип: "+ Arrays.stream(container.getClass().getDeclaredFields()).findFirst().get().getType().getSimpleName()+
                         "\n-Дата создания: "+container.getCreationDate()+
                         "\n-Количество элементов: "+container.size());
+                System.out.println("-------------------------------------------------------------------------------------");
             }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 

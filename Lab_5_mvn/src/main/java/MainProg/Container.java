@@ -52,7 +52,7 @@ public class Container<T extends Organization> {
         Integer yL = newOrg.getPostalAddress().getTown().getY();
         Integer zL = newOrg.getPostalAddress().getTown().getZ();
         String name = newOrg.getPostalAddress().getTown().getName();
-        if (zip != null && zip.length() < 4){
+        if (zip != null && zip.length() >= 4){
             oldOrg.getPostalAddress().setZipCode(zip);
         }
         if (xL != null){

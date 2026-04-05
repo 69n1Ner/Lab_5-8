@@ -1,7 +1,10 @@
 package Commands;
 
+import Exceptions.InvalidInput;
 import IO.InputManager;
 import MainProg.Invoker;
+
+import java.util.Arrays;
 
 public class RemoveByIDCommand extends Command{
 
@@ -11,24 +14,28 @@ public class RemoveByIDCommand extends Command{
     }
 
     @Override
-    public boolean isValid(InputManager inputManager) {
+    public boolean isValid(InputManager inputManager) throws InvalidInput {
         try {
             getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
             return true;
         } catch (NumberFormatException e) {
-            System.err.println("Неверно задан ID");
+            throw new InvalidInput("Неверно задан ID");
         }
-        return false;
     }
 
     @Override
     public void execute() {
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        if (isValid(inputMan)){
-            invokerFather.getContainer().removeById(Long.parseLong(inputMan.getMainArgument()));
-            System.out.println("~~Организация успешно удалена~~");
+        try {
+            if (isValid(inputMan)){
+                invokerFather.getContainer().removeById(Long.parseLong(inputMan.getMainArgument()));
+                System.out.println("~~Организация успешно удалена~~");
+            }
+        } catch (InvalidInput e){
+            System.err.println("!! "+e.getMessage()+" !!");
         }
+
     }
 
     @Override

@@ -38,9 +38,13 @@ public class Main {
 
         String filePath = System.getenv("LAB5_8");
         if (filePath == null) {
-            System.err.println("Ошибка, невозможно найти переменную окружения LAB5_8. Поставьте значение PLAB5_8 = 'initial_collection.xml'");
+            System.err.println("Ошибка, невозможно найти переменную окружения LAB5_8. Поставьте значение LAB5_8 = 'initial_collection.xml'");
         } else {
+            try{
             container.addList(XmlUtil.readListFromFile(filePath));
+            } catch (XmlUtilException e){
+                System.err.println("!! "+e.getMessage()+" !!");
+            }
         }
 
         programExecute(invoker);
@@ -102,10 +106,10 @@ public class Main {
                      RecursionLimitReached |
                      InvalidInput |
                      EmptyContainerException |
+                     XmlUtilException |
                      NoFileNameException |
                      IOException e) {
                 System.err.println("!! " + e.getMessage() + " !!");
-
 
             } catch (RuntimeException e) {
                 e.printStackTrace();

@@ -22,6 +22,7 @@ D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\Exceptions\NoSuchComm
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\Exceptions\NullCommandException.java
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\Exceptions\RecursionLimitReached.java
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\Exceptions\SameObjectExistsException.java
+D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\Exceptions\XmlUtilException.java
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\IO\ContainerWrapper.java
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\IO\InputManager.java
 D:\ITMO\Programming\1_Course\Lab_5\Lab_5_mvn\src\main\java\IO\LocalDateAdapter.java

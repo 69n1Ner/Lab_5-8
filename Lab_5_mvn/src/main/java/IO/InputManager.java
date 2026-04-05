@@ -187,10 +187,10 @@ public class InputManager {
         Address address = inputAddress();
 
         System.out.print("Введите количество сотрудников");
-        Long employeesCount = getValueOf(Long.class, isUpdate,isUpdate);
+        Long employeesCount = getValueOf(Long.class, isUpdate,true);
 
         System.out.print("Введите годовую выручку");
-        Integer annualTurnover = getValueOf(Integer.class, isUpdate,isUpdate);
+        Integer annualTurnover = getValueOf(Integer.class, isUpdate,true);
 
         Organization organization = new Organization(
                 name,

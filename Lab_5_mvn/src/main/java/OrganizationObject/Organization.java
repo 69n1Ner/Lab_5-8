@@ -50,7 +50,6 @@ public class Organization implements Comparable {
     }
 
     public Organization() {
-        this.name = "";
         this.coordinates = new Coordinates();
         this.postalAddress = new Address();
         this.postalAddress.setTown(new Location());

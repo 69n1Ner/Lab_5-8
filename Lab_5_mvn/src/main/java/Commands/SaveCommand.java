@@ -27,7 +27,7 @@ public class SaveCommand extends Command{
                 SaveCommand.addCounter();
             }
         }catch (InvalidInput e){
-            System.err.println(e.getMessage());
+            System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 

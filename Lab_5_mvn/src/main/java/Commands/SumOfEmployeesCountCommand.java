@@ -1,5 +1,6 @@
 package Commands;
 
+import Exceptions.EmptyContainerException;
 import IO.InputManager;
 import MainProg.Container;
 import Exceptions.InvalidInput;
@@ -23,13 +24,18 @@ public class SumOfEmployeesCountCommand extends Command {
 
             if (isValid(inputManager)){
                 long total= 0;
+                if (!container.getAll().isEmpty()){
                 for (Object org: container.getAll()){
                     total+= ((Organization) org).getEmployeesCount();
                 }
                 System.out.println("Количество сотрудников во всех организациях: "+ total);
+                }
+                else {
+                    throw new EmptyContainerException("Пустой контейнер");
+                }
             }
         }catch (InvalidInput e){
-        System.err.println(e.getMessage());
+        System.err.println("!! "+e.getMessage()+" !!");
         }
     }
 
