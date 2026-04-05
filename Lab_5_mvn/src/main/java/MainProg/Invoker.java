@@ -12,8 +12,6 @@ public class Invoker {
     private HashMap<String , Command> commandHashMap = new HashMap<>();
     private Container container;
     private InputManager inputManager;
-    private final int recursionLimit = 1;
-    private int currentRecursion = 0;
 
     public Invoker(Container container){
         this.container = container;
@@ -21,24 +19,6 @@ public class Invoker {
 
     public void setCommand(Command command){
         this.commandHashMap.put(command.getName(), command);
-    }
-
-    public void decrementCurrentRecursion() {
-        if (currentRecursion > 0) {
-            currentRecursion -= 1;
-        }
-    }
-
-    public void incrementCurrentRecursion() {
-        if (currentRecursion <= recursionLimit) {
-            currentRecursion += 1;
-        } else {
-            throw new RecursionLimitReached("Достигнут предел рекурсии: " + recursionLimit);
-        }
-    }
-
-    public int getCurrentRecursion() {
-        return currentRecursion;
     }
 
     public Command defineCommand(String string, boolean isScript) throws InvalidInput, NoSuchCommandException {

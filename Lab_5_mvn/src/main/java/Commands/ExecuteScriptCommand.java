@@ -10,10 +10,26 @@ import MainProg.Main;
 import java.io.IOException;
 
 public class ExecuteScriptCommand extends Command{
+    private int currentRecursion = 0;
+    private int recursionLimit = 3;
 
     public ExecuteScriptCommand(String name, Invoker invoker) {
         this.setName(name);
         setInvokerFather(invoker);
+    }
+
+    public void decrementCurrentRecursion() {
+        if (currentRecursion > 0) {
+            currentRecursion -= 1;
+        }
+    }
+
+    public void incrementCurrentRecursion() {
+        if (currentRecursion <= recursionLimit) {
+            currentRecursion += 1;
+        } else {
+            throw new RecursionLimitReached("Достигнут предел рекурсии: " + recursionLimit);
+        }
     }
 
     @Override
@@ -30,7 +46,7 @@ public class ExecuteScriptCommand extends Command{
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
         try {
-            invokerFather.incrementCurrentRecursion();
+            incrementCurrentRecursion();
         } catch (RecursionLimitReached r){
             System.err.println(r.getMessage());
             return;
@@ -44,7 +60,7 @@ public class ExecuteScriptCommand extends Command{
         }catch (InvalidInput e){
             System.err.println(e.getMessage());
         } finally {
-            invokerFather.decrementCurrentRecursion();
+            decrementCurrentRecursion();
         }
     }
 

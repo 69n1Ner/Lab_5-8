@@ -116,10 +116,10 @@ public class Container<T extends Organization> {
             System.out.println("Значение координаты X города не было установлено");
         }
         if (yL == null){
-            System.out.println("Значение координаты Y города не было установлено)");
+            System.out.println("Значение координаты Y города не было установлено");
         }
         if (zL == null){
-            System.out.println("Значение координаты Z города не было установлено)");
+            System.out.println("Значение координаты Z города не было установлено");
         }
         if (name.isEmpty()){
             System.out.println("Значение названия города не было установлено");

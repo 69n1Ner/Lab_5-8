@@ -99,6 +99,7 @@ public class Main {
             } catch (NoSuchElementException |
                      NullCommandException |
                      SameObjectExistsException |
+                     RecursionLimitReached |
                      InvalidInput |
                      EmptyContainerException |
                      NoFileNameException |
