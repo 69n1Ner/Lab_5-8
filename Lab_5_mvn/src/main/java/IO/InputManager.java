@@ -184,7 +184,7 @@ public class InputManager {
         Coordinates coordinates = new Coordinates(xC,yC);
 
 
-        Address address = inputAddress();
+        Address address = inputAddress(isUpdate);
 
         System.out.print("Введите количество сотрудников");
         Long employeesCount = getValueOf(Long.class, isUpdate,true);
@@ -204,20 +204,24 @@ public class InputManager {
     }
 
     public Address inputAddress() throws IOException, InvalidInput {
+        return inputAddress(false);
+    }
+
+    public Address inputAddress(boolean isUpdate) throws IOException, InvalidInput {
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
         System.out.println("Введите адрес");
         System.out.print("Почтовый индекс (минимум 4 символа)");
-        String zip = getZipCode();
+        String zip = getZipCode(isUpdate);
         System.out.print("Название города");
-        String city = getValueOf(String.class, false);
+        String city = getValueOf(String.class, isUpdate);
         System.out.print("Координата x");
-        Float xL = getValueOf(Float.class, false);
+        Float xL = getValueOf(Float.class, isUpdate);
         System.out.print("Координата y");
-        Integer yL = getValueOf(Integer.class, false);
+        Integer yL = getValueOf(Integer.class, isUpdate);
         System.out.print("Координата z");
-        Integer zL = getValueOf(Integer.class, false);
+        Integer zL = getValueOf(Integer.class, isUpdate);
 
         return new Address( zip,new Location(city,xL,yL,zL));
     }
@@ -232,33 +236,33 @@ public class InputManager {
         try {
             String sa = separateAttribute(br.readLine());
             if (isValid(sa)) {
-                if (type == String.class){
+                if (type == String.class) {
                     return (T) sa;
                 }
                 var method = type.getMethod("valueOf", String.class);
                 if (type.isEnum()) {
                     return (T) Enum.valueOf((Class<Enum>) type, sa);
                 }
-                Number number = (Number) type.getMethod("valueOf", String.class).invoke(null,sa);
-                if (positive && (number.doubleValue() <= 0)){
+                Number number = (Number) type.getMethod("valueOf", String.class).invoke(null, sa);
+                if (positive && (number.doubleValue() <= 0)) {
                     return null;
                 }
 
                 return (T) method.invoke(null, sa);
             }
+        } catch (InvalidInput e){
+            System.err.println("!! "+e.getMessage()+" !!");
 
         } catch (IllegalArgumentException |
                  InvocationTargetException e){
             return null;
 
-        }
-        catch (IOException |
+        } catch (IOException |
                NoSuchMethodException |
-               IllegalAccessException  e) {
+               IllegalAccessException |
+               RuntimeException e) {
             e.printStackTrace();
 
-        }catch (RuntimeException e){
-            e.printStackTrace();
         }
 
         return null;
@@ -281,7 +285,7 @@ public class InputManager {
         try {
             String sa = separateAttribute(br.readLine());
             if (isValid(sa)) {
-                if (classType == String.class && !sa.isEmpty()){
+                if (classType == String.class && !sa.isEmpty()) {
                     return (T) sa;
                 }
                 var method = classType.getMethod("valueOf", String.class);
@@ -289,18 +293,16 @@ public class InputManager {
                 if (classType.isEnum()) {
                     return (T) Enum.valueOf((Class<Enum>) classType, sa);
                 }
-                Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null,sa);
-                if (positive && (number.doubleValue() <= 0)){
-                    return !isUpdate ? oneMoreTime(classType,true) : null;
+                Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null, sa);
+                if (positive && (number.doubleValue() <= 0)) {
+                    return !isUpdate ? oneMoreTime(classType, true) : null;
                 }
 
                 return (T) method.invoke(null, sa);
             }
 
-        }catch (InvalidInput e) {
-                if (isUpdate) {
-                    return null;
-                }
+        }catch (InvalidInput e){
+            System.err.println("!! "+e.getMessage()+" !!");
 
         } catch (IOException |
                  NullPointerException |
@@ -308,19 +310,20 @@ public class InputManager {
                  IllegalAccessException |
                  InvocationTargetException |
                  IllegalArgumentException e) {
+
             return !isUpdate ? oneMoreTime(classType,positive) : null;
         }
 
         return null;
     }
 
-    private String getZipCode() throws IOException, InvalidInput {
+    private String getZipCode(boolean isUpdate) throws IOException, InvalidInput {
         System.out.println(" [String]");
         String sa = separateAttribute(br.readLine());
         if (isValid(sa) && sa.length() >=4){
             return sa;
         }else{
-            return oneMoreTimeZipCode();
+            return !isUpdate? oneMoreTimeZipCode() : null;
         }
     }
 
