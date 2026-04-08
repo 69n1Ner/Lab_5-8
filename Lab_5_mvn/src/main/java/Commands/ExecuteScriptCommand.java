@@ -1,6 +1,5 @@
 package Commands;
 
-import Exceptions.InvalidInput;
 import Exceptions.NoFileNameException;
 import Exceptions.RecursionLimitReached;
 import IO.InputManager;
@@ -33,7 +32,7 @@ public class ExecuteScriptCommand extends Command{
     }
 
     @Override
-    public boolean isValid(InputManager inputManager) throws InvalidInput {
+    public boolean isValid(InputManager inputManager){
         if (inputManager.getMainArgument() != null){
             return true;
         } else {
@@ -52,16 +51,11 @@ public class ExecuteScriptCommand extends Command{
             return;
         }
 
-        try {
-
             if (isValid(inputMan)){
                 Main.programExecute(invokerFather,inputMan.getMainArgument());
             }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        } finally {
+
             decrementCurrentRecursion();
-        }
     }
 
     @Override
