@@ -1,7 +1,6 @@
 package main;
 
 import commands.Command;
-import exceptions.InvalidInput;
 import exceptions.NoSuchCommandException;
 import io.InputManager;
 import organization.Organization;
@@ -21,7 +20,7 @@ public class Invoker {
         this.commandHashMap.put(command.getName(), command);
     }
 
-    public Command defineCommand(String string, boolean isScript) throws InvalidInput, NoSuchCommandException {
+    public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
         this.inputManager = new InputManager(this, isScript);
         inputManager.separate(string);
         if (inputManager.isValidCommand(inputManager.getCommand())) {

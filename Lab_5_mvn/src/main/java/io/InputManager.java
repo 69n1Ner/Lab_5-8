@@ -1,6 +1,5 @@
 package io;
 
-import exceptions.InvalidInput;
 import exceptions.NullCommandException;
 import main.*;
 import organization.*;
@@ -163,7 +162,7 @@ public class InputManager {
         return input.trim();
     }
 
-    public Organization inputOrganization(boolean isUpdate) throws InvalidInput, IOException {
+    public Organization inputOrganization(boolean isUpdate) throws IOException {
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
@@ -201,11 +200,11 @@ public class InputManager {
         );
     }
 
-    public Address inputAddress() throws IOException, InvalidInput {
+    public Address inputAddress() throws IOException {
         return inputAddress(false);
     }
 
-    public Address inputAddress(boolean isUpdate) throws IOException, InvalidInput {
+    public Address inputAddress(boolean isUpdate) throws IOException {
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
@@ -315,7 +314,7 @@ public class InputManager {
 
     }
 
-    private String getZipCode(boolean isUpdate) throws IOException, InvalidInput {
+    private String getZipCode(boolean isUpdate) throws IOException {
         System.out.println(" [String]");
         String sa = separateAttribute(br.readLine());
         if (isValid(sa) && sa.length() >=4){

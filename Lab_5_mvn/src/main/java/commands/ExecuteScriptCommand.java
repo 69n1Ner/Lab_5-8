@@ -5,8 +5,6 @@ import io.InputManager;
 import main.Invoker;
 import main.Main;
 
-import java.io.IOException;
-
 public class ExecuteScriptCommand extends Command{
     private int currentRecursion = 0;
 

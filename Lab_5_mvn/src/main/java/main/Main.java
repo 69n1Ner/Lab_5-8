@@ -100,15 +100,8 @@ public class Main {
                     System.err.println("!! " + ex.getMessage() + " !!");
                 }
 
-            } catch (NoSuchElementException |
-                     NullCommandException |
-                     SameObjectExistsException |
-                     RecursionLimitReached |
-                     InvalidInput |
-                     EmptyContainerException |
-                     XmlUtilException |
-                     NoFileNameException |
-                     IOException e) {
+            } catch (NoSuchElementException | NullCommandException | SameObjectExistsException | RecursionLimitReached |
+                     EmptyContainerException | XmlUtilException | IOException e) {
                 System.err.println("!! " + e.getMessage() + " !!");
 
             } catch (RuntimeException e) {
