@@ -22,7 +22,7 @@ public class Organization implements Comparable<Object> {
     @XmlElement(name = "type")
     private OrganizationType type; //Поле может быть null
     @XmlElement(name = "coordinates")
-    private Coordinates coordinates; //Поле не может быть null
+    private final Coordinates coordinates; //Поле не может быть null
     @XmlElement(name = "postal_address")
     private Address postalAddress; //Поле не может быть null
     @XmlElement(name = "employees_count")
