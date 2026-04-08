@@ -261,7 +261,7 @@ public class InputManager {
                NoSuchMethodException |
                IllegalAccessException |
                RuntimeException e) {
-            e.printStackTrace();
+            System.out.println(Arrays.toString(e.getStackTrace()));
 
         }
 
