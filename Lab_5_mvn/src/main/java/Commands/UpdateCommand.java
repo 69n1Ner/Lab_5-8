@@ -39,7 +39,7 @@ public class UpdateCommand extends Command {
     public void execute() throws IOException{
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        Container container = invokerFather.getContainer();
+        Container<Organization> container = invokerFather.getContainer();
 
         try {
             if (!container.getAll().isEmpty()) {
