@@ -4,16 +4,16 @@ import OrganizationObject.Organization;
 
 import java.util.Comparator;
 
-public class SortByType implements Comparator {
+public class SortByType implements Comparator<Organization> {
     @Override
-    public int compare(Object o1, Object o2) {
-        if (((Organization) o1).getType() == null && ((Organization) o2).getType() == null){
+    public int compare(Organization o1, Organization o2) {
+        if (o1.getType() == null && o2.getType() == null){
             return 0;
-        } else if (((Organization) o1).getType() != null && ((Organization) o2).getType() == null){
+        } else if (o1.getType() != null && o2.getType() == null){
             return -1;
-        } else if (((Organization) o1).getType() == null && ((Organization) o2).getType() != null) {
+        } else if (o1.getType() == null && o2.getType() != null) {
             return 1;
         }
-        return (((Organization) o1).getType().getName().compareTo(((Organization) o2).getType().getName()));
+        return (o1.getType().getName().compareTo(o2.getType().getName()));
     }
 }
