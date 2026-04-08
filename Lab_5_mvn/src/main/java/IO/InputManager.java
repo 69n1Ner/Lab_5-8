@@ -224,7 +224,7 @@ public class InputManager {
         return new Address( zip,new Location(city,xL,yL,zL));
     }
 
-    private <T> Object oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
+    private <T> Object oneMoreTime(Class<T> type, boolean positive) {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
         if (type.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {

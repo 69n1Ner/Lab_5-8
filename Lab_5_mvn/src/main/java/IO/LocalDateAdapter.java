@@ -6,14 +6,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
-
-    // Формат даты: измените под ваши нужды
-    // "yyyy-MM-dd" — ISO стандарт (2020-02-01)
-    // "dd-MM-yyyy" — ваш формат (01-02-2020)
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     @Override
-    public LocalDate unmarshal(String v) throws Exception {
+    public LocalDate unmarshal(String v) {
         if (v == null || v.isEmpty()) {
             return null;
         }
@@ -26,7 +22,7 @@ public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
     }
 
     @Override
-    public String marshal(LocalDate v) throws Exception {
+    public String marshal(LocalDate v){
         if (v == null) {
             return null;
         }
