@@ -12,7 +12,7 @@ import static java.util.Objects.hash;
 
 
 public class Container<T extends Organization> {
-    private final TreeSet<T> container;
+    private final TreeSet<Organization> container;
     private final LocalDate creationDate;
 
     public Container(){
@@ -131,7 +131,7 @@ public class Container<T extends Organization> {
 
 
     public void add(Organization newOrganization) {
-        this.container.add((T) newOrganization);
+        this.container.add(newOrganization);
     }
 
     public void addList(ArrayList<T> list){
@@ -142,7 +142,7 @@ public class Container<T extends Organization> {
         setParamsTo(parametrizedOrg, oldOrg);
     }
 
-    public List<T> getAll(){
+    public List<Organization> getAll(){
         return new ArrayList<>(container);
     }
 
@@ -151,7 +151,6 @@ public class Container<T extends Organization> {
     }
 
     public void removeById(Long id){
-        //noinspection SuspiciousMethodCalls
         this.container.remove(this.getById(id));
     }
 
