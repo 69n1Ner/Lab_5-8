@@ -5,15 +5,16 @@ import Exceptions.InvalidInput;
 import Exceptions.NoSuchCommandException;
 import Exceptions.RecursionLimitReached;
 import IO.InputManager;
+import OrganizationObject.Organization;
 
 import java.util.HashMap;
 
 public class Invoker {
-    private HashMap<String , Command> commandHashMap = new HashMap<>();
-    private Container container;
+    private final HashMap<String , Command> commandHashMap = new HashMap<>();
+    private final Container<Organization> container;
     private InputManager inputManager;
 
-    public Invoker(Container container){
+    public Invoker(Container<Organization> container){
         this.container = container;
     }
 
