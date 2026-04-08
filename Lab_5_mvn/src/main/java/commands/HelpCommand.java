@@ -20,7 +20,6 @@ public class HelpCommand extends Command {
     @Override
     public void execute(){
 
-        try {
         if (isValid(getInvokerFather().getInputManager())) {
             System.out.println("-------------------------------------------------------------------------------------");
             for (Command command : this.getInvokerFather()
@@ -33,9 +32,7 @@ public class HelpCommand extends Command {
             }
             System.out.println("-------------------------------------------------------------------------------------");
         }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
 

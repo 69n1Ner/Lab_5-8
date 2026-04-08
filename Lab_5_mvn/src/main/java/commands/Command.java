@@ -30,9 +30,10 @@ public abstract class Command {
 
     public abstract String describe();
 
-    public boolean isValid(InputManager inputManager) throws InvalidInput{
+    public boolean isValid(InputManager inputManager){
         if (inputManager.getMainArgument() != null || inputManager.getXmlArgument() != null){
-            throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
+            System.err.println("Команда "+ this.getName() +" не должна иметь параметров");
+            return false;
         }
         return true;
     }

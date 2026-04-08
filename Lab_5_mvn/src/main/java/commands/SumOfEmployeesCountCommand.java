@@ -20,7 +20,6 @@ public class SumOfEmployeesCountCommand extends Command {
         Container<Organization> container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
-        try {
 
             if (isValid(inputManager)){
                 long total= 0;
@@ -34,9 +33,7 @@ public class SumOfEmployeesCountCommand extends Command {
                     throw new EmptyContainerException("Пустой контейнер");
                 }
             }
-        }catch (InvalidInput e){
-        System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
     @Override

@@ -36,7 +36,8 @@ public class ExecuteScriptCommand extends Command{
         if (inputManager.getMainArgument() != null){
             return true;
         } else {
-            throw new NoFileNameException("Нет имени файла");
+            System.err.println("Нет имени файла");
+            return false;
         }
     }
 

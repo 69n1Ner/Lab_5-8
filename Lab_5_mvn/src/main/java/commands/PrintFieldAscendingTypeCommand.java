@@ -23,7 +23,6 @@ public class PrintFieldAscendingTypeCommand extends Command{
         Container<Organization> container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
-        try {
 
             if (isValid(inputManager)){
                 if (!container.getAll().isEmpty()) {
@@ -38,9 +37,7 @@ public class PrintFieldAscendingTypeCommand extends Command{
 
                 } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
             }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
     @Override

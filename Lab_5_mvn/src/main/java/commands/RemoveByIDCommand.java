@@ -12,12 +12,13 @@ public class RemoveByIDCommand extends Command{
     }
 
     @Override
-    public boolean isValid(InputManager inputManager) throws InvalidInput {
+    public boolean isValid(InputManager inputManager) {
         try {
             getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
             return true;
         } catch (NumberFormatException e) {
-            throw new InvalidInput("Неверно задан ID");
+            System.err.println("Неверно задан ID");
+            return false;
         }
     }
 
@@ -25,14 +26,11 @@ public class RemoveByIDCommand extends Command{
     public void execute() {
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
-        try {
             if (isValid(inputMan)){
                 invokerFather.getContainer().removeById(Long.parseLong(inputMan.getMainArgument()));
                 System.out.println("~~Организация успешно удалена~~");
             }
-        } catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
 
     }
 

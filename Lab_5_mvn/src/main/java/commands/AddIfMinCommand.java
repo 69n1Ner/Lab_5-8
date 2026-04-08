@@ -18,13 +18,6 @@ public class AddIfMinCommand extends Command{
         setInvokerFather(invoker);
     }
 
-    @Override
-    public boolean isValid(InputManager inputManager) throws InvalidInput {
-        if (inputManager.getMainArgument() != null){
-            throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
-        }
-        return true;
-    }
 
     @Override
     public void execute() throws IOException {

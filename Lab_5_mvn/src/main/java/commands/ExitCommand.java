@@ -12,13 +12,10 @@ public class ExitCommand extends Command{
 
     @Override
     public void execute(){
-        try {
         if (isValid(getInvokerFather().getInputManager())) {
             System.exit(0);
         }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
     @Override

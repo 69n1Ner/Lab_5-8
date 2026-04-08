@@ -20,8 +20,6 @@ public class InfoCommand extends Command{
         InputManager inputMan = invokerFather.getInputManager();
         Container<Organization> container = invokerFather.getContainer();
 
-        try{
-
             if (isValid(inputMan)){
                 System.out.println("-------------------------------------------------------------------------------------");
                 //noinspection OptionalGetWithoutIsPresent
@@ -31,9 +29,7 @@ public class InfoCommand extends Command{
                         "\n-Количество элементов: "+container.size());
                 System.out.println("-------------------------------------------------------------------------------------");
             }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
     @Override

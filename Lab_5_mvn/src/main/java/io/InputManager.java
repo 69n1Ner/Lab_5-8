@@ -137,15 +137,17 @@ public class InputManager {
             this.mainArgument = wordList.get(1);
         }
     }
-    public boolean isValid(String input) throws InvalidInput {
+    public boolean isValid(String input) {
         String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
         for (int i = 0; i < input.length(); i++) {
             if (specialSymbols.indexOf(input.charAt(i)) != -1) {
-                throw new InvalidInput("Строка содержит недопустимый символ: " + input.charAt(i));
+                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
+                return false;
             }
         }
         if (input.length() > 255) {
-            throw new InvalidInput("Слишком длинная строка! Максимальная длина 255");
+            System.err.println("Слишком длинная строка! Максимальная длина 255");
+            return false;
         }
         return true;
     }
@@ -226,7 +228,7 @@ public class InputManager {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
         if (type.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
-                System.out.println(en.getName());
+                System.out.println(en.name());
             }
         }
 
@@ -247,10 +249,9 @@ public class InputManager {
                 }
 
                 return method.invoke(null, sa);
+            } else{
+                return null;
             }
-        } catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-
         } catch (IllegalArgumentException |
                  InvocationTargetException e){
             return null;
@@ -259,7 +260,7 @@ public class InputManager {
                NoSuchMethodException |
                IllegalAccessException |
                RuntimeException e) {
-            System.out.println(Arrays.toString(e.getStackTrace()));
+            System.out.println(Arrays.toString(e.getStackTrace()) + e.getMessage());
 
         }
 
@@ -268,7 +269,7 @@ public class InputManager {
 
 
 
-    private <T> Object getValueOf(Class<T> classType, boolean isUpdate) throws InvalidInput {
+    private <T> Object getValueOf(Class<T> classType, boolean isUpdate){
         return getValueOf(classType,isUpdate,false);
     }
 
@@ -298,10 +299,9 @@ public class InputManager {
                 }
 
                 return method.invoke(null, sa);
+            } else {
+                return !isUpdate ? oneMoreTime(classType,positive) : null;
             }
-
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
 
         } catch (IOException |
                  NullPointerException |
@@ -313,7 +313,6 @@ public class InputManager {
             return !isUpdate ? oneMoreTime(classType,positive) : null;
         }
 
-        return null;
     }
 
     private String getZipCode(boolean isUpdate) throws IOException, InvalidInput {

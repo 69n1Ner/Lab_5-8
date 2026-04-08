@@ -20,15 +20,12 @@ public class SaveCommand extends Command{
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
 
-        try {
 
             if (isValid(inputMan)){
                 XmlUtil.writeListToFile((ArrayList<Organization>) invokerFather.getContainer().getAll(),"collection"+getCounter()+".xml");
                 SaveCommand.addCounter();
             }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 
     @Override

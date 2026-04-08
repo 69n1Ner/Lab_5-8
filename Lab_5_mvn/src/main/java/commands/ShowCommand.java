@@ -18,7 +18,6 @@ public class ShowCommand extends Command{
 
     @Override
     public void execute() {
-        try {
         //todo пофиксить вывод первой строки
         if (isValid(getInvokerFather().getInputManager()) && !getInvokerFather().getContainer().getAll().isEmpty()){
             boolean hatFlag = true;
@@ -33,8 +32,6 @@ public class ShowCommand extends Command{
         } else {
             throw new EmptyContainerException("Пустой контейнер");
         }
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
-        }
+
     }
 }
