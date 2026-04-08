@@ -10,16 +10,13 @@ import java.util.List;
 public class ContainerWrapper {
 
     @XmlElement(name = "organization")
-    private List<Organization> organizations;
+    private final List<Organization> organizations;
 
     public ContainerWrapper() {
         this.organizations = new ArrayList<>();
     }
 
-    // Конструктор для удобства
-    public ContainerWrapper(List<Organization> organizations) {
-        this.organizations = organizations != null ? organizations : new ArrayList<>();
-    }
+
 
     public List<Organization> getOrganizations() {
         return organizations;

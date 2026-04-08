@@ -40,12 +40,5 @@ public class Coordinates {
         this.y = y;
     }
 
-    public void setY(String  y) {
-        this.y = Double.parseDouble(y);
-    }
 
-    public void setX(String  x) {
-        Long tmpX = Long.parseLong(x);
-        this.x = tmpX <= 623 ? tmpX : 623;
-    }
 }
