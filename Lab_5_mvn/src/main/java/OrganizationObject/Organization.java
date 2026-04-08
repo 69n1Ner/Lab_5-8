@@ -147,10 +147,6 @@ public class Organization implements Comparable<Object> {
         return coordinates;
     }
 
-    public void setCoordinates(Coordinates coordinates) {
-        this.coordinates = coordinates;
-    }
-
     public int getAnnualTurnover() {
         return annualTurnover;
     }
