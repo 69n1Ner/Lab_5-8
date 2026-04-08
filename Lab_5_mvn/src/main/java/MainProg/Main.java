@@ -112,7 +112,7 @@ public class Main {
                 System.err.println("!! " + e.getMessage() + " !!");
 
             } catch (RuntimeException e) {
-                e.printStackTrace();
+                System.out.println(Arrays.toString(e.getStackTrace()));
             }
         }
     }
