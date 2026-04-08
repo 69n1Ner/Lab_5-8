@@ -4,8 +4,6 @@ import Exceptions.InvalidInput;
 import IO.InputManager;
 import MainProg.Invoker;
 
-import java.util.Arrays;
-
 public class RemoveByIDCommand extends Command{
 
     public RemoveByIDCommand(String name, Invoker invoker){
