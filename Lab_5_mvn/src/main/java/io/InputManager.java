@@ -272,7 +272,7 @@ public class InputManager {
         return getValueOf(classType,isUpdate,false);
     }
 
-    private <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive) throws InvalidInput {
+    private <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive){
         System.out.println(" [" + classType.getSimpleName() + "]");
         if (classType.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
