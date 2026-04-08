@@ -9,7 +9,6 @@ import OrganizationObject.Address;
 import OrganizationObject.Organization;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class FilterGreaterThanPostalAddress extends Command{
@@ -33,7 +32,7 @@ public class FilterGreaterThanPostalAddress extends Command{
     @Override
     public void execute() throws IOException{
         Invoker invokerFather = getInvokerFather();
-        Container container = invokerFather.getContainer();
+        Container<Organization> container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
         try {
@@ -51,23 +50,17 @@ public class FilterGreaterThanPostalAddress extends Command{
                 organization.setPostalAddress(address);
                 Address addr1 = organization.getPostalAddress();
 
-                Iterator<Organization> iterator = container.getAll().iterator();
+                var iterator = container.getAll().iterator();
                 int showedCount = 0;
 
                 boolean hatFlag = true;
                 boolean printThis = false;
-                boolean printAll = false;
-
-                if (addr1.getZipCode() == null){
-                    printAll = true;
-                }
+                boolean printAll = addr1.getZipCode() == null;
 
                 while (iterator.hasNext()) {
-                    Organization org = iterator.next();
+                    Organization org = (Organization) iterator.next();
                     Address addr = org.getPostalAddress();
-                    if (addr != null && addr.getZipCode() != null &&
-                            addr1 != null && addr1.getZipCode() != null &&
-                            addr.compareTo(addr1) > 0) {
+                    if (addr != null && addr.getZipCode() != null && addr1.getZipCode() != null && addr.compareTo(addr1) > 0) {
                         printThis = true;
                     }
                     if (printThis || printAll) {
