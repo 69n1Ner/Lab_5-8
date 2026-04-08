@@ -1,7 +1,6 @@
 package commands;
 
 import exceptions.EmptyContainerException;
-import exceptions.InvalidInput;
 import main.Invoker;
 
 public class ShowCommand extends Command{

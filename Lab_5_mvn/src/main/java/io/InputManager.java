@@ -152,7 +152,7 @@ public class InputManager {
         return true;
     }
 
-    public boolean isValidCommand(String command) throws InvalidInput {
+    public boolean isValidCommand(String command) {
         if (!invoker.contains(command)) {
             return false;
         }
@@ -325,7 +325,7 @@ public class InputManager {
         }
     }
 
-    private String oneMoreTimeZipCode() throws IOException, InvalidInput {
+    private String oneMoreTimeZipCode() throws IOException {
         System.out.println("Введите еще раз " + "[String]");
         String sa = separateAttribute(br.readLine());
         if (isValid(sa) && sa.length() >=4){

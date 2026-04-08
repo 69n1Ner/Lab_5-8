@@ -1,6 +1,5 @@
 package commands;
 
-import exceptions.NoFileNameException;
 import exceptions.RecursionLimitReached;
 import io.InputManager;
 import main.Invoker;
@@ -42,7 +41,7 @@ public class ExecuteScriptCommand extends Command{
     }
 
     @Override
-    public void execute() throws IOException {
+    public void execute() {
         Invoker invokerFather = getInvokerFather();
         InputManager inputMan = invokerFather.getInputManager();
         try {

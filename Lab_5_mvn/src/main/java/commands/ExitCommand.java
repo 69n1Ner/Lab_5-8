@@ -1,6 +1,5 @@
 package commands;
 
-import exceptions.InvalidInput;
 import main.Invoker;
 
 public class ExitCommand extends Command{
