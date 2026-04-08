@@ -339,11 +339,7 @@ public class InputManager {
     }
 
 
-    public void clear() {
-        this.command = null;
-        this.mainArgument = null;
-        this.xmlArgument = null;
-    }
+
 
     public String getMainArgument() {
         return mainArgument;
@@ -357,9 +353,7 @@ public class InputManager {
         return command;
     }
 
-    public Invoker getInvoker() {
-        return invoker;
-    }
+
 
     public boolean isScript() {
         return isScript;
