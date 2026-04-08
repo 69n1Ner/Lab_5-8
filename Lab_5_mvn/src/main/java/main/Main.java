@@ -118,35 +118,3 @@ public class Main {
     }
 }
 
-//class lab_5to8.Invoker {
-//    private Map<String, lab_5to8.HelpCommand> commandMap = new  HashMap();
-//
-//    public void registerCommand(String string,lab_5to8.HelpCommand helpCommand){
-//
-//    }
-//}
-
-// lab_5to8.Main
-// lab_5to8.Invoker (вызов команд)
-// Command (пусть интерфейс, Add, Help...)
-// FileProducer, FileValidator(считывание можно через библу, но нельзя валидировать), FileUploader
-// Validation
-// Model (Cords, lab_5to8.Organization...)
-//
-
-/// ///HELP
-// 1 Вывести меню действий
-// 2 Ввод пользователя
-// 3 Обработка (валидация) ввода пользователя
-// -- Создать объект команды (?)
-// -- вероятно (!) поместить в список истории команд
-
-// 4 (команда верная) -->
-//
-//                      -- Ввод name-a
-//                                          --> корректно
-//                      -- Исполнить результат
-//                                          --> некорректно
-//                      -- Выводим ошибку (ошибку лучше хранить в файле)
-
-/// ///
