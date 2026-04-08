@@ -45,23 +45,21 @@ public class XmlUtil {
     public static ArrayList<Organization> readListFromFile(String resourceName) {
         InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(resourceName);
 
-        if (inputStream == null) {
-            throw new XmlUtilException("Коллекция не загружена. Поставьте значение LAB5_8 = 'initial_collection.xml'");
-        }
-
-        try {
-            JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
-            ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
-            System.out.println("Загружено из "+ resourceName +": " + wrapper.getOrganizations().size()+ " организаций");
-            return new ArrayList<>(wrapper.getOrganizations());
-        } catch (JAXBException e) {
-            throw new XmlUtilException("Ошибка парсинга XML: " + e.getMessage());
-        } finally {
+        try (inputStream) {
             try {
-                inputStream.close();
-            } catch (IOException e) {
+                if (inputStream == null) {
+                    throw new XmlUtilException("Коллекция не загружена. Поставьте значение LAB5_8 = 'initial_collection.xml'");
+                }
+                JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
+                Unmarshaller unmarshaller = context.createUnmarshaller();
+                ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
+                System.out.println("Загружено из " + resourceName + ": " + wrapper.getOrganizations().size() + " организаций");
+                return new ArrayList<>(wrapper.getOrganizations());
+            } catch (JAXBException e) {
+                throw new XmlUtilException("Ошибка парсинга XML: " + e.getMessage());
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
