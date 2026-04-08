@@ -17,7 +17,7 @@ public class SumOfEmployeesCountCommand extends Command {
     @Override
     public void execute() {
         Invoker invokerFather = getInvokerFather();
-        Container container = invokerFather.getContainer();
+        Container<Organization> container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
         try {
