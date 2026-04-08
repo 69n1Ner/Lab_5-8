@@ -77,9 +77,7 @@ public class FilterGreaterThanPostalAddress extends Command{
                 }
 
 
-                if (showedCount == 0) {
-                    throw new NoSuchElementException("Нет организаций, с большим адресом");
-                }
+                if (showedCount == 0) throw new NoSuchElementException("Нет организаций, с большим адресом");
             }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
         }catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");

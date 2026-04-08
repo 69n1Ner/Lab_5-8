@@ -37,6 +37,7 @@ public abstract class Command {
         return true;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isValidForScript(InputManager inputManager) throws InvalidInput{
         if (inputManager.getMainArgument() == null){
             if (inputManager.isScript()){

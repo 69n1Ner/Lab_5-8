@@ -16,7 +16,7 @@ import static java.util.Objects.checkFromToIndex;
 
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Organization implements Comparable {
+public class Organization implements Comparable<Object> {
     @XmlElement(name = "id")
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     @XmlElement(name = "creation_date")
@@ -175,10 +175,7 @@ public class Organization implements Comparable {
             if (C1!= 0){
                 return C1;
             }
-            if (C2 != 0){
-                return C2;
-            }
-            return 0;
+            return C2;
         }
 
     }

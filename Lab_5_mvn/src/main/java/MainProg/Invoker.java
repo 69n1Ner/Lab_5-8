@@ -32,10 +32,7 @@ public class Invoker {
 
 
     public boolean contains(String command){
-        if (this.commandHashMap.get(command) != null){
-            return true;
-        }
-        return false;
+        return this.commandHashMap.get(command) != null;
     }
 
     public HashMap<String , Command> allCommands(){
