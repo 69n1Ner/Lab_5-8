@@ -11,7 +11,7 @@ public enum OrganizationType {
     @XmlEnumValue("open_joint_stock_company")
     OPEN_JOINT_STOCK_COMPANY("Открытая совместная складская");
 
-    private String name;
+    private final String name;
 
     OrganizationType(String name){
         this.name = name;
