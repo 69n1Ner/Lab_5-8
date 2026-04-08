@@ -1,8 +1,6 @@
 package MainProg;
 
-import OrganizationObject.Address;
 import OrganizationObject.Organization;
-import OrganizationObject.OrganizationType;
 import Sorts.SortById;
 
 import java.time.LocalDate;
@@ -35,7 +33,7 @@ public class Container<T extends Organization> {
 
     private void setParamsTo(Organization newOrg,Organization oldOrg){
         oldOrg.setAnnualTurnover(newOrg.getAnnualTurnover() > 0 ? newOrg.getAnnualTurnover() : oldOrg.getAnnualTurnover());
-        Long xC = newOrg.getCoordinates().getX();
+        long xC = newOrg.getCoordinates().getX();
         Double yC = newOrg.getCoordinates().getY();
         if (xC != 0){
             oldOrg.getCoordinates().setX(xC);
@@ -83,7 +81,7 @@ public class Container<T extends Organization> {
             System.out.println("Значение годовой выручки не было установлено");
         }
 
-        Long xC = organization.getCoordinates().getX();
+        long xC = organization.getCoordinates().getX();
         Double yC = organization.getCoordinates().getY();
         if (xC == 0){
             System.out.println("Значение координаты X организации не было установлено");
@@ -132,8 +130,8 @@ public class Container<T extends Organization> {
     }
 
 
-    public void add(T newOrganization) {
-        this.container.add(newOrganization);
+    public void add(Organization newOrganization) {
+        this.container.add((T) newOrganization);
     }
 
     public void addList(ArrayList<T> list){
@@ -153,6 +151,7 @@ public class Container<T extends Organization> {
     }
 
     public void removeById(Long id){
+        //noinspection SuspiciousMethodCalls
         this.container.remove(this.getById(id));
     }
 
