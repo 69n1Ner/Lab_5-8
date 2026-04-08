@@ -14,13 +14,13 @@ import java.util.*;
 import static java.lang.Math.abs;
 
 public class InputManager {
-    private Invoker invoker;
+    private final Invoker invoker;
     private String command;
     private String mainArgument;
     private String xmlArgument;
     private BufferedReader br;
     private boolean isScript;
-    private List<Character> asciiChars = new ArrayList<>();
+    private final List<Character> asciiChars = new ArrayList<>();
 
     public InputManager(Invoker invoker,boolean isScript) {
         this.invoker = invoker;
