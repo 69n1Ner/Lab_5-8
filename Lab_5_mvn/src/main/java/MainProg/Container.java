@@ -14,8 +14,8 @@ import static java.util.Objects.hash;
 
 
 public class Container<T extends Organization> {
-    private TreeSet<T> container;
-    private LocalDate creationDate;
+    private final TreeSet<T> container;
+    private final LocalDate creationDate;
 
     public Container(){
         this.creationDate = LocalDate.now();
