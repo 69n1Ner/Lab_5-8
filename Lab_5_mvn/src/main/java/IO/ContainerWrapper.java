@@ -25,7 +25,4 @@ public class ContainerWrapper {
         return organizations;
     }
 
-    public void setOrganizations(List<Organization> organizations) {
-        this.organizations = organizations;
-    }
 }
