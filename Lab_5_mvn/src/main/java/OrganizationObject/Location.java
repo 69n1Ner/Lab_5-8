@@ -70,15 +70,5 @@ public class Location {
         this.z = z;
     }
 
-    public void setX(String  x) throws NumberFormatException{
-        this.x = Float.parseFloat(x);
-    }
 
-    public void setY(String  y) throws NumberFormatException{
-        this.y = Integer.parseInt(y);
-    }
-
-    public void setZ(String  z) throws NumberFormatException{
-        this.z = Integer.parseInt(z);
-    }
 }
