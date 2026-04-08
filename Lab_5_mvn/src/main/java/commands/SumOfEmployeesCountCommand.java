@@ -25,8 +25,8 @@ public class SumOfEmployeesCountCommand extends Command {
             if (isValid(inputManager)){
                 long total= 0;
                 if (!container.getAll().isEmpty()){
-                for (Object org: container.getAll()){
-                    total+= ((Organization) org).getEmployeesCount();
+                for (Organization org: container.getAll()){
+                    total+= org.getEmployeesCount();
                 }
                 System.out.println("Количество сотрудников во всех организациях: "+ total);
                 }
