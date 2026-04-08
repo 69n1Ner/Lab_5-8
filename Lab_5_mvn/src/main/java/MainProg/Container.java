@@ -131,17 +131,6 @@ public class Container<T extends Organization> {
         return organization;
     }
 
-//    public Address generateAddress(Address address){
-//
-//        String zip = address.getZipCode();
-//        if (zip == null) {
-//            System.out.println("ZIP "+zip);
-//            address.setZipCode("");
-//            System.out.println("NZIP "+ address.getZipCode());
-//        }
-//        return address;
-//    }
-
 
     public void add(T newOrganization) {
         this.container.add(newOrganization);
@@ -167,49 +156,7 @@ public class Container<T extends Organization> {
         this.container.remove(this.getById(id));
     }
 
-//    public void removeGreaterOrganizations(Organization organization) throws NoSuchElementException{
-//        Iterator<T> iterator = container.iterator();
-//        int removedCount = 0;
-//
-//        while (iterator.hasNext()) {
-//            T org = iterator.next();
-//            if (org.compareTo(organization) > 0) {
-//                iterator.remove();
-//                System.out.println("Организация с ID " + org.getId() + " удалена");
-//                removedCount++;
-//            }
-//        }
-//
-//        if (removedCount == 0) {
-//            throw new  NoSuchElementException("Нет организаций, больших заданной");
-//        }
-//    }
 
-//    public void removeLowerOrganizations(Organization organization){
-//        Iterator<T> iterator = container.iterator();
-//        int removedCount = 0;
-//
-//        while (iterator.hasNext()) {
-//            T org = iterator.next();
-//            if (org.compareTo(organization) < 0) {
-//                iterator.remove();
-//                System.out.println("Организация с ID " + org.getId() + " удалена");
-//                removedCount++;
-//            }
-//        }
-//
-//        if (removedCount == 0) {
-//            throw new  NoSuchElementException("Нет организаций, меньше заданной");
-//        }
-//    }
-
-//    public void sumOfEmployeesOfAll(){
-//        long total= 0;
-//        for (Organization org:container){
-//            total+= org.getEmployeesCount();
-//        }
-//        System.out.println("Количество сотрудников во всех организациях: "+ total);
-//    }
 
     public void clear(){
         this.container.clear();
