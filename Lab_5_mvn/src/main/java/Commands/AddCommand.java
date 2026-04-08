@@ -20,7 +20,7 @@ public class AddCommand extends Command {
     @Override
     public void execute() throws IOException {
         Invoker invokerFather = getInvokerFather();
-        Container container = invokerFather.getContainer();
+        Container<Organization> container =  invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
         try {

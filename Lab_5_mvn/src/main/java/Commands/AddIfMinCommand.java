@@ -9,7 +9,6 @@ import MainProg.*;
 import OrganizationObject.Organization;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.NoSuchElementException;
 
 public class AddIfMinCommand extends Command{
@@ -30,7 +29,7 @@ public class AddIfMinCommand extends Command{
     @Override
     public void execute() throws IOException {
         Invoker invokerFather = getInvokerFather();
-        Container container = invokerFather.getContainer();
+        Container<Organization> container = invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();
 
         try {
@@ -47,16 +46,20 @@ public class AddIfMinCommand extends Command{
                     throw new SameObjectExistsException("Такой объект уже есть");
                 } catch (NoSuchElementException e) {
 
-                    Organization minOrg = (Organization) container
-                            .getAll().stream()
-                            .min(Comparator.naturalOrder())
-                            .orElse(null);
+                    boolean seen = false;
+                    Organization best = null;
+                    for (Organization organization : container
+                            .getAll()) {
+                        if (!seen || organization.compareTo(best) < 0) {
+                            seen = true;
+                            best = organization;
+                        }
+                    }
+                    Organization minOrg = seen ? best : null;
 
-                    if (minOrg.compareTo(newOrganization) > 0) {
+                    if (minOrg != null && minOrg.compareTo(newOrganization) > 0) {
                         container.add(container.generateFields(newOrganization, false));
                         System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
-                    } else {
-                        throw new NoSuchElementException("Нет организаций, меньше заданной");
                     }
                 }
             } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");

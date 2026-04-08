@@ -3,7 +3,6 @@ package MainProg;
 import Commands.Command;
 import Exceptions.InvalidInput;
 import Exceptions.NoSuchCommandException;
-import Exceptions.RecursionLimitReached;
 import IO.InputManager;
 import OrganizationObject.Organization;
 
@@ -47,7 +46,7 @@ public class Invoker {
         return this.inputManager;
     }
 
-    public Container getContainer() {
+    public Container<Organization> getContainer() {
         return container;
     }
 }
