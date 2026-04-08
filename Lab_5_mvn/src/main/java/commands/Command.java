@@ -38,14 +38,13 @@ public abstract class Command {
         return true;
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean isValidForScript(InputManager inputManager) throws InvalidInput{
+    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput{
         if (inputManager.getMainArgument() == null){
             if (inputManager.isScript()){
                 if (inputManager.getXmlArgument() != null) {
-                    return isXmlHasIdAndDate(inputManager);
+                    return !isXmlHasIdAndDate(inputManager);
                 } throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
-            } return false;
+            } return true;
         } throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
     }
 

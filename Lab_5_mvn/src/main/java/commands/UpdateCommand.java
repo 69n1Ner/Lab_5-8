@@ -22,17 +22,17 @@ public class UpdateCommand extends Command {
 
 
     @Override
-    public boolean isValidForScript(InputManager inputManager) throws InvalidInput{
+    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput{
         if (inputManager.isScript()){
             if (inputManager.getXmlArgument() != null) {
                 try {
                     getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
-                    return true;
+                    return false;
                 } catch (NumberFormatException e) {
                     throw new InvalidInput("Неверно задан id");
                 }
             }throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
-        } return false;
+        } return true;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class UpdateCommand extends Command {
             if (!container.getAll().isEmpty()) {
                 Organization oldOrg;
                 Organization parametrizedOrg;
-                if (!isValidForScript(inputMan)) {
+                if (isNotValidForScript(inputMan)) {
                     oldOrg = invokerFather.getContainer().getById(Long.parseLong(inputMan.getMainArgument()));
                     parametrizedOrg = inputMan.inputOrganization(true);
                 }else {

@@ -28,7 +28,7 @@ public class AddIfMinCommand extends Command{
         try {
             if (!container.getAll().isEmpty()) {
                 Organization newOrganization;
-                if (!isValidForScript(inputManager)) {
+                if (isNotValidForScript(inputManager)) {
                     newOrganization = inputManager.inputOrganization(false);
                 } else {
                     newOrganization = XmlUtil.readObjectFromString(inputManager.getXmlArgument());

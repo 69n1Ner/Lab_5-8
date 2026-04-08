@@ -25,7 +25,7 @@ public class AddCommand extends Command {
 
         try {
 
-            if (!isValidForScript(inputManager)) {
+            if (isNotValidForScript(inputManager)) {
 
                 Organization newOrganization = inputManager.inputOrganization(false);
                 try {

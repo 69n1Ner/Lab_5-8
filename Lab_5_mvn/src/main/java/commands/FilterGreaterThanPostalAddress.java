@@ -19,13 +19,13 @@ public class FilterGreaterThanPostalAddress extends Command{
     }
 
     @Override
-    public boolean isValidForScript(InputManager inputManager) throws InvalidInput {
+    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput {
         if (inputManager.getMainArgument() == null){
             if (inputManager.isScript()){
                 if (inputManager.getXmlArgument() != null) {
-                    return true;
+                    return false;
                 } throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
-            } return false;
+            } return true;
         } throw new InvalidInput("Команда "+ this.getName() +" не должна иметь параметров");
     }
 
@@ -38,7 +38,7 @@ public class FilterGreaterThanPostalAddress extends Command{
         try {
             if (!container.getAll().isEmpty()) {
                 Address address;
-                if (!isValidForScript(inputManager)) {
+                if (isNotValidForScript(inputManager)) {
 
                     address = inputManager.inputAddress();
                 }else {

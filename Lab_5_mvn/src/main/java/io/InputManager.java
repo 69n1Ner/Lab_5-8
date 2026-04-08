@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 
@@ -170,7 +171,7 @@ public class InputManager {
         String name = getValueOf(String.class, isUpdate).toString();
 
         System.out.print("Введите тип организации");
-        OrganizationType type = (OrganizationType) getValueOf(OrganizationType.class, isUpdate);
+        OrganizationType type = (OrganizationType) getOrganizationType(isUpdate,false);
 
         System.out.println("Введите координаты организации");
         //todo недоработка
@@ -225,11 +226,6 @@ public class InputManager {
 
     private <T> Object oneMoreTime(Class<T> type, boolean positive) {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
-        if (type.isEnum()) {
-            for (OrganizationType en: OrganizationType.values()) {
-                System.out.println(en.name());
-            }
-        }
 
         try {
             String sa = separateAttribute(br.readLine());
@@ -237,11 +233,8 @@ public class InputManager {
                 if (type == String.class) {
                     return sa;
                 }
-                var method = type.getMethod("valueOf", String.class);
-                if (type.isEnum()) {
-                    //noinspection unchecked,rawtypes
-                    return Enum.valueOf((Class<Enum>) type, sa);
-                }
+                Method method = type.getMethod("valueOf", String.class);
+
                 Number number = (Number) type.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
                     return null;
@@ -274,11 +267,7 @@ public class InputManager {
 
     private <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive){
         System.out.println(" [" + classType.getSimpleName() + "]");
-        if (classType.isEnum()) {
-            for (OrganizationType en: OrganizationType.values()) {
-                System.out.println(en.name());
-            }
-        }
+
 
         try {
             String sa = separateAttribute(br.readLine());
@@ -286,12 +275,8 @@ public class InputManager {
                 if (classType == String.class && !sa.isEmpty()) {
                     return sa;
                 }
-                var method = classType.getMethod("valueOf", String.class);
+                Method method = classType.getMethod("valueOf", String.class);
 
-                if (classType.isEnum()) {
-                    //noinspection unchecked,rawtypes
-                    return Enum.valueOf((Class<Enum>) classType, sa);
-                }
                 Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
                     return !isUpdate ? oneMoreTime(classType, true) : null;
@@ -312,6 +297,27 @@ public class InputManager {
             return !isUpdate ? oneMoreTime(classType,positive) : null;
         }
 
+    }
+
+    private Object getOrganizationType(boolean isUpdate, boolean isOMT) throws IOException {
+        if (isOMT){
+            System.out.println("Введите еще раз");
+        }else {
+            System.out.println();
+        }
+        Arrays.stream(OrganizationType.values()).forEach(e -> System.out.println(e.name()));
+        String sa = separateAttribute(br.readLine());
+        if (isValid(sa)){
+            try{
+                return OrganizationType.valueOf(sa);
+            } catch (IllegalArgumentException e){
+                if (isOMT){
+                    return null;
+                } else {
+                    return !isUpdate ? getOrganizationType(false,true) : null;
+                }
+            }
+        } return !isUpdate ? getOrganizationType(false,true) : null;
     }
 
     private String getZipCode(boolean isUpdate) throws IOException {
