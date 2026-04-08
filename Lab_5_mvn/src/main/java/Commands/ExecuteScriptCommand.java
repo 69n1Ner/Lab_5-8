@@ -11,7 +11,6 @@ import java.io.IOException;
 
 public class ExecuteScriptCommand extends Command{
     private int currentRecursion = 0;
-    private int recursionLimit = 3;
 
     public ExecuteScriptCommand(String name, Invoker invoker) {
         this.setName(name);
@@ -25,6 +24,7 @@ public class ExecuteScriptCommand extends Command{
     }
 
     public void incrementCurrentRecursion() {
+        int recursionLimit = 3;
         if (currentRecursion <= recursionLimit) {
             currentRecursion += 1;
         } else {
