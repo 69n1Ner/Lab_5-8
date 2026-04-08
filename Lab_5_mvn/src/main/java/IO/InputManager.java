@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-import static java.lang.Math.abs;
 
 public class InputManager {
     private final Invoker invoker;
@@ -169,30 +168,30 @@ public class InputManager {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
         System.out.print("Введите название организации");
-        String name = getValueOf(String.class, isUpdate);
+        String name = getValueOf(String.class, isUpdate).toString();
 
         System.out.print("Введите тип организации");
-        OrganizationType type = getValueOf(OrganizationType.class, isUpdate);
+        OrganizationType type = (OrganizationType) getValueOf(OrganizationType.class, isUpdate);
 
         System.out.println("Введите координаты организации");
         //todo недоработка
         System.out.print("Координата x (максимум 623)");
-        Long xC = getValueOf(Long.class, isUpdate);
+        Long xC = (Long) getValueOf(Long.class, isUpdate);
 
         System.out.print("Координата y");
-        Double yC = getValueOf(Double.class, isUpdate);
+        Double yC = (Double) getValueOf(Double.class, isUpdate);
         Coordinates coordinates = new Coordinates(xC,yC);
 
 
         Address address = inputAddress(isUpdate);
 
         System.out.print("Введите количество сотрудников");
-        Long employeesCount = getValueOf(Long.class, isUpdate,true);
+        Long employeesCount = (Long) getValueOf(Long.class, isUpdate,true);
 
         System.out.print("Введите годовую выручку");
-        Integer annualTurnover = getValueOf(Integer.class, isUpdate,true);
+        Integer annualTurnover = (Integer) getValueOf(Integer.class, isUpdate,true);
 
-        Organization organization = new Organization(
+        return new Organization(
                 name,
                 annualTurnover,
                 coordinates,
@@ -200,7 +199,6 @@ public class InputManager {
                 address,
                 type
         );
-        return organization;
     }
 
     public Address inputAddress() throws IOException, InvalidInput {
@@ -215,21 +213,22 @@ public class InputManager {
         System.out.print("Почтовый индекс (минимум 4 символа)");
         String zip = getZipCode(isUpdate);
         System.out.print("Название города");
-        String city = getValueOf(String.class, isUpdate);
+        String city = getValueOf(String.class, isUpdate).toString();
         System.out.print("Координата x");
-        Float xL = getValueOf(Float.class, isUpdate);
+        Float xL = (Float) getValueOf(Float.class, isUpdate);
         System.out.print("Координата y");
-        Integer yL = getValueOf(Integer.class, isUpdate);
+        Integer yL = (Integer) getValueOf(Integer.class, isUpdate);
         System.out.print("Координата z");
-        Integer zL = getValueOf(Integer.class, isUpdate);
+        Integer zL = (Integer) getValueOf(Integer.class, isUpdate);
 
         return new Address( zip,new Location(city,xL,yL,zL));
     }
 
-    private <T> T oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
+    private <T> Object oneMoreTime(Class<T> type, boolean positive) throws InvalidInput {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
         if (type.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
+                System.out.println(en.getName());
             }
         }
 
@@ -237,18 +236,19 @@ public class InputManager {
             String sa = separateAttribute(br.readLine());
             if (isValid(sa)) {
                 if (type == String.class) {
-                    return (T) sa;
+                    return sa;
                 }
                 var method = type.getMethod("valueOf", String.class);
                 if (type.isEnum()) {
-                    return (T) Enum.valueOf((Class<Enum>) type, sa);
+                    //noinspection unchecked,rawtypes
+                    return Enum.valueOf((Class<Enum>) type, sa);
                 }
                 Number number = (Number) type.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
                     return null;
                 }
 
-                return (T) method.invoke(null, sa);
+                return method.invoke(null, sa);
             }
         } catch (InvalidInput e){
             System.err.println("!! "+e.getMessage()+" !!");
@@ -270,11 +270,11 @@ public class InputManager {
 
 
 
-    private <T> T getValueOf(Class<T> classType, boolean isUpdate) throws InvalidInput {
+    private <T> Object getValueOf(Class<T> classType, boolean isUpdate) throws InvalidInput {
         return getValueOf(classType,isUpdate,false);
     }
 
-    private <T> T getValueOf(Class<T> classType, boolean isUpdate, boolean positive) throws InvalidInput {
+    private <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive) throws InvalidInput {
         System.out.println(" [" + classType.getSimpleName() + "]");
         if (classType.isEnum()) {
             for (OrganizationType en: OrganizationType.values()) {
@@ -286,19 +286,20 @@ public class InputManager {
             String sa = separateAttribute(br.readLine());
             if (isValid(sa)) {
                 if (classType == String.class && !sa.isEmpty()) {
-                    return (T) sa;
+                    return sa;
                 }
                 var method = classType.getMethod("valueOf", String.class);
 
                 if (classType.isEnum()) {
-                    return (T) Enum.valueOf((Class<Enum>) classType, sa);
+                    //noinspection unchecked,rawtypes
+                    return Enum.valueOf((Class<Enum>) classType, sa);
                 }
                 Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
                     return !isUpdate ? oneMoreTime(classType, true) : null;
                 }
 
-                return (T) method.invoke(null, sa);
+                return method.invoke(null, sa);
             }
 
         }catch (InvalidInput e){
