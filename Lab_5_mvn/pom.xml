@@ -47,7 +47,7 @@
                     <archive>
                         <manifest>
                             <!-- Главный класс вашей программы -->
-                            <mainClass>MainProg.Main</mainClass>
+                            <mainClass>main.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

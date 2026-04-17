@@ -1,7 +1,6 @@
-Exceptions\NullCommandException.class
-Exceptions\SameObjectExistsException.class
-Exceptions\RecursionLimitReached.class
-Exceptions\InvalidInput.class
-Exceptions\EmptyContainerException.class
-Exceptions\NoSuchCommandException.class
-Exceptions\NoFileNameException.class
+exceptions\EmptyContainerException.class
+exceptions\SameObjectExistsException.class
+exceptions\NullCommandException.class
+exceptions\NoSuchCommandException.class
+exceptions\RecursionLimitReached.class
+exceptions\InvalidInput.class

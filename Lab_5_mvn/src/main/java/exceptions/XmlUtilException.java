@@ -1,0 +1,7 @@
+package exceptions;
+
+public class XmlUtilException extends RuntimeException {
+    public XmlUtilException(String message) {
+        super(message);
+    }
+}

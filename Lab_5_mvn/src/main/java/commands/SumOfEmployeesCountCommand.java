@@ -1,0 +1,42 @@
+package commands;
+
+import exceptions.EmptyContainerException;
+import io.InputManager;
+import main.Container;
+import main.Invoker;
+import organization.Organization;
+
+public class SumOfEmployeesCountCommand extends Command {
+
+    public SumOfEmployeesCountCommand(String name, Invoker invoker){
+        this.setName(name);
+        setInvokerFather(invoker);
+    }
+
+    @Override
+    public void execute() {
+        Invoker invokerFather = getInvokerFather();
+        Container<Organization> container = invokerFather.getContainer();
+        InputManager inputManager = invokerFather.getInputManager();
+
+
+            if (isValid(inputManager)){
+                long total= 0;
+                if (!container.getAll().isEmpty()){
+                for (Organization org: container.getAll()){
+                    total+= org.getEmployeesCount();
+                }
+                System.out.println("Количество сотрудников во всех организациях: "+ total);
+                }
+                else {
+                    throw new EmptyContainerException("Пустой контейнер");
+                }
+            }
+
+    }
+
+    @Override
+    public String describe() {
+        return "sum_of_employees_count : вывести сумму значений поля employeesCount для всех элементов коллекции";
+    }
+}
