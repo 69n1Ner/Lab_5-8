@@ -119,7 +119,7 @@ public class Container<T extends Organization> {
         if (zL == null){
             System.out.println("Значение координаты Z города не было установлено");
         }
-        if (name.isEmpty()){
+        if (name == null || name.isEmpty()){
             System.out.println("Значение названия города не было установлено");
         }
         if (organization.getType() == null){

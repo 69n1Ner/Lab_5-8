@@ -168,7 +168,7 @@ public class InputManager {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
         System.out.print("Введите название организации");
-        String name = getValueOf(String.class, isUpdate).toString();
+        String name = (String) getValueOf(String.class, isUpdate);
 
         System.out.print("Введите тип организации");
         OrganizationType type = (OrganizationType) getOrganizationType(isUpdate,false);
@@ -213,7 +213,7 @@ public class InputManager {
         System.out.print("Почтовый индекс (минимум 4 символа)");
         String zip = getZipCode(isUpdate);
         System.out.print("Название города");
-        String city = getValueOf(String.class, isUpdate).toString();
+        String city = (String) getValueOf(String.class, isUpdate);
         System.out.print("Координата x");
         Float xL = (Float) getValueOf(Float.class, isUpdate);
         System.out.print("Координата y");
@@ -307,17 +307,23 @@ public class InputManager {
         }
         Arrays.stream(OrganizationType.values()).forEach(e -> System.out.println(e.name()));
         String sa = separateAttribute(br.readLine());
-        if (isValid(sa)){
+
             try{
-                return OrganizationType.valueOf(sa);
-            } catch (IllegalArgumentException e){
-                if (isOMT){
+                if (isValid(sa)){
+                    return OrganizationType.valueOf(sa);
+                } else if (isOMT){
                     return null;
                 } else {
                     return !isUpdate ? getOrganizationType(false,true) : null;
                 }
+
+            } catch (IllegalArgumentException e) {
+                if (isOMT) {
+                    return null;
+                } else {
+                    return !isUpdate ? getOrganizationType(false, true) : null;
+                }
             }
-        } return !isUpdate ? getOrganizationType(false,true) : null;
     }
 
     private String getZipCode(boolean isUpdate) throws IOException {
