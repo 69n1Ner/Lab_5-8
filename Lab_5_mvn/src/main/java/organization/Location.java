@@ -4,8 +4,12 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 
+import java.io.Serializable;
+
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Location {
+public class Location implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @XmlElement
     private Float x; //Поле не может быть null
     @XmlElement
