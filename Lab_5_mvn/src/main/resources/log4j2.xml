@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+
+        <Console name="Info" target="SYSTEM_OUT">
+            <LevelMatchFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [INFO] %msg%n"/>
+        </Console>
+
+
+        <Console name="Warn" target="SYSTEM_ERR">
+            <LevelMatchFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="InfoAppender"/>
+            <AppenderRef ref="WarnAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>

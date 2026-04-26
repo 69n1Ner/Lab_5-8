@@ -152,12 +152,12 @@ public class InputManager {
         return true;
     }
 
-    public boolean isValidCommand(String command) {
-        if (!invoker.contains(command)) {
-            return false;
-        }
-        return isValid(command);
-    }
+//    public boolean isValidCommand(String command) {
+//        if (!invoker.contains(command)) {
+//            return false;
+//        }
+//        return isValid(command);
+//    }
 
     public String separateAttribute(String input) {
         return input.trim();
@@ -359,5 +359,9 @@ public class InputManager {
 
     public boolean isScript() {
         return isScript;
+    }
+
+    public Invoker getInvokerFather() {
+        return invoker;
     }
 }

@@ -1,6 +1,7 @@
 package commands;
 
 import io.InputManager;
+import io.Validator;
 import main.Invoker;
 
 public class ClearCommand extends Command{
@@ -12,11 +13,11 @@ public class ClearCommand extends Command{
 
     @Override
     public void execute() {
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
 
-            if (isValid(inputMan)){
-                invokerFather.getContainer().clear();
+            Invoker invoker = getInvokerFather();
+
+            if (Validator.isValid(invoker)){
+                invoker.getContainer().clear();
                 System.out.println("~~Коллекция успешно удалена~~");
             }
 

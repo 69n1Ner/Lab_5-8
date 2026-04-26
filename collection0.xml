@@ -64,25 +64,6 @@
         <annual_turnover>1</annual_turnover>
     </organization>
     <organization>
-        <id>1049146579</id>
-        <creation_date>27-04-2026</creation_date>
-        <name>1234567890-09876543234567890987654321</name>
-        <coordinates>
-            <x>1</x>
-            <y>1.0</y>
-        </coordinates>
-        <postal_address>
-            <town>
-                <x>1.0</x>
-                <y>1</y>
-                <z>1</z>
-                <name>1</name>
-            </town>
-        </postal_address>
-        <employees_count>1</employees_count>
-        <annual_turnover>11</annual_turnover>
-    </organization>
-    <organization>
         <id>1334871783</id>
         <creation_date>11-03-2026</creation_date>
         <name>5</name>

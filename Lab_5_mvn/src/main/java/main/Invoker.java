@@ -3,6 +3,7 @@ package main;
 import commands.Command;
 import exceptions.NoSuchCommandException;
 import io.InputManager;
+import io.Validator;
 import organization.Organization;
 
 import java.util.HashMap;
@@ -23,7 +24,7 @@ public class Invoker {
     public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
         this.inputManager = new InputManager(this, isScript);
         inputManager.separate(string);
-        if (inputManager.isValidCommand(inputManager.getCommand())) {
+        if (Validator.isValidCommand(inputManager.getCommand(),this)) {
             return commandHashMap.get(inputManager.getCommand());
         }
         throw new NoSuchCommandException("Такой команды не существует");
