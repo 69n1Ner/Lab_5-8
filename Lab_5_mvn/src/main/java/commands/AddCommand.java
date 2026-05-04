@@ -18,7 +18,7 @@ public class AddCommand extends Command {
     }
 
     @Override
-    public void execute() throws IOException {
+    public void execute(){
         Invoker invokerFather = getInvokerFather();
         Container<Organization> container =  invokerFather.getContainer();
         InputManager inputManager = invokerFather.getInputManager();

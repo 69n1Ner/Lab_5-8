@@ -163,7 +163,7 @@ public class InputManager {
         return input.trim();
     }
 
-    public Organization inputOrganization(boolean isUpdate) throws IOException {
+    public Organization inputOrganization(boolean isUpdate){
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
@@ -191,6 +191,12 @@ public class InputManager {
         System.out.print("Введите годовую выручку");
         Integer annualTurnover = (Integer) getValueOf(Integer.class, isUpdate,true);
 
+        try {
+            br.close();
+        } catch (IOException e) {
+            System.err.println("toLogger");
+            throw new RuntimeException(e);
+        }
         return new Organization(
                 name,
                 annualTurnover,
@@ -201,11 +207,11 @@ public class InputManager {
         );
     }
 
-    public Address inputAddress() throws IOException {
+    public Address inputAddress() {
         return inputAddress(false);
     }
 
-    public Address inputAddress(boolean isUpdate) throws IOException {
+    public Address inputAddress(boolean isUpdate) {
         if (br == null) {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
@@ -220,7 +226,12 @@ public class InputManager {
         Integer yL = (Integer) getValueOf(Integer.class, isUpdate);
         System.out.print("Координата z");
         Integer zL = (Integer) getValueOf(Integer.class, isUpdate);
-
+        try {
+            br.close();
+        } catch (IOException e) {
+            System.err.println("toLogger");
+            throw new RuntimeException(e);
+        }
         return new Address( zip,new Location(city,xL,yL,zL));
     }
 
@@ -299,43 +310,58 @@ public class InputManager {
 
     }
 
-    private Object getOrganizationType(boolean isUpdate, boolean isOMT) throws IOException {
-        if (isOMT){
+    private Object getOrganizationType(boolean isUpdate, boolean isOMT) {
+        if (isOMT) {
             System.out.println("Введите еще раз");
-        }else {
+        } else {
             System.out.println();
         }
         Arrays.stream(OrganizationType.values()).forEach(e -> System.out.println(e.name()));
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa)){
-            try{
-                return OrganizationType.valueOf(sa);
-            } catch (IllegalArgumentException e){
-                if (isOMT){
-                    return null;
-                } else {
-                    return !isUpdate ? getOrganizationType(false,true) : null;
-                }
-            }
-        } return !isUpdate ? getOrganizationType(false,true) : null;
-    }
+        try {
+            String sa = separateAttribute(br.readLine());
 
-    private String getZipCode(boolean isUpdate) throws IOException {
-        System.out.println(" [String]");
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa) && sa.length() >=4){
-            return sa;
-        }else{
-            return !isUpdate? oneMoreTimeZipCode() : null;
+            if (isValid(sa)) {
+                return OrganizationType.valueOf(sa);
+            }
+            return null;
+        } catch (IllegalArgumentException e) {
+            if (isOMT) {
+                return null;
+            } else {
+                return !isUpdate ? getOrganizationType(false, true) : null;
+            }
+        } catch (IOException e) {
+            System.err.println("toLogger");
+            return null;
         }
     }
 
-    private String oneMoreTimeZipCode() throws IOException {
+    private String getZipCode(boolean isUpdate) {
+        try {
+            System.out.println(" [String]");
+            String sa = separateAttribute(br.readLine());
+            if (isValid(sa) && sa.length() >= 4) {
+                return sa;
+            } else {
+                return !isUpdate ? oneMoreTimeZipCode() : null;
+            }
+        }catch (IOException e){
+            System.err.println("toLogger");
+            return null;
+        }
+    }
+
+    private String oneMoreTimeZipCode() {
         System.out.println("Введите еще раз " + "[String]");
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa) && sa.length() >=4){
-            return sa;
-        }else{
+        try {
+            String sa = separateAttribute(br.readLine());
+            if (isValid(sa) && sa.length() >= 4) {
+                return sa;
+            } else {
+                return null;
+            }
+        }catch (IOException e){
+            System.err.println("toLogger");
             return null;
         }
     }

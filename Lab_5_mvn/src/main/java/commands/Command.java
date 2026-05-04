@@ -8,7 +8,8 @@ import java.io.IOException;
 
 public abstract class Command {
     private Invoker invokerFather;
-    private String name; // непонятно зачем нужно
+    private String name;
+
 
     public void setName(String name) {
         this.name = name;
@@ -26,7 +27,7 @@ public abstract class Command {
         return this.name;
     }
 
-    public abstract void execute() throws IOException;
+    public abstract void execute();
 
     public abstract String describe();
 
