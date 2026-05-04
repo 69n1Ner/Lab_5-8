@@ -11,6 +11,25 @@ public abstract class Command {
     private String commandName;
     private String argument;
     private String xmlArgument;
+    private ArgumentType argumentType;
+    private boolean isScript;
+
+    public boolean isScript() {
+        return isScript;
+    }
+
+    public Command setIsScript(boolean isScript) {
+        this.isScript = isScript;
+        return this;
+    }
+
+    public ArgumentType getArgumentType() {
+        return argumentType;
+    }
+
+    public void setArgumentType(ArgumentType argumentType) {
+        this.argumentType = argumentType;
+    }
 
     public String getArgument() {
         return argument;
@@ -58,33 +77,33 @@ public abstract class Command {
 //        return true;
 //    }
 
-    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput{
-        if (inputManager.getMainArgument() == null){
-            if (inputManager.isScript()){
-                if (inputManager.getXmlArgument() != null) {
-                    return !isXmlHasIdAndDate(inputManager);
-                } throw new InvalidInput("Команда "+ this.getCommandName() +" должна иметь XML строку при исполнении скрипта");
-            } return true;
-        } throw new InvalidInput("Команда "+ this.getCommandName() +" не должна иметь параметров");
-    }
-
-    public static boolean isXmlHasIdAndDate(InputManager inputManager) throws InvalidInput {
-        if (inputManager.getXmlArgument() != null) {
-            boolean ERR = inputManager.getXmlArgument().equals("ERR");
-            boolean isId = inputManager.getXmlArgument().matches(".*<id>[^<]+</id>.*");
-            boolean isDate = inputManager.getXmlArgument().matches(".*<creation_date>[^<]+</creation_date>.*");
-            if (!ERR) {
-                if (isDate) {
-                    if (isId) {
-                        return true;
-                    }throw new InvalidInput("XML не имеет ID");
-                }throw new InvalidInput("XML не имеет даты создания");
-            }throw new InvalidInput("Неверная XML строка");
-
-
-        }
-        return false;
-    }
+//    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput{
+//        if (inputManager.getMainArgument() == null){
+//            if (inputManager.isScript()){
+//                if (inputManager.getXmlArgument() != null) {
+//                    return !isXmlHasIdAndDate(inputManager);
+//                } throw new InvalidInput("Команда "+ this.getCommandName() +" должна иметь XML строку при исполнении скрипта");
+//            } return true;
+//        } throw new InvalidInput("Команда "+ this.getCommandName() +" не должна иметь параметров");
+//    }
+//
+//    public static boolean isXmlHasIdAndDate(InputManager inputManager) throws InvalidInput {
+//        if (inputManager.getXmlArgument() != null) {
+//            boolean ERR = inputManager.getXmlArgument().equals("ERR");
+//            boolean isId = inputManager.getXmlArgument().matches(".*<id>[^<]+</id>.*");
+//            boolean isDate = inputManager.getXmlArgument().matches(".*<creation_date>[^<]+</creation_date>.*");
+//            if (!ERR) {
+//                if (isDate) {
+//                    if (isId) {
+//                        return true;
+//                    }throw new InvalidInput("XML не имеет ID");
+//                }throw new InvalidInput("XML не имеет даты создания");
+//            }throw new InvalidInput("Неверная XML строка");
+//
+//
+//        }
+//        return false;
+//    }
 
 //    void unexecute();
 }
