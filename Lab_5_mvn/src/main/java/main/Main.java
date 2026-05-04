@@ -93,12 +93,8 @@ public class Main {
 
             } catch (NoSuchCommandException e) {
                 System.err.println("!! " + e.getMessage() + " !!");
+                invoker.allCommands().get("help").execute();
 
-                try {
-                    invoker.allCommands().get("help").execute();
-                } catch ( IOException ex) {
-                    System.err.println("!! " + ex.getMessage() + " !!");
-                }
 
             } catch (NoSuchElementException | NullCommandException | SameObjectExistsException | RecursionLimitReached |
                      EmptyContainerException | XmlUtilException | IOException e) {

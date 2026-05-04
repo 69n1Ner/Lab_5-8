@@ -13,8 +13,7 @@ import java.util.*;
 
 
 public class InputManager {
-    private final Invoker invoker;
-    private String command;
+    private String commandName;
     private String mainArgument;
     private String xmlArgument;
     private BufferedReader br;
@@ -22,7 +21,6 @@ public class InputManager {
     private final List<Character> asciiChars = new ArrayList<>();
 
     public InputManager(Invoker invoker,boolean isScript) {
-        this.invoker = invoker;
         this.isScript = isScript;
         for (int code = 0; code <= 31; code++) {
             asciiChars.add((char) code);
@@ -131,33 +129,33 @@ public class InputManager {
             }
         }
 
-        this.command = wordList.get(0);
+        this.commandName = wordList.get(0);
 
         if (wordList.size() >= 2) {
             this.mainArgument = wordList.get(1);
         }
     }
-    public boolean isValid(String input) {
-        String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
-        for (int i = 0; i < input.length(); i++) {
-            if (specialSymbols.indexOf(input.charAt(i)) != -1) {
-                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
-                return false;
-            }
-        }
-        if (input.length() > 255) {
-            System.err.println("Слишком длинная строка! Максимальная длина 255");
-            return false;
-        }
-        return true;
-    }
+//    public boolean isValid(String input) {
+//        String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
+//        for (int i = 0; i < input.length(); i++) {
+//            if (specialSymbols.indexOf(input.charAt(i)) != -1) {
+//                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
+//                return false;
+//            }
+//        }
+//        if (input.length() > 255) {
+//            System.err.println("Слишком длинная строка! Максимальная длина 255");
+//            return false;
+//        }
+//        return true;
+//    }
 
-    public boolean isValidCommand(String command) {
-        if (!invoker.contains(command)) {
-            return false;
-        }
-        return isValid(command);
-    }
+//    public boolean isValidCommand(String commandName) {
+//        if (!invoker.contains(commandName)) {
+//            return false;
+//        }
+//        return Validator.isValidInput(commandName);
+//    }
 
     public String separateAttribute(String input) {
         return input.trim();
@@ -240,7 +238,7 @@ public class InputManager {
 
         try {
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa)) {
+            if (Validator.isValidInput(sa)) {
                 if (type == String.class) {
                     return sa;
                 }
@@ -282,7 +280,7 @@ public class InputManager {
 
         try {
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa)) {
+            if (Validator.isValidInput(sa)) {
                 if (classType == String.class && !sa.isEmpty()) {
                     return sa;
                 }
@@ -320,7 +318,7 @@ public class InputManager {
         try {
             String sa = separateAttribute(br.readLine());
 
-            if (isValid(sa)) {
+            if (Validator.isValidInput(sa)) {
                 return OrganizationType.valueOf(sa);
             }
             return null;
@@ -340,7 +338,7 @@ public class InputManager {
         try {
             System.out.println(" [String]");
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa) && sa.length() >= 4) {
+            if (Validator.isValidInput(sa) && sa.length() >= 4) {
                 return sa;
             } else {
                 return !isUpdate ? oneMoreTimeZipCode() : null;
@@ -355,7 +353,7 @@ public class InputManager {
         System.out.println("Введите еще раз " + "[String]");
         try {
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa) && sa.length() >= 4) {
+            if (Validator.isValidInput(sa) && sa.length() >= 4) {
                 return sa;
             } else {
                 return null;
@@ -377,8 +375,8 @@ public class InputManager {
         return xmlArgument;
     }
 
-    public String getCommand() {
-        return command;
+    public String getCommandName() {
+        return commandName;
     }
 
 

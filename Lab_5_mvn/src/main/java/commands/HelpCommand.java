@@ -1,5 +1,6 @@
 package commands;
 
+import io.Validator;
 import main.Invoker;
 
 import java.util.Comparator;
@@ -7,7 +8,7 @@ import java.util.Comparator;
 public class HelpCommand extends Command {
 
     public HelpCommand(String name, Invoker invoker){
-        this.setName(name);
+        this.setCommandName(name);
         setInvokerFather(invoker);
     }
 
@@ -19,13 +20,13 @@ public class HelpCommand extends Command {
     @Override
     public void execute(){
 
-        if (isValid(getInvokerFather().getInputManager())) {
+        if (Validator.isValidNoArgs(this)) {
             System.out.println("-------------------------------------------------------------------------------------");
             for (Command command : this.getInvokerFather()
                     .allCommands()
                     .values()
                     .stream()
-                    .sorted(Comparator.comparing(Command::getName,String.CASE_INSENSITIVE_ORDER))
+                    .sorted(Comparator.comparing(Command::getCommandName,String.CASE_INSENSITIVE_ORDER))
                     .toList()) {
                 System.out.println(command.describe());
             }
