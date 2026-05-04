@@ -22,13 +22,14 @@ public class Invoker {
     }
 
     public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
-        this.inputManager = new InputManager(this, isScript);
+        this.inputManager = new InputManager(isScript);
         inputManager.separate(string);
-        if (Validator.isValidCommand(inputManager.getCommandName(),this)) {
+        if (Validator.isCommandExists(inputManager.getCommandName(),this)) {
             return commandHashMap
                     .get(inputManager.getCommandName())
                     .setArgument(inputManager.getMainArgument())
-                    .setXmlArgument(inputManager.getXmlArgument());
+                    .setXmlArgument(inputManager.getXmlArgument())
+                    .setIsScript(isScript);
         }
         throw new NoSuchCommandException("Такой команды не существует");
     }

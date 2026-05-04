@@ -10,6 +10,7 @@ public class HelpCommand extends Command {
     public HelpCommand(String name, Invoker invoker){
         this.setCommandName(name);
         setInvokerFather(invoker);
+        setArgumentType(ArgumentType.NO_ARGUMENTS);
     }
 
     @Override
@@ -20,7 +21,7 @@ public class HelpCommand extends Command {
     @Override
     public void execute(){
 
-        if (Validator.isValidNoArgs(this)) {
+        if (Validator.isValidArgument(this)) {
             System.out.println("-------------------------------------------------------------------------------------");
             for (Command command : this.getInvokerFather()
                     .allCommands()

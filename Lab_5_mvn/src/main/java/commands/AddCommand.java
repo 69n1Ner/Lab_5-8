@@ -13,8 +13,9 @@ import java.util.NoSuchElementException;
 public class AddCommand extends Command {
 
     public AddCommand(String name, Invoker invoker) {
-        this.setName(name);
+        this.setCommandName(name);
         setInvokerFather(invoker);
+        setArgumentType(ArgumentType.NO_ARGUMENT);
     }
 
     @Override

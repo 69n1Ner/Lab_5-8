@@ -20,7 +20,7 @@ public class InputManager {
     private boolean isScript;
     private final List<Character> asciiChars = new ArrayList<>();
 
-    public InputManager(Invoker invoker,boolean isScript) {
+    public InputManager(boolean isScript) {
         this.isScript = isScript;
         for (int code = 0; code <= 31; code++) {
             asciiChars.add((char) code);
@@ -97,7 +97,6 @@ public class InputManager {
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
                     this.xmlArgument = input.substring(end);
-                    isScript = true;
                 }
                 continue;
 
@@ -150,7 +149,7 @@ public class InputManager {
 //        return true;
 //    }
 
-//    public boolean isValidCommand(String commandName) {
+//    public boolean isCommandExists(String commandName) {
 //        if (!invoker.contains(commandName)) {
 //            return false;
 //        }
