@@ -1,40 +1,51 @@
 package commands;
 
+import exceptions.InvalidInput;
+import exceptions.NoSuchOrganizationException;
 import io.InputManager;
+import io.Validator;
 import main.Invoker;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RemoveByIDCommand extends Command{
+    private static final Logger logger = LogManager.getLogger(RemoveByIDCommand.class);
 
     public RemoveByIDCommand(String name, Invoker invoker){
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.ID_ONLY);
     }
 
-    @Override
-    public boolean isValid(InputManager inputManager) {
-        try {
-            getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
-            return true;
-        } catch (NumberFormatException e) {
-            System.err.println("Неверно задан ID");
-            return false;
-        }
-    }
 
     @Override
     public void execute() {
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
-            if (isValid(inputMan)){
-                invokerFather.getContainer().removeById(Long.parseLong(inputMan.getMainArgument()));
-                System.out.println("~~Организация успешно удалена~~");
+        String r = "непредвиденная";
+        try {
+            Validator.isValidArgument(this);
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                createRequest();
             }
-
-
+            Long ID = Long.parseLong(getArgument());
+            getInvokerFather().getContainer().removeById(ID);
+            String text = "Организация с ID "+ID+" успешно удалена";
+            logger.info(text);
+            r= text;
+        } catch (InvalidInput | NoSuchOrganizationException i){
+            logger.warn(i);
+            r= i.getMessage();
+        }finally {
+            createResponse(r);
+        }
     }
 
     @Override
     public String describe() {
         return "remove_by_id id : удалить элемент из коллекции по его id";
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

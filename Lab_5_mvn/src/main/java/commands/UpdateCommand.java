@@ -2,16 +2,19 @@ package commands;
 
 import exceptions.*;
 import io.InputManager;
+import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
-import java.io.IOException;
-
 public class UpdateCommand extends Command {
+    private static final Logger logger = LogManager.getLogger(UpdateCommand.class);
+
     public UpdateCommand(String name, Invoker invoker) {
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.ID);
     }
 
     @Override
@@ -20,48 +23,54 @@ public class UpdateCommand extends Command {
                 " Поля без значения не будут изменены.";
     }
 
-
     @Override
-    public boolean isNotValidForScript(InputManager inputManager) throws InvalidInput{
-        if (inputManager.isScript()){
-            if (inputManager.getXmlArgument() != null) {
-                try {
-                    getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
-                    return false;
-                } catch (NumberFormatException e) {
-                    throw new InvalidInput("Неверно задан id");
-                }
-            }throw new InvalidInput("Команда "+ this.getName() +" должна иметь XML строку при исполнении скрипта");
-        } return true;
-    }
+    public void execute() {
+        String r = "непредвиденная";
 
-    @Override
-    public void execute() throws IOException{
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
-        Container<Organization> container = invokerFather.getContainer();
+        try{
+            Validator.isValidArgument(this);
 
-        try {
+            Organization parametrizedOrg;
+
+            if(getXmlArgument() == null){
+                parametrizedOrg = InputManager.inputOrganization(true);
+            }else {
+                parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
+            }
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                createRequestWith(parametrizedOrg);
+            }
+
+            Invoker invokerFather = getInvokerFather();
+            Container<Organization> container = invokerFather.getContainer();
+
             if (!container.getAll().isEmpty()) {
-                Organization oldOrg;
-                Organization parametrizedOrg;
-                if (isNotValidForScript(inputMan)) {
-                    oldOrg = invokerFather.getContainer().getById(Long.parseLong(inputMan.getMainArgument()));
-                    parametrizedOrg = inputMan.inputOrganization(true);
-                }else {
-                    Long ID = Long.parseLong(inputMan.getMainArgument());
-                    oldOrg = invokerFather.getContainer().getById(ID);
-                    parametrizedOrg = XmlUtil.readObjectFromString(inputMan.getXmlArgument());
-                    parametrizedOrg.setId(ID);
-                }
+                Long ID = Long.parseLong(getArgument());
+                Organization oldOrg = container.getById(ID);
 
-                    invokerFather.getContainer().update(parametrizedOrg, oldOrg);
-                    System.out.println("~~Организация с ID " + oldOrg.getId() + " успешно изменена~~");
+                container.update(parametrizedOrg, oldOrg);
+                String t = "Организация с ID " + oldOrg.getId() + " успешно изменена";
+                logger.info(t);
+                r = t;
 
-            } else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
-        }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
+            } else{
+                EmptyContainerException ec = new EmptyContainerException();
+                logger.warn(ec);
+                r= ec.getMessage();
+            }
+
+
+        }catch (InvalidInput | NoSuchOrganizationException i){
+            logger.warn(i);
+            r=i.getMessage();
+        }finally {
+            createResponse(r);
         }
     }
 
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
 }

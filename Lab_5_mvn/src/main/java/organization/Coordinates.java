@@ -8,8 +8,6 @@ import java.io.Serializable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Coordinates implements Serializable {
-    private static final long serialVersionUID = 1L;
-
     @XmlElement
     private long x; //Максимальное значение поля: 623
     @XmlElement

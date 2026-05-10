@@ -12,7 +12,6 @@ public enum OrganizationType implements Serializable {
     GOVERNMENT("Государственная"),
     @XmlEnumValue("open_joint_stock_company")
     OPEN_JOINT_STOCK_COMPANY("Открытая совместная складская");
-    private static final long serialVersionUID = 1L;
 
     private final String name;
 

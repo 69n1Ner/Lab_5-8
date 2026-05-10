@@ -1,16 +1,18 @@
 package commands;
 
+import exceptions.InvalidInput;
 import exceptions.RecursionLimitReached;
-import io.InputManager;
+import io.Validator;
 import main.Invoker;
-import main.Main;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExecuteScriptCommand extends Command{
     private int currentRecursion = 0;
+    private static final Logger logger = LogManager.getLogger(ExecuteScriptCommand.class);
 
     public ExecuteScriptCommand(String name, Invoker invoker) {
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.FILE);
     }
 
     public void decrementCurrentRecursion() {
@@ -19,7 +21,7 @@ public class ExecuteScriptCommand extends Command{
         }
     }
 
-    public void incrementCurrentRecursion() {
+    public void incrementCurrentRecursion() throws RecursionLimitReached {
         int recursionLimit = 3;
         if (currentRecursion <= recursionLimit) {
             currentRecursion += 1;
@@ -28,36 +30,36 @@ public class ExecuteScriptCommand extends Command{
         }
     }
 
-    @Override
-    public boolean isValid(InputManager inputManager){
-        if (inputManager.getMainArgument() != null){
-            return true;
-        } else {
-            System.err.println("Нет имени файла");
-            return false;
-        }
-    }
-
+    //TODO при посылке реквеста не должна посылаться команда, а сразу выполняться и посылать другие команды. Т.е. добавить флаг isScript и в этот execute
     @Override
     public void execute() {
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
+        String r = "непредвиденная";
         try {
+            Validator.isValidArgument(this);
             incrementCurrentRecursion();
-        } catch (RecursionLimitReached r){
-            System.err.println(r.getMessage());
-            return;
-        }
 
-            if (isValid(inputMan)){
-                Main.programExecute(invokerFather,inputMan.getMainArgument());
-            }
 
+            getInvokerFather().getRunner().run(true,getArgument());
+            String t = "Скрипт" +getArgument()+  "выполнен";
+            logger.info(t);
+            r = t;
+
+        }catch (InvalidInput | RecursionLimitReached i){
+            logger.warn(i);
+            r = i.getMessage();
+        } finally {
             decrementCurrentRecursion();
+            createResponse(r);
+        }
     }
 
     @Override
     public String describe() {
         return "execute_script file_name : считать и исполнить скрипт из указанного файла. Команды которым необходимы на вход организации или адрес должны вводится в xml формате в строке с командой";
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

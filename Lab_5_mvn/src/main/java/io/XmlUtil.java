@@ -2,35 +2,69 @@ package io;
 
 
 import exceptions.XmlUtilException;
+import jakarta.xml.bind.*;
 import organization.Address;
 import organization.Organization;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
-import jakarta.xml.bind.Unmarshaller;
 
+import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class XmlUtil {
 
+    final private static JAXBContext CONTEXT_WRAPPER;
+    final private static JAXBContext CONTEXT_ORGANIZATION;
+    final private static JAXBContext CONTEXT_ADDRESS;
 
-    public static void writeListToFile(ArrayList<Organization> list, String filename) {
+    static {
+        try {
+            CONTEXT_ADDRESS = JAXBContext.newInstance(Address.class);
+            CONTEXT_WRAPPER = JAXBContext.newInstance(ContainerWrapper.class);
+            CONTEXT_ORGANIZATION = JAXBContext.newInstance(Organization.class);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public static String adrToXml(Address address){
+        try{
+            Marshaller marshaller = CONTEXT_ADDRESS.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            StringWriter xmlOrg = new StringWriter();
+            marshaller.marshal(address,new StreamResult(xmlOrg));
+            return xmlOrg.toString();
+        }catch (JAXBException e){
+            throw new RuntimeException(e);
+        }
+    }
 
+    public static String orgToXml(Organization organization){
+        try {
+            ContainerWrapper wrapper = new ContainerWrapper();
+            wrapper.getOrganizations().add(organization);
+            Marshaller marshaller = CONTEXT_WRAPPER.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            StringWriter xmlOrg = new StringWriter();
+            marshaller.marshal(wrapper,new StreamResult(xmlOrg));
+            return xmlOrg.toString();
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String writeListToFile(ArrayList<Organization> list, String filename) {
         try {
             ContainerWrapper wrapper = new ContainerWrapper();
             wrapper.getOrganizations().addAll(list);
 
-            JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
 
-            Marshaller marshaller = context.createMarshaller();
+            Marshaller marshaller = CONTEXT_WRAPPER.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
             marshaller.marshal(wrapper, new File(filename));
 
-            System.out.println("Коллекция записана в файл: " + System.getProperty("user.dir")+"\\"+filename);
+            return "Коллекция записана в файл: " + System.getProperty("user.dir")+"\\"+filename;
 
         } catch (JAXBException e) {
             throw new RuntimeException(Arrays.toString(e.getStackTrace()).replace(",","\n"));
@@ -39,7 +73,7 @@ public class XmlUtil {
     }
 
 
-    public static ArrayList<Organization> readListFromFile(String resourceName) {
+    public static ArrayList<Organization> readListFromFile(String resourceName) throws XmlUtilException{
         InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(resourceName);
 
         try (inputStream) {
@@ -47,8 +81,8 @@ public class XmlUtil {
                 if (inputStream == null) {
                     throw new XmlUtilException("Коллекция не загружена. Поставьте значение LAB5_8 = 'initial_collection.xml'");
                 }
-                JAXBContext context = JAXBContext.newInstance(ContainerWrapper.class);
-                Unmarshaller unmarshaller = context.createUnmarshaller();
+
+                Unmarshaller unmarshaller = CONTEXT_WRAPPER.createUnmarshaller();
                 ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
                 System.out.println("Загружено из " + resourceName + ": " + wrapper.getOrganizations().size() + " организаций");
                 return new ArrayList<>(wrapper.getOrganizations());
@@ -60,14 +94,14 @@ public class XmlUtil {
         }
     }
 
-    public static Organization readObjectFromString(String xmlString) {
+    public static Organization readOrganizationFromString(String xmlString) {
         if (xmlString == null || xmlString.trim().isEmpty()) {
             throw new XmlUtilException("Пустая XML-строка");
         }
 
         try {
-            JAXBContext context = JAXBContext.newInstance(Organization.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
+
+            Unmarshaller unmarshaller = CONTEXT_ORGANIZATION.createUnmarshaller();
             return (Organization) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
@@ -81,8 +115,8 @@ public class XmlUtil {
         }
 
         try {
-            JAXBContext context = JAXBContext.newInstance(Address.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
+
+            Unmarshaller unmarshaller = CONTEXT_ADDRESS.createUnmarshaller();
             return (Address) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {

@@ -13,7 +13,6 @@ import java.util.List;
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Organization implements Comparable<Object>, Serializable {
-    private static final long serialVersionUID = 1L;
     @XmlElement(name = "id")
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     @XmlElement(name = "creation_date")
@@ -158,10 +157,6 @@ public class Organization implements Comparable<Object>, Serializable {
             return 1;
         } else {
             Organization other = (Organization) o;
-
-            if (other.annualTurnover == 0 || other.employeesCount == 0){
-                return 1;
-            }
 
             int C1 = Integer.compare(annualTurnover,other.annualTurnover);
             int C2 = Long.compare(employeesCount,other.employeesCount);

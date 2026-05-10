@@ -10,8 +10,6 @@ import java.io.Serializable;
 @XmlRootElement(name = "postal_address")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Address implements Comparable<Object>, Serializable {
-    private static final long serialVersionUID = 1L;
-
     @XmlElement(name = "zip_code")
     private String zipCode; //Длина строки должна быть не меньше 4, Поле может быть null
     @XmlElement
