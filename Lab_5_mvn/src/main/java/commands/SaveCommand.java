@@ -1,7 +1,6 @@
 package commands;
 
 import exceptions.InvalidInput;
-import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.Invoker;
@@ -15,13 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class SaveCommand extends Command{
-    private static int counter = 0;
+    private int counter = 0;
     private static final Logger logger = LogManager.getLogger(SaveCommand.class);
+    private boolean silent = false;
 
     public SaveCommand(String name, Invoker invoker) {
         super(name,invoker,ArgumentType.NO_ARGUMENTS);
@@ -34,39 +34,47 @@ public class SaveCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequest();
+                return;
             }
 
             Path dir = Paths.get(System.getProperty("user.dir"));
 
             try (Stream<Path> stream = Files.list(dir)) {
-                List<String> lst =  stream
+                List<Integer> lst = stream
                         .map(Path::getFileName)
                         .map(Path::toString)
-                        .filter(name -> name.equals("collection"+counter+".xml"))
+                        .filter(name -> name.matches("collection\\d*\\.xml"))
+                        .map(s -> Integer.parseInt(s.replaceAll("\\D+", "")))
                         .sorted()
                         .toList();
 
+                logger.debug("Список#{}",lst);
                 if (!lst.isEmpty()) {
-                    String biggestName = lst.get(lst.size() - 1);
-                    counter = Integer.parseInt(biggestName.replaceAll("\\D+", ""));
+                    int i = 0;
+                    while (lst.contains(i)){
+                        i++;
+                    }
+                    counter = i;
+
                 }
 
-                String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + getCounter() + ".xml");
-                counter++;
-                createResponse(response);
             } catch (IOException e) {
                 logger.warn(e);
             }
 
-
-
-
-            counter+=1;
-            String t = "Коллекция сохранена в collection" + getCounter() + ".xml";
-            logger.info(t);
-
+            String t = "Коллекция сохранена в collection" + counter + ".xml";
+            if (!silent){
+                logger.info(t);
+            }else {
+                logger.info("\n{}", t);
+            }
         }catch (InvalidInput i){
             logger.warn(i);
+        }finally {
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
+                String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
+                createResponse(response);
+            }
         }
     }
 
@@ -75,13 +83,17 @@ public class SaveCommand extends Command{
         return "save : сохранить коллекцию в файл";
     }
 
-    public static int getCounter(){
-        return counter;
-    }
-
-
     @Override
     public Logger getLogger() {
         return logger;
+    }
+
+    public boolean isSilent() {
+        return silent;
+    }
+
+    public SaveCommand setSilent(boolean silent) {
+        this.silent = silent;
+        return this;
     }
 }

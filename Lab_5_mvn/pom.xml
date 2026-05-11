@@ -39,26 +39,74 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.6.0</version>
-                <configuration>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <!-- Главный класс вашей программы -->
-                            <mainClass>main.Main</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
                 <executions>
+                    <!-- Тестовый ввод -->
                     <execution>
-                        <id>make-assembly</id>
+                        <id>make-test-jar</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>io.TestInput</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>lab5_8-test</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
                     </execution>
+
+                    <!-- === СБОРКА СЕРВЕРА === -->
+                    <execution>
+                        <id>make-server-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <!-- 🔹 Главный класс сервера -->
+                                    <mainClass>net.UdpServer</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <!-- Итоговое имя: lab5_8-server.jar -->
+                            <finalName>lab5_8-server</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+
+                    <!-- === СБОРКА КЛИЕНТА === -->
+                    <execution>
+                        <id>make-client-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <!-- 🔹 Главный класс клиента -->
+                                    <mainClass>net.UdpClient</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <!-- Итоговое имя: lab5_8-client.jar -->
+                            <finalName>lab5_8-client</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
         </plugins>
@@ -80,7 +128,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.24.0</version>
+            <version>2.25.4</version>
         </dependency>
 
         <!-- JAXB API -->

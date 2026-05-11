@@ -53,6 +53,10 @@ public class Address implements Comparable<Object>, Serializable {
         if (o== null){
             return 1;
         }
+        if (getZipCode() == null || getZipCode().isEmpty()){
+            return 1;
+        }
+
         return zipCode.compareTo(((Address) o).getZipCode());
     }
 }

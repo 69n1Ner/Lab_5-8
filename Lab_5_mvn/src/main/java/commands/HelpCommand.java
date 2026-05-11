@@ -5,10 +5,12 @@ import io.Validator;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
-public class HelpCommand extends Command {
+public class HelpCommand extends Command  implements Serializable {
     private static final Logger logger = LogManager.getLogger(HelpCommand.class);
 
     public HelpCommand(String name, Invoker invoker){

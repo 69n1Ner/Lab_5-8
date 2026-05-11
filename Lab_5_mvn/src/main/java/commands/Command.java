@@ -1,23 +1,25 @@
 package commands;
 
-import exceptions.InvalidInput;
-import io.InputManager;
-import io.Validator;
 import io.XmlUtil;
 import main.Invoker;
 import net.Request;
 import net.RequestType;
-import org.apache.logging.log4j.Logger;
+import net.Runner;
 import organization.Address;
 import organization.Organization;
 
-public abstract class Command implements Executable,Describable,GetLoggerable {
-    private final Invoker invokerFather;
+import java.io.Serializable;
+import java.util.UUID;
+
+public abstract class Command implements Executable,Describable,GetLoggerable, Serializable {
+    private transient Invoker invokerFather;
     private final String commandName;
     private String argument;
     private String xmlArgument;
     private final ArgumentType argumentType;
     private boolean isScript;
+    private UUID id;
+    private boolean isRequest = false;
 
     protected Command(String commandName,Invoker invoker, ArgumentType argumentType){
         this.commandName = commandName;
@@ -31,6 +33,7 @@ public abstract class Command implements Executable,Describable,GetLoggerable {
 
     public Command setArgument(String argument) {
         if (argument == null || argument.isEmpty()){
+            this.argument = "";
             return this;
         }
         this.argument = argument;
@@ -47,6 +50,7 @@ public abstract class Command implements Executable,Describable,GetLoggerable {
 
     public Command setXmlArgument(String xmlArgument) {
         if (xmlArgument == null || xmlArgument.isEmpty()){
+            this.xmlArgument = "";
             return this;
         }
         this.xmlArgument = xmlArgument;
@@ -70,6 +74,10 @@ public abstract class Command implements Executable,Describable,GetLoggerable {
         return invokerFather;
     }
 
+    public void setInvokerFather(Invoker invoker){
+        this.invokerFather = invoker;
+    }
+
     public String basicExecuteError() {
         RuntimeException re = new RuntimeException();
         getLogger().fatal("Непредвиденная ошибка в {}", getCommandName(),re);
@@ -78,73 +86,71 @@ public abstract class Command implements Executable,Describable,GetLoggerable {
 
 
     protected void createRequest() {
-        getInvokerFather().getRunner().sendMessage(
-                Request.build()
+        Runner runner = getInvokerFather().getRunner();
+        runner.sendMessage(
+                Request.build(runner.getUuid())
                         .setRequestType(RequestType.COMMAND)
                         .setCommand(this)
         );
     }
-
     protected void createRequestWith(Address address) {
         String xmlOrg = XmlUtil.adrToXml(address);
+        Runner runner = getInvokerFather().getRunner();
+
         setXmlArgument(xmlOrg);
-        getInvokerFather().getRunner().sendMessage(
-                Request.build()
-                        .setRequestType(RequestType.COMMAND)
-                        .setCommand(this)
-        );
+            runner.sendMessage(
+                    Request.build(runner.getUuid())
+                            .setRequestType(RequestType.COMMAND)
+                            .setCommand(this)
+            );
     }
 
     protected void createRequestWith(Organization organization) {
         String xmlOrg = XmlUtil.orgToXml(organization);
-        setXmlArgument(xmlOrg);
-        getInvokerFather().getRunner().sendMessage(
-                Request.build()
-                .setRequestType(RequestType.COMMAND)
-                .setCommand(this)
-        );
+        getLogger().debug("{} --commandIN",xmlOrg);
+        Runner runner = getInvokerFather().getRunner();
 
+        setXmlArgument(xmlOrg);
+            runner.sendMessage(
+                    Request.build(runner.getUuid())
+                    .setRequestType(RequestType.COMMAND)
+                    .setCommand(this)
+            );
     }
 
-    protected void createResponse(String response){
-        getInvokerFather().getRunner().sendMessage(Request.build()
+    protected void createResponse(String response) {
+        getLogger().debug("before");
+        Runner runner = getInvokerFather().getRunner();
+        getLogger().debug("{} response", id);
+        runner.sendMessage(
+                Request.build(id)
                 .setFeedback(response)
                 .setRequestType(RequestType.FEEDBACK)
         );
     }
 
-
-//    @Override
-//    public void createRequest()  {
-//        Logger logger = getLogger();
-//
-//        Validator.isValidForScript1(this);
-//
-//
-//        if (Validator.isValidForScript1(this)) {
-//
-//            Organization newOrganization = InputManager.inputOrganization();
-//            String xmlOrg = XmlUtil.orgToXml(newOrganization);
-//            this.setXmlArgument(xmlOrg);
-//
-//        } else {
-//            if (!Validator.isXmlHasNotIdAndDate(this)) {
-//                logger.info("Создан запрос");
-//                return Request.build()
-//                        .setRequestType(RequestType.COMMAND)
-//                        .setCommand(this);
-//            }
-//        }
-//
-//        RuntimeException re = new RuntimeException("Ошибка в логике execute команды"+ getCommandName());
-//        logger.fatal("Ошибка в логике execute команды {}", getCommandName(),re);
-//        throw re;
-//    }
-
-
     @Override
     public String toString() {
         return commandName+ " "+ argument + " "+ xmlArgument;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Command setId(UUID id) {
+        this.id = id;
+        return this;
+    }
+
+    public boolean isRequest() {
+        return isRequest;
+    }
+
+    public Command setRequest(boolean request) {
+        isRequest = request;
+        return this;
+    }
+
 }
 

@@ -11,10 +11,11 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 import sorts.SortByType;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class PrintFieldAscendingTypeCommand extends Command{
+public class PrintFieldAscendingTypeCommand extends Command implements Serializable {
     private final static Logger logger = LogManager.getLogger(PrintFieldAscendingTypeCommand.class);
 
     public PrintFieldAscendingTypeCommand(String name, Invoker invoker) {
@@ -29,6 +30,7 @@ public class PrintFieldAscendingTypeCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequest();
+                return;
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -51,7 +53,9 @@ public class PrintFieldAscendingTypeCommand extends Command{
             logger.warn(i);
             r= i.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

@@ -1,7 +1,6 @@
 package io;
 
 import exceptions.NoSuchCommandException;
-import main.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.*;
@@ -37,7 +36,7 @@ public class InputManager {
 
     public void separate(String input) {
         if (input == null || input.isEmpty()) {
-            throw new NoSuchCommandException("Пустая строка, введите help для получения справки");
+            throw new NoSuchCommandException("Пустая строка, введите help для справки");
         }
 
         int charNum = 0;
@@ -45,7 +44,7 @@ public class InputManager {
 
             //Ctrl+Z
             if (input.contains("\u001A")) {
-                throw new NoSuchElementException("""
+                throw new NoSuchCommandException("""
                         
                         /﹋\\
                         (҂`_´)
@@ -61,7 +60,7 @@ public class InputManager {
                 } else {
                     asciiPrint = "\\u00" + asciiPrint.toUpperCase();
                 }
-                throw new NoSuchElementException("Найден спец символ: " + asciiPrint);
+                throw new NoSuchCommandException("Найден спец символ: " + asciiPrint);
             }
 
             ++charNum;
@@ -263,7 +262,7 @@ public class InputManager {
 
                 Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
-                    return !isUpdate ? oneMoreTime(classType, true,br) : null;
+                    return !isUpdate ? oneMoreTime(classType, true, br) : null;
                 }
 
                 return method.invoke(null, sa);
@@ -337,7 +336,7 @@ public class InputManager {
     }
 
 
-    public static Organization generateFields(Organization organization, boolean isReadFile) {
+    public static Organization generateOrganizationFields(Organization organization, boolean isReadFile) {
         if (!isReadFile) {
             if (organization.getId() == null || organization.getId() <= 0) {
                 organization.setId((long) abs(hash(ZonedDateTime.now()) + organization.hashCode()));
@@ -369,11 +368,17 @@ public class InputManager {
             System.out.println("Значение названия организации не было установлено");
         }
 
-        String zip = organization.getPostalAddress().getZipCode();
-        Float xL = organization.getPostalAddress().getTown().getX();
-        Integer yL = organization.getPostalAddress().getTown().getY();
-        Integer zL = organization.getPostalAddress().getTown().getZ();
-        String name = organization.getPostalAddress().getTown().getName();
+        generateAddressFields(organization.getPostalAddress());
+
+        return organization;
+    }
+
+    public static void generateAddressFields(Address address){
+        String zip = address.getZipCode();
+        Float xL = address.getTown().getX();
+        Integer yL = address.getTown().getY();
+        Integer zL = address.getTown().getZ();
+        String name = address.getTown().getName();
         if (zip == null || zip.length() < 4) {
             System.out.println("Значение почтового индекса не было установлено");
         }
@@ -386,14 +391,9 @@ public class InputManager {
         if (zL == null) {
             System.out.println("Значение координаты Z города не было установлено");
         }
-        if (name.isEmpty()) {
+        if (name == null || name.isEmpty()) {
             System.out.println("Значение названия города не было установлено");
         }
-        if (organization.getType() == null) {
-            System.out.println("Значение типа организации не было установлено");
-        }
-
-        return organization;
     }
 
 

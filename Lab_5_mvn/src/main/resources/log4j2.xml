@@ -4,13 +4,18 @@
 
         <Console name="Info" target="SYSTEM_OUT">
             <LevelMatchFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
-            <PatternLayout pattern="%d{HH:mm:ss} [INFO] %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%-5level] %msg%n"/>
         </Console>
 
 
         <Console name="Warn" target="SYSTEM_ERR">
             <LevelMatchFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %msg%n"/>
+        </Console>
+
+        <Console name="Debug" target="SYSTEM_ERR">
+            <LevelMatchFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %msg%n"/>
         </Console>
     </Appenders>
 
@@ -18,6 +23,7 @@
         <Root level="info">
             <AppenderRef ref="Info"/>
             <AppenderRef ref="Warn"/>
+            <AppenderRef ref="Debug"/>
         </Root>
     </Loggers>
 </Configuration>

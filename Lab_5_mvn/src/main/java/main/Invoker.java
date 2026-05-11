@@ -7,7 +7,9 @@ import io.Validator;
 import net.Runner;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class Invoker {
     private final HashMap<String , Command> commandHashMap = new HashMap<>();
@@ -39,15 +41,20 @@ public class Invoker {
         this.commandHashMap.put(command.getCommandName(), command);
     }
 
-    public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
+    public Command defineCommand(String string, boolean isScript, UUID id) throws NoSuchCommandException {
         this.inputManager = new InputManager();
         inputManager.separate(string);
         if (Validator.isCommandExists(inputManager.getCommandName(),this)) {
-            return commandHashMap
-                    .get(inputManager.getCommandName())
-                    .setArgument(inputManager.getMainArgument())
-                    .setXmlArgument(inputManager.getXmlArgument())
-                    .setIsScript(isScript);
+            Command command = commandHashMap
+                                .get(inputManager.getCommandName())
+                                .setArgument(inputManager.getMainArgument())
+                                .setXmlArgument(inputManager.getXmlArgument())
+                                .setIsScript(isScript)
+                                .setId(id);
+            if (id != null){
+                command.setRequest(true);
+            }
+            return command;
         }
         throw new NoSuchCommandException();
     }

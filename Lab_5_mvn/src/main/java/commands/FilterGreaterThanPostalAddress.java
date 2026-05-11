@@ -2,6 +2,7 @@ package commands;
 
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
+import exceptions.XmlUtilException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
@@ -12,10 +13,11 @@ import org.apache.logging.log4j.Logger;
 import organization.Address;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FilterGreaterThanPostalAddress extends Command{
+public class FilterGreaterThanPostalAddress extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(FilterGreaterThanPostalAddress.class);
 
     public FilterGreaterThanPostalAddress(String name, Invoker invoker) {
@@ -29,22 +31,26 @@ public class FilterGreaterThanPostalAddress extends Command{
             Validator.isValidArgument(this);
 
             Invoker invokerFather = getInvokerFather();
-            List<Organization> container = invokerFather.getContainer().getAll();
+            Address address;
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequest();
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+                address = InputManager.inputAddress();
+            }else {
+                address = XmlUtil.readAddressFromString(getXmlArgument());
             }
 
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                createRequestWith(address);
+                return;
+            }
+
+            List<Organization> container = invokerFather.getContainer().getAll();
+
             if (!container.isEmpty()) {
-                Address address;
-                if (getXmlArgument() == null) {
-                    address = InputManager.inputAddress();
-                }else {
-                    address = XmlUtil.readAddressFromString(getXmlArgument());
-                }
+
 
                 //todo mb add if errors
-//                address = inputManager.generateAddress(address);
+                InputManager.generateAddressFields(address);
                 String s = container.stream()
                         .filter(o -> o.getPostalAddress().compareTo(address) >= 1)
                         .map(Organization::toString).collect(Collectors.joining("\n"));
@@ -64,7 +70,9 @@ public class FilterGreaterThanPostalAddress extends Command{
             logger.warn(e);
             r= e.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

@@ -7,7 +7,9 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ClearCommand extends Command{
+import java.io.Serializable;
+
+public class ClearCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(ClearCommand.class);
 
     public ClearCommand(String name, Invoker invoker){
@@ -22,6 +24,7 @@ public class ClearCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequest();
+                return;
             }
 
             getInvokerFather().getContainer().clear();
@@ -33,7 +36,9 @@ public class ClearCommand extends Command{
             logger.warn(i);
             r = i.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

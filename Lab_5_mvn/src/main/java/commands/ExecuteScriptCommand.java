@@ -4,8 +4,11 @@ import exceptions.InvalidInput;
 import exceptions.RecursionLimitReached;
 import io.Validator;
 import main.Invoker;
+import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Arrays;
 
 public class ExecuteScriptCommand extends Command{
     private int currentRecursion = 0;
@@ -40,16 +43,19 @@ public class ExecuteScriptCommand extends Command{
 
 
             getInvokerFather().getRunner().run(true,getArgument());
-            String t = "Скрипт" +getArgument()+  "выполнен";
+            String t = "Скрипт " +getArgument()+  " выполнен";
             logger.info(t);
             r = t;
 
         }catch (InvalidInput | RecursionLimitReached i){
             logger.warn(i);
+            logger.debug(Arrays.toString(i.getStackTrace()).replace(",","\n"));
             r = i.getMessage();
         } finally {
             decrementCurrentRecursion();
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

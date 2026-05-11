@@ -3,6 +3,8 @@ package net;
 import commands.Command;
 import io.InputManager;
 import main.Invoker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
 import java.net.SocketAddress;
@@ -18,20 +20,23 @@ public record Request (
         ) implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public static Request build(){
-        return new Request(false,null,UUID.randomUUID(),null,null);
+    public static Request build(UUID uuid){
+        return new Request(false,null,uuid,"",null);
     }
 
     public Request setRequestType(RequestType requestType){
         return new Request(isScript,requestType,id,feedback,command);
     }
+
     public Request setCommand(Command command){
+        command = command.setRequest(true);
         return new Request(isScript,requestType,id,feedback,command);
     }
 
     public Request setFeedback(String feedback){
         return new Request(isScript,requestType,id,feedback,command);
     }
+
 
 
     @Override
@@ -41,6 +46,7 @@ public record Request (
                 "\n id=" + id +
                 "\n feedback='" + feedback + '\'' +
                 "\n "+ command+
+                "\n "+command.isRequest()+
                 '}';
     }
 }

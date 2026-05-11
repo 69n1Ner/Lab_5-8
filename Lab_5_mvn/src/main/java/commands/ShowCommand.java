@@ -3,19 +3,19 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
-import main.Container;
 import main.Invoker;
-import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class ShowCommand extends Command{
+public class ShowCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(ShowCommand.class);
 
     public ShowCommand(String name, Invoker invoker){
@@ -36,6 +36,7 @@ public class ShowCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequest();
+                return;
             }
 
             List<Organization> container = getInvokerFather().getContainer().getAll();
@@ -49,13 +50,16 @@ public class ShowCommand extends Command{
             } else {
                 EmptyContainerException ec = new EmptyContainerException();
                 logger.warn(ec);
+                logger.debug(Arrays.toString(ec.getStackTrace()).replace(",","\n"));
                 r = ec.getMessage();
             }
         }catch (InvalidInput i){
             logger.warn(i);
             r = i.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

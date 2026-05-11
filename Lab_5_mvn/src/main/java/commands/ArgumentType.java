@@ -1,6 +1,8 @@
 package commands;
 
-public enum ArgumentType {
+import java.io.Serializable;
+
+public enum ArgumentType implements Serializable {
     NO_ARGUMENT,
     NO_ARGUMENTS,
     FILE,

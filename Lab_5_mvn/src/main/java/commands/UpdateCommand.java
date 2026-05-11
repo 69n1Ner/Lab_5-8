@@ -10,7 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
-public class UpdateCommand extends Command {
+import java.io.Serializable;
+
+public class UpdateCommand extends Command  implements Serializable {
     private static final Logger logger = LogManager.getLogger(UpdateCommand.class);
 
     public UpdateCommand(String name, Invoker invoker) {
@@ -32,7 +34,7 @@ public class UpdateCommand extends Command {
 
             Organization parametrizedOrg;
 
-            if(getXmlArgument() == null){
+            if((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()){
                 parametrizedOrg = InputManager.inputOrganization(true);
             }else {
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
@@ -40,6 +42,7 @@ public class UpdateCommand extends Command {
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequestWith(parametrizedOrg);
+                return;
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -65,7 +68,9 @@ public class UpdateCommand extends Command {
             logger.warn(i);
             r=i.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

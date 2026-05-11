@@ -1,6 +1,7 @@
 package main;
 
 import exceptions.NoSuchOrganizationException;
+import exceptions.SameOrganizationExistsException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
@@ -77,7 +78,11 @@ public class Container<T extends Organization> {
 
 
     public void add(T newOrganization) {
-        this.container.add(newOrganization);
+        try {
+            getById(newOrganization.getId());
+        } catch (NoSuchOrganizationException e) {
+            container.add(newOrganization);
+        }
     }
 
     public void addList(ArrayList<T> list){

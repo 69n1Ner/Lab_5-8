@@ -1,20 +1,21 @@
 package commands;
 
 import exceptions.EmptyContainerException;
+import exceptions.InvalidInput;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.Container;
-import exceptions.InvalidInput;
 import main.Invoker;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.util.NoSuchElementException;
 
-public class RemoveLowerCommand extends Command{
+public class RemoveLowerCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(RemoveLowerCommand.class);
 
     public RemoveLowerCommand(String name, Invoker invoker){
@@ -29,7 +30,7 @@ public class RemoveLowerCommand extends Command{
             Validator.isValidArgument(this);
 
             Organization newOrganization;
-            if (getXmlArgument() == null) {
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 newOrganization = InputManager.inputOrganization();
             } else {
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
@@ -37,6 +38,7 @@ public class RemoveLowerCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequestWith(newOrganization);
+                return;
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -66,7 +68,9 @@ public class RemoveLowerCommand extends Command{
             logger.warn(e);
             r= e.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

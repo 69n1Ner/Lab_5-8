@@ -11,10 +11,11 @@ import net.UdpClient;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
-import java.util.NoSuchElementException;
 import org.apache.logging.log4j.LogManager;
 
-public class AddCommand extends Command {
+import java.io.Serializable;
+
+public class AddCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(AddCommand.class);
 
     @Override
@@ -36,7 +37,7 @@ public class AddCommand extends Command {
             Invoker invokerFather = getInvokerFather();
             Organization newOrganization;
 
-            if (getXmlArgument() == null) {
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 newOrganization = InputManager.inputOrganization();
             } else {
                 Validator.isXmlOrgValid(this);
@@ -45,28 +46,23 @@ public class AddCommand extends Command {
 //---
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequestWith(newOrganization);
+                return;
             }
 
             Container<Organization> container =  invokerFather.getContainer();
 
-            try {
-                container.getById(newOrganization.getId());
-                SameOrganizationExistsException ex = new SameOrganizationExistsException();
-                logger.warn(ex);
-                response =ex.getMessage();
-
-            } catch (NoSuchOrganizationException e) {
-                container.add(InputManager.generateFields(newOrganization, false));
-                String text = "ID созданной организации: " + container.getIdBy(newOrganization);
-                logger.info(text);
-                response = text;
-            }
+            container.add(InputManager.generateOrganizationFields(newOrganization, isScript()));
+            String text = "ID созданной организации: " + container.getIdBy(newOrganization);
+            logger.info(text);
+            response = text;
 
         }catch (InvalidInput i){
             logger.warn(i);
             response = i.getMessage();
         }finally {
-            createResponse(response);
+            if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+                createResponse(response);
+            }
         }
     }
 

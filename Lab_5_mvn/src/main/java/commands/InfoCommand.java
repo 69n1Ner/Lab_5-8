@@ -1,7 +1,6 @@
 package commands;
 
 import exceptions.InvalidInput;
-import io.InputManager;
 import io.Validator;
 import main.Container;
 import main.Invoker;
@@ -10,12 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class InfoCommand extends Command{
+public class InfoCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(InfoCommand.class);
 
     public InfoCommand(String name, Invoker invoker) {
@@ -30,6 +28,7 @@ public class InfoCommand extends Command{
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequest();
+                return;
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -40,8 +39,7 @@ public class InfoCommand extends Command{
                                     .getClass()
                                     .getDeclaredFields())
                             .findFirst()
-                            .map(Field::getType)
-                            .map(Class::getSimpleName),
+                            .get().getType().getSimpleName(),
                     "-Дата создания:" + container.getCreationDate(),
                     "-Количество элементов:" + container.size());
             logger.info(t);
@@ -50,7 +48,10 @@ public class InfoCommand extends Command{
             logger.warn(i);
             r= i.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
+
         }
     }
 

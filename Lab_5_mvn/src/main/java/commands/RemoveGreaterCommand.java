@@ -11,9 +11,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.util.NoSuchElementException;
 
-public class RemoveGreaterCommand extends Command {
+public class RemoveGreaterCommand extends Command  implements Serializable {
     private static final Logger logger = LogManager.getLogger(RemoveGreaterCommand.class);
 
     public RemoveGreaterCommand(String name, Invoker invoker) {
@@ -29,7 +30,7 @@ public class RemoveGreaterCommand extends Command {
             Validator.isValidArgument(this);
 
             Organization newOrganization;
-            if (getXmlArgument() == null) {
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 newOrganization = InputManager.inputOrganization();
             } else {
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
@@ -37,6 +38,7 @@ public class RemoveGreaterCommand extends Command {
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 createRequestWith(newOrganization);
+                return;
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -66,7 +68,9 @@ public class RemoveGreaterCommand extends Command {
             logger.warn(e);
             r = e.getMessage();
         }finally {
-            createResponse(r);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(r);
+            }
         }
     }
 

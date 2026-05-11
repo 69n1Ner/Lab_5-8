@@ -13,10 +13,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
 import java.util.List;
-import java.util.NoSuchElementException;
 
-public class AddIfMinCommand extends Command{
+public class AddIfMinCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(AddIfMinCommand.class);
 
     public AddIfMinCommand(String name, Invoker invoker){
@@ -32,12 +32,11 @@ public class AddIfMinCommand extends Command{
 
             Invoker invokerFather = getInvokerFather();
             Container<Organization> container = invokerFather.getContainer();
-
-            if (!container.getAll().isEmpty()) {
-                Organization newOrganization;
+            Organization newOrganization;
 
 
-                if (getXmlArgument() == null) {
+
+                if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                     newOrganization = InputManager.inputOrganization();
                 } else {
                     Validator.isXmlOrgValid(this);
@@ -46,30 +45,24 @@ public class AddIfMinCommand extends Command{
 
                 if (getInvokerFather().getRunner() instanceof UdpClient){
                     createRequestWith(newOrganization);
+                    return;
                 }
 
-                try {
-                    container.getById(newOrganization.getId());
-                    SameOrganizationExistsException ex = new SameOrganizationExistsException();
-                    logger.warn(ex);
-                    response = ex.getMessage();
+            if (!container.getAll().isEmpty()) {
 
-                } catch (NoSuchOrganizationException e) {
+                List<Organization> list = container.getAll().stream()
+                        .filter(o -> o.compareTo(newOrganization) <= 0)
+                        .toList();
 
-                    List<Organization> list = container.getAll().stream()
-                            .filter(o -> o.compareTo(newOrganization) <= 0)
-                            .toList();
-
-                    if (list.isEmpty()){
-                        container.add(newOrganization);
-                        String text = "ID созданной организации: " + container.getIdBy(newOrganization);
-                        logger.info(text);
-                        response = text;
-                    }else {
-                        String text = "Значение введенной организации больше минимальной";
-                        logger.info(text);
-                        response = text;
-                    }
+                if (list.isEmpty()){
+                    container.add(InputManager.generateOrganizationFields(newOrganization,isScript()));
+                    String text = "ID созданной организации: " + container.getIdBy(newOrganization);
+                    logger.info(text);
+                    response = text;
+                }else {
+                    String text = "Значение введенной организации больше минимальной";
+                    logger.info(text);
+                    response = text;
                 }
             } else{
                 EmptyContainerException ex = new EmptyContainerException();
@@ -81,7 +74,9 @@ public class AddIfMinCommand extends Command{
             logger.warn(e);
             response = e.getMessage();
         }finally {
-            createResponse(response);
+            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
+                createResponse(response);
+            }
         }
     }
 
