@@ -1,11 +1,7 @@
 package net;
 
-import commands.Command;
-import commands.GetLoggerable;
-import commands.HelpCommand;
 import exceptions.*;
 import io.ByteUtil;
-import io.Validator;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,9 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class UdpClient implements Runner {
     private static final String IP_ADDRESS = "localhost";
@@ -69,6 +63,7 @@ public class UdpClient implements Runner {
             InetSocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.send(buffer, address);
             if (request.requestType() != RequestType.PING) logger.info("Сообщение направлено на сервер #{}",address);
+
         }catch (PortUnreachableException e){
             logger.warn("Сервер не подключен к сети");
             connect();
@@ -76,6 +71,31 @@ public class UdpClient implements Runner {
             logger.warn(e);
         }
     }
+
+//    @Override
+//    public boolean sendAndWait(Request request, UUID uuid) {
+//        long start = System.currentTimeMillis();
+//        long timeout = 300;
+//        sendMessage(request);
+//        while (System.currentTimeMillis() - start < timeout) {
+//            try {
+//                Request response = receiveMessage();
+//                if (response != null && uuid.equals(response.id()) && response.requestType() == RequestType.OK) {
+//                    return true;
+//                }else {
+//                    Thread.sleep(30);
+//                    sendMessage(request);
+//                }
+//
+//
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//                break;
+//            }
+//        }
+//        logger.warn("Не получен ответ от сервера");
+//        return false;
+//    }
 
     @Override
     public  Request receiveMessage() {
@@ -130,6 +150,8 @@ public class UdpClient implements Runner {
 
         while (isRunning) {
             try {
+                Thread.sleep(300);
+
                 if (br.ready()) {
                     String input = br.readLine();
 
@@ -174,6 +196,9 @@ public class UdpClient implements Runner {
                     }
 
                 }
+            }catch (InterruptedException e){
+                Thread.currentThread().interrupt();
+                logger.warn(e);
             } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException | IOException e) {
                 logger.warn("{}",e.getMessage(),e);
 

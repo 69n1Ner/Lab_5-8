@@ -73,6 +73,8 @@ public class UdpServer implements Runner {
         }
     }
 
+
+
     @Override
     public Request receiveMessage() {
         try {
@@ -82,10 +84,16 @@ public class UdpServer implements Runner {
 
             Request request;
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
+
+            if (request.requestType() == RequestType.COMMAND){
+                sendMessage(Request.build(request.requestId()).setRequestType(RequestType.OK));
+            }
+
             SocketAddress address = socketAddressMap.put(request.id(),fromClient.getSocketAddress());
             logger.info("Сообщение получено от клиента #{}#{}", address, request.id());
             return request;
         } catch (SocketTimeoutException t) {
+            logger.debug(t);
             return null;
         } catch (IOException | ClassNotFoundException e) {
             logger.warn(e);
@@ -113,8 +121,6 @@ public class UdpServer implements Runner {
         } else {
             connect();
             br = new BufferedReader(new InputStreamReader(System.in));
-
-
         }
 
         if (!isScript) {
@@ -123,7 +129,9 @@ public class UdpServer implements Runner {
         }
 
         while (isRunning) {
+
             try {
+                Thread.sleep(300);
                 if (br.ready()) {
                     String input = br.readLine();
 
@@ -141,7 +149,7 @@ public class UdpServer implements Runner {
                     }
                     logger.debug("---------1----");
 
-                    invoker.defineCommand(input, isScript,null).execute();
+                    invoker.defineCommand(input, isScript, null).execute();
                     if (!isScript && isRunning) {
                         System.out.print("$user: ");
                         System.out.flush();
@@ -158,9 +166,13 @@ public class UdpServer implements Runner {
                         logger.debug("---------2----");
                         logger.debug("{} -- req", request);
 
-                        invoker.defineCommand(command.toString(), request.isScript(),request.id()).execute();
+                        invoker.defineCommand(command.toString(), request.isScript(), request.id()).execute();
                     }
                 }
+
+            }catch (InterruptedException e){
+                Thread.currentThread().interrupt();
+                logger.warn(e);
             } catch (SocketException e) {
                 if (!isRunning) break;
                 logger.warn("Ошибка сокета: {}", e.getMessage());

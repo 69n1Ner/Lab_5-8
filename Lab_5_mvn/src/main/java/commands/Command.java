@@ -87,11 +87,11 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
 
     protected void createRequest() {
         Runner runner = getInvokerFather().getRunner();
-        runner.sendMessage(
+        runner.sendAndWait(
                 Request.build(runner.getUuid())
                         .setRequestType(RequestType.COMMAND)
                         .setCommand(this)
-        );
+        ,);
     }
     protected void createRequestWith(Address address) {
         String xmlOrg = XmlUtil.adrToXml(address);

@@ -16,26 +16,32 @@ public record Request (
         RequestType requestType,
         UUID id,
         String feedback,
-        Command command
+        Command command,
+        UUID requestId
         ) implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    public static Request build(Request request){
+        return new Request(false,null,request.id,"",null,UUID.randomUUID());
+    }
+
     public static Request build(UUID uuid){
-        return new Request(false,null,uuid,"",null);
+        return new Request(false,null,uuid,"",null,UUID.randomUUID());
     }
 
     public Request setRequestType(RequestType requestType){
-        return new Request(isScript,requestType,id,feedback,command);
+        return new Request(isScript,requestType,id,feedback,command,requestId);
     }
 
     public Request setCommand(Command command){
         command = command.setRequest(true);
-        return new Request(isScript,requestType,id,feedback,command);
+        return new Request(isScript,requestType,id,feedback,command,requestId);
     }
 
     public Request setFeedback(String feedback){
-        return new Request(isScript,requestType,id,feedback,command);
+        return new Request(isScript,requestType,id,feedback,command,requestId);
     }
+
 
 
 
