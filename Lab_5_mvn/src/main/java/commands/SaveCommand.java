@@ -55,7 +55,6 @@ public class SaveCommand extends Command{
                         i++;
                     }
                     counter = i;
-
                 }
 
             } catch (IOException e) {
@@ -66,7 +65,7 @@ public class SaveCommand extends Command{
             if (!silent){
                 logger.info(t);
             }else {
-                logger.info("\n{}", t);
+                System.out.println("\nt");
             }
         }catch (InvalidInput i){
             logger.warn(i);

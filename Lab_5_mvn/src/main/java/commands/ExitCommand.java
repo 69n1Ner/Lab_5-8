@@ -24,7 +24,7 @@ public class ExitCommand extends Command{
             Validator.isValidArgument(this);
             System.out.println("\n"+getInvokerFather().getRunner().toString()+" завершил работу");
             Runner runner = getInvokerFather().getRunner();
-            runner.shutdown();
+            runner.shutdown(false);
 
         }catch (InvalidInput i){
             logger.warn(i);

@@ -42,7 +42,7 @@ public class UdpServer implements Runner {
         invoker.setCommand(new SaveCommand("save",invoker));
         UdpServer server = new UdpServer(invoker, 9898);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown((false))));
 
         server.run();
     }

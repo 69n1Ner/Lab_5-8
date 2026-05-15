@@ -14,13 +14,13 @@ public interface Runner extends Messageable, GetLoggerable ,Unique{
     void run();
     void run(boolean isScript, String path);
     Closeable getTunnel();
-    default void shutdown(){
+    default void shutdown(boolean isInterrupt){
         this.setRunning(false);
         Closeable tunnel = this.getTunnel();
         if (tunnel != null) {
             try {
                 if (this instanceof UdpServer) {
-                    ((SaveCommand) this.getInvokerFather().getAllCommands().get("save")).setSilent(true).execute();
+                    ((SaveCommand) this.getInvokerFather().getAllCommands().get("save")).setSilent(isInterrupt).execute();
                 }
                 tunnel.close();
             } catch (Exception e) {
