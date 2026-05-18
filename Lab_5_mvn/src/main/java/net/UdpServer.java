@@ -1,6 +1,7 @@
 package net;
 
 import commands.Command;
+import commands.ExitCommand;
 import commands.GetLoggerable;
 import commands.SaveCommand;
 import exceptions.*;
@@ -42,7 +43,12 @@ public class UdpServer implements Runner {
         invoker.setCommand(new SaveCommand("save",invoker));
         UdpServer server = new UdpServer(invoker, 9898);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown((false))));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
+                .getInvokerFather()
+                .getAllCommands()
+                .get("exit"))
+                .setInterrupt(true)
+                .execute()));
 
         server.run();
     }
