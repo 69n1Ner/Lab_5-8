@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 public class SaveCommand extends Command{
     private int counter = 0;
     private static final Logger logger = LogManager.getLogger(SaveCommand.class);
-    private boolean silent = false;
 
     public SaveCommand(String name, Invoker invoker) {
         super(name,invoker,ArgumentType.NO_ARGUMENTS);
@@ -55,7 +54,6 @@ public class SaveCommand extends Command{
                         i++;
                     }
                     counter = i;
-
                 }
 
             } catch (IOException e) {
@@ -63,16 +61,12 @@ public class SaveCommand extends Command{
             }
 
             String t = "Коллекция сохранена в collection" + counter + ".xml";
-            if (!silent){
                 logger.info(t);
-            }else {
-                logger.info("\n{}", t);
-            }
         }catch (InvalidInput i){
             logger.warn(i);
         }finally {
+            String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
             if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
-                String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
                 createResponse(response);
             }
         }
@@ -88,12 +82,4 @@ public class SaveCommand extends Command{
         return logger;
     }
 
-    public boolean isSilent() {
-        return silent;
-    }
-
-    public SaveCommand setSilent(boolean silent) {
-        this.silent = silent;
-        return this;
-    }
 }
