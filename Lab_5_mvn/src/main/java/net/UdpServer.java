@@ -46,13 +46,6 @@ public class UdpServer implements Runner {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        String level = System.getProperty("log.level");
-        Level l = InputManager.parseLevel(level);
-        String console = System.getProperty("log.console");
-        boolean isConsole = InputManager.parseConsole(console);
-        String file = System.getProperty("log.file");
-        boolean isFile = InputManager.parseFile(file);
-
 
 
         Container<Organization> container = new Container<>();
@@ -60,28 +53,7 @@ public class UdpServer implements Runner {
         invoker.setCommand(new SaveCommand("save", invoker));
         UdpServer server = new UdpServer(invoker, 9898);
 
-        org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) logger;
-        LoggerConfig rootLogger = coreLogger.getContext().getConfiguration().getRootLogger();
-        rootLogger.setLevel(l);
-
-        if (!isFile || !isConsole) {
-            Map<String, Appender> appenders = rootLogger.getAppenders();
-
-            if (!isFile) {
-                appenders.values().stream()
-                        .filter(a -> a.getName().startsWith("File"))
-                        .forEach(a -> rootLogger.removeAppender(a.getName()));
-            }
-
-            if (!isConsole) {
-                appenders.values().stream()
-                        .filter(a -> a.getName().startsWith("Console"))
-                        .forEach(a -> rootLogger.removeAppender(a.getName()));
-            }
-        }
-
-
-        coreLogger.getContext().updateLoggers();
+        server.applyParams();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
                 .getInvokerFather()

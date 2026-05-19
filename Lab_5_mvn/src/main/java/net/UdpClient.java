@@ -39,6 +39,8 @@ public class UdpClient implements Runner {
         Invoker invoker = new Invoker(null);
         UdpClient client = new UdpClient(invoker,9898);
 
+        client.applyParams();
+
         client.run();
     }
     public void connect() {
