@@ -1,6 +1,8 @@
 package io;
 
+import exceptions.InvalidInput;
 import exceptions.NoSuchCommandException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.*;
@@ -24,7 +26,6 @@ public class InputManager {
     private String mainArgument;
     private String xmlArgument;
     private final List<Character> asciiChars = new ArrayList<>();
-    private static final Logger logger = LogManager.getLogger(InputManager.class);
 
     public InputManager() {
 
@@ -396,6 +397,85 @@ public class InputManager {
         }
     }
 
+    public static Level parseLevel(String string) {
+        if (string == null || string.isEmpty()){
+            System.out.println("Уровень логирования установлен по умолчанию: info");
+            return Level.INFO;
+        }
+
+        string = string.toLowerCase();
+        switch (string){
+            case "info" -> {
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.INFO;
+            }
+            case "warn" -> {
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.WARN;
+            }
+            case "error" ->{
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.ERROR;
+            }
+            case "debug" ->{
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.DEBUG;
+            }
+            default -> {
+                System.err.println("Неопознанное значения уровня логирования: "+string);
+                System.out.println("Уровень логирования установлен по умолчанию: info");
+                return Level.INFO;
+            }
+        }
+    }
+
+    public static boolean parseConsole(String s) {
+        if (s == null || s.isEmpty()) {
+            System.out.println("Логирование будет выведено на консоль");
+            return true;
+        }
+        s = s.toLowerCase();
+
+        switch (s) {
+            case "true" -> {
+                System.out.println("Логирование будет выведено на консоль");
+                return true;
+            }
+            case "false" -> {
+                System.out.println("Логирование не будет выведено на консоль");
+                return false;
+            }
+            default -> {
+                System.err.println("Неопознанное значения флага вывода на консоль: "+s);
+                System.out.println("Логирование будет выведено на консоль");
+                return true;
+            }
+        }
+    }
+
+    public static boolean parseFile(String s){
+        if (s == null || s.isEmpty()) {
+            System.out.println("Логирование будет выведено в файл");
+            return true;
+        }
+        s = s.toLowerCase();
+
+        switch (s) {
+            case "true" -> {
+                System.out.println("Логирование будет выведено в файл");
+                return true;
+            }
+            case "false" -> {
+                System.out.println("Логирование не будет выведено в файл");
+                return false;
+            }
+            default -> {
+                System.err.println("Неопознанное значения флага вывода в файл: "+s);
+                System.out.println("Логирование будет выведено в файл");
+                return true;
+            }
+        }
+    }
 
     public String getMainArgument() {
         return mainArgument;

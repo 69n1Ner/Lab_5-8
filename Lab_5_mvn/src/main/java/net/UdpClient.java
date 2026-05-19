@@ -22,7 +22,7 @@ public class UdpClient implements Runner {
     private static final int ARRAY_SIZE = 1500;
     private final int port;
     private DatagramChannel CHANNEL;
-    private static final Logger logger = LogManager.getLogger(UdpClient.class);
+    private static Logger logger;
     private final Invoker invoker;
     private BufferedReader br;
     private boolean isRunning;
@@ -32,6 +32,7 @@ public class UdpClient implements Runner {
         this.invoker = invoker;
         this.port = port;
         this.invoker.setRunner(this);
+        logger = LogManager.getLogger(UdpClient.class);
     }
 
     public static void main(String[] args) throws IOException {

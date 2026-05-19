@@ -6,10 +6,16 @@ import commands.GetLoggerable;
 import commands.SaveCommand;
 import exceptions.*;
 import io.ByteUtil;
+import io.InputManager;
 import main.Container;
 import main.Invoker;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import organization.Organization;
 
 import java.io.*;
@@ -17,6 +23,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class UdpServer implements Runner {
@@ -35,13 +42,46 @@ public class UdpServer implements Runner {
         this.invoker = invoker;
         this.port = port;
         invoker.setRunner(this);
+
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        String level = System.getProperty("log.level");
+        Level l = InputManager.parseLevel(level);
+        String console = System.getProperty("log.console");
+        boolean isConsole = InputManager.parseConsole(console);
+        String file = System.getProperty("log.file");
+        boolean isFile = InputManager.parseFile(file);
+
+
+
         Container<Organization> container = new Container<>();
         Invoker invoker = new Invoker(container);
-        invoker.setCommand(new SaveCommand("save",invoker));
+        invoker.setCommand(new SaveCommand("save", invoker));
         UdpServer server = new UdpServer(invoker, 9898);
+
+        org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) logger;
+        LoggerConfig rootLogger = coreLogger.getContext().getConfiguration().getRootLogger();
+        rootLogger.setLevel(l);
+
+        if (!isFile || !isConsole) {
+            Map<String, Appender> appenders = rootLogger.getAppenders();
+
+            if (!isFile) {
+                appenders.values().stream()
+                        .filter(a -> a.getName().startsWith("File"))
+                        .forEach(a -> rootLogger.removeAppender(a.getName()));
+            }
+
+            if (!isConsole) {
+                appenders.values().stream()
+                        .filter(a -> a.getName().startsWith("Console"))
+                        .forEach(a -> rootLogger.removeAppender(a.getName()));
+            }
+        }
+
+
+        coreLogger.getContext().updateLoggers();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
                 .getInvokerFather()

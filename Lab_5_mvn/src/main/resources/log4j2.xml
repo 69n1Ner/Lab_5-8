@@ -2,44 +2,44 @@
 <Configuration status="WARN" shutdownHook="disable">
     <Appenders>
 
-        <Console name="Info" target="SYSTEM_OUT">
-            <LevelMatchFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        <Console name="ConsoleInfo" target="SYSTEM_OUT">
+            <ThresholdFilter level="INFO"/>
             <PatternLayout pattern="%d{HH:mm:ss} [%-5level] %msg%n"/>
         </Console>
 
 
-        <Console name="Warn" target="SYSTEM_ERR">
-            <LevelMatchFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+        <Console name="ConsoleWarn" target="SYSTEM_ERR">
+            <ThresholdFilter level="WARN"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-4level] %msg%n"/>
         </Console>
 
-        <Console name="Debug" target="SYSTEM_ERR">
-            <LevelMatchFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+        <Console name="ConsoleDebug" target="SYSTEM_ERR">
+            <ThresholdFilter level="DEBUG"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-4level] %msg%n"/>
         </Console>
 
 
-        <Console name="Error" target="SYSTEM_ERR">
-            <LevelMatchFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+        <Console name="ConsoleError" target="SYSTEM_ERR">
+            <ThresholdFilter level="ERROR"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %msg%n"/>
         </Console>
 
         <File name="FileAll" fileName="logs/app.log" append="true">
-            <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n%ex"/>
         </File>
 
         <File name="FileErrors" fileName="logs/errors.log" append="true">
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <ThresholdFilter level="ERROR"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n%ex"/>
         </File>
     </Appenders>
 
     <Loggers>
-        <Root level="debug">
-            <AppenderRef ref="Info"/>
-            <AppenderRef ref="Warn"/>
-            <AppenderRef ref="Debug"/>
+        <Root level="all">
+            <AppenderRef ref="ConsoleInfo"/>
+            <AppenderRef ref="ConsoleWarn"/>
+            <AppenderRef ref="ConsoleDebug"/>
+            <AppenderRef ref="ConsoleError"/>
             <AppenderRef ref="FileErrors"/>
             <AppenderRef ref="FileAll"/>
         </Root>
