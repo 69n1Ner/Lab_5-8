@@ -66,7 +66,6 @@ public class UdpClient implements Runner {
             InetSocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.send(buffer, address);
             if (request.requestType() != RequestType.PING) logger.info("Сообщение направлено на сервер #{}",address);
-
         }catch (PortUnreachableException e){
             logger.warn("Сервер не подключен к сети");
             connect();
@@ -74,31 +73,6 @@ public class UdpClient implements Runner {
             logger.warn(e);
         }
     }
-
-//    @Override
-//    public boolean sendAndWait(Request request, UUID uuid) {
-//        long start = System.currentTimeMillis();
-//        long timeout = 300;
-//        sendMessage(request);
-//        while (System.currentTimeMillis() - start < timeout) {
-//            try {
-//                Request response = receiveMessage();
-//                if (response != null && uuid.equals(response.id()) && response.requestType() == RequestType.OK) {
-//                    return true;
-//                }else {
-//                    Thread.sleep(30);
-//                    sendMessage(request);
-//                }
-//
-//
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//                break;
-//            }
-//        }
-//        logger.warn("Не получен ответ от сервера");
-//        return false;
-//    }
 
     @Override
     public  Request receiveMessage() {
