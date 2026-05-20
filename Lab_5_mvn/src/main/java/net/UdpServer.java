@@ -103,11 +103,12 @@ public class UdpServer implements Runner {
             Request request;
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
 
-            if (request.requestType() == RequestType.COMMAND){
-                sendMessage(Request.build(request.requestId()).setRequestType(RequestType.OK));
-            }
+//            if (request.requestType() == RequestType.COMMAND){
+//                sendMessage(Request.build(request.requestId()).setRequestType(RequestType.OK));
+//            }
 
-            SocketAddress address = socketAddressMap.put(request.id(),fromClient.getSocketAddress());
+            socketAddressMap.put(request.id(),fromClient.getSocketAddress());
+            SocketAddress address = socketAddressMap.get(request.id());
             logger.info("Сообщение получено от клиента #{}#{}", address, request.id());
             return request;
         } catch (SocketTimeoutException t) {

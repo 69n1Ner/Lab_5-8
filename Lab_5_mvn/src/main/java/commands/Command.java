@@ -88,9 +88,11 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
     protected void createRequest() {
         Runner runner = getInvokerFather().getRunner();
 //        runner.sendAndWait(
+        runner.sendMessage(
                 Request.build(runner.getUuid())
                         .setRequestType(RequestType.COMMAND)
-                        .setCommand(this);
+                        .setCommand(this)
+        );
 //        ,);
     }
     protected void createRequestWith(Address address) {

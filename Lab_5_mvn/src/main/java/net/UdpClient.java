@@ -63,7 +63,7 @@ public class UdpClient implements Runner {
     public void sendMessage(Request request) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap(ByteUtil.toByteArray(request, ARRAY_SIZE));
-            InetSocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
+            SocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.send(buffer, address);
             if (request.requestType() != RequestType.PING) logger.info("Сообщение направлено на сервер #{}",address);
         }catch (PortUnreachableException e){
