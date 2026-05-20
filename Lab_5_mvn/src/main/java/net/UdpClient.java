@@ -112,7 +112,7 @@ public class UdpClient implements Runner {
             try {
                 br = new BufferedReader(new InputStreamReader(new FileInputStream(path1.toFile())));
             } catch (FileNotFoundException e) {
-                logger.warn(e);
+                logger.warn(e.getMessage());
                 System.out.println(e.getMessage());
                 return;
             }
@@ -156,7 +156,6 @@ public class UdpClient implements Runner {
                     Request request1 = receiveMessage();
 
                     if (request1 != null) {
-                        logger.debug(request1);
                         if (request1.requestType() == null){
                             if (!isScript && isRunning) {
                                 System.out.print("$user: ");
@@ -175,9 +174,9 @@ public class UdpClient implements Runner {
                 }
             }catch (InterruptedException e){
                 Thread.currentThread().interrupt();
-                logger.warn(e);
+                logger.warn(e.getMessage());
             } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException | IOException e) {
-                logger.warn("{}",e.getMessage(),e);
+                logger.warn("{}",e.getMessage());
 
                 if (!isScript && isRunning) {
                     System.out.print("$user: ");
