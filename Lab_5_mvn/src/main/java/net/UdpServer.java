@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class UdpServer implements Runner {
-    private static final String IP_ADDRESS = "localhost";
-    private static final int ARRAY_SIZE = 1500;
+    private static final int ARRAY_SIZE = 65000;
     private final int port;
     private DatagramSocket SOCKET;
     private static final Logger logger = LogManager.getLogger(UdpServer.class);
