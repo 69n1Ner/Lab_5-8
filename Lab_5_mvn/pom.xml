@@ -41,8 +41,28 @@
                 <version>3.6.0</version>
                 <executions>
                     <!-- Тестовый ввод -->
+<!--                    <execution>-->
+<!--                        <id>make-test-jar</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <archive>-->
+<!--                                <manifest>-->
+<!--                                    <mainClass>theory6.KlazzServer</mainClass>-->
+<!--                                </manifest>-->
+<!--                            </archive>-->
+<!--                            <descriptorRefs>-->
+<!--                                <descriptorRef>jar-with-dependencies</descriptorRef>-->
+<!--                            </descriptorRefs>-->
+<!--                            <finalName>lab5_8-test</finalName>-->
+<!--                            <appendAssemblyId>false</appendAssemblyId>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+
                     <execution>
-                        <id>make-test-jar</id>
+                        <id>make-test1-jar</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -50,13 +70,13 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>io.TestInput</mainClass>
+                                    <mainClass>theory6.KlazzClient</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>lab5_8-test</finalName>
+                            <finalName>lab5_8-test1</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>

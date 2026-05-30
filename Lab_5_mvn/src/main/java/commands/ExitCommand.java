@@ -54,7 +54,7 @@ public class ExitCommand extends Command{
 
     @Override
     public String describe() {
-        return "exit : завершить программу (без сохранения в файл)";
+        return "exit : завершить программу";
     }
 
     @Override

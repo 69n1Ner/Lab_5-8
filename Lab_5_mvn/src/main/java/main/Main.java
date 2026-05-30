@@ -16,7 +16,7 @@
 //import static java.nio.charset.StandardCharsets.UTF_8;
 //
 //
-//public class Main {
+//public class theory6.Main {
 //    public static void main(String[] args) {
 //        Container<Organization> container = new Container<>();
 //        Invoker invoker = new Invoker(container);
