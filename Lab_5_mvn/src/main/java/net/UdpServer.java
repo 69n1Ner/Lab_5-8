@@ -2,20 +2,13 @@ package net;
 
 import commands.Command;
 import commands.ExitCommand;
-import commands.GetLoggerable;
 import commands.SaveCommand;
 import exceptions.*;
 import io.ByteUtil;
-import io.InputManager;
 import main.Container;
 import main.Invoker;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.LoggerConfig;
 import organization.Organization;
 
 import java.io.*;
@@ -23,21 +16,19 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-public class UdpServer implements Runner {
+public class UdpServer extends Runner {
     private static final int ARRAY_SIZE = 65000;
     private final int port;
-    private DatagramSocket SOCKET;
     private static final Logger logger = LogManager.getLogger(UdpServer.class);
     private Invoker invoker;
     private volatile boolean isRunning;
-    private BufferedReader br;
+    private DatagramSocket SOCKET;
     private final HashMap<UUID,SocketAddress> socketAddressMap = new HashMap<>();
-    private final UUID uuid = UUID.randomUUID();
 
     private UdpServer(Invoker invoker, int port) {
+        super(port, invoker);
         this.invoker = invoker;
         this.port = port;
         invoker.setRunner(this);
@@ -80,11 +71,11 @@ public class UdpServer implements Runner {
         try {
             byte[] buf = ByteUtil.toByteArray(request, ARRAY_SIZE);
             logger.debug("принят буфер");
-            SocketAddress address = socketAddressMap.get(request.id());
+            SocketAddress address = socketAddressMap.get(request.runnerId());
             DatagramPacket toClient = new DatagramPacket(buf, buf.length, address);
             logger.debug("создан пакет");
             SOCKET.send(toClient);
-            logger.info("Сообщение отправлено клиенту #{}#{}", address, request.id());
+            logger.info("Сообщение отправлено клиенту #{}#{}", address, request.runnerId());
         } catch (IOException e) {
             logger.warn(e);
         }
@@ -101,18 +92,12 @@ public class UdpServer implements Runner {
 
             Request request;
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
+            ping();
 
-//            if (request.requestType() == RequestType.COMMAND){
-//                sendMessage(Request.build(request.requestId()).setRequestType(RequestType.OK));
-//            }
-
-            socketAddressMap.put(request.id(),fromClient.getSocketAddress());
-            SocketAddress address = socketAddressMap.get(request.id());
-            logger.info("Сообщение получено от клиента #{}#{}", address, request.id());
+            socketAddressMap.put(request.runnerId(),fromClient.getSocketAddress());
+            SocketAddress address = socketAddressMap.get(request.runnerId());
+            if (request.requestType() != RequestType.PING) logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
             return request;
-        } catch (SocketTimeoutException t) {
-            logger.debug(t);
-            return null;
         } catch (IOException | ClassNotFoundException e) {
             logger.warn(e);
             return null;
@@ -167,7 +152,13 @@ public class UdpServer implements Runner {
                     }
                     logger.debug("---------1----");
 
+                    //sending
                     invoker.defineCommand(input, isScript, null).execute();
+                    Request request = invoker.defineCommand(input, isScript, runnerId).execute();
+                    if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
+                        request.setRunnerId(runnerId);
+                        sendMessage(request);
+                    }
                     if (!isScript && isRunning) {
                         System.out.print("$user: ");
                         System.out.flush();
@@ -175,6 +166,7 @@ public class UdpServer implements Runner {
                     continue;
                 }
 
+                //receiving
                 if (isRunning && SOCKET != null && !SOCKET.isClosed()) {
                     Request request = receiveMessage();
                     if (request != null && request.requestType() != RequestType.PING) {
@@ -184,7 +176,7 @@ public class UdpServer implements Runner {
                         logger.debug("---------2----");
                         logger.debug("{} -- req", request);
 
-                        invoker.defineCommand(command.toString(), request.isScript(), request.id()).execute();
+                        invoker.defineCommand(command.toString(), request.isScript(), request.runnerId()).execute();
                     }
                 }
 
@@ -247,7 +239,7 @@ public class UdpServer implements Runner {
 
 
     @Override
-    public UUID getUuid() {
-        return uuid;
+    public UUID getRunnerId() {
+        return runnerId;
     }
 }

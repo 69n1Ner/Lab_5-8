@@ -7,6 +7,7 @@ import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,8 +26,8 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
     }
 
     @Override
-    public void execute() {
-        String r = "непредвиденная";
+    public Request execute() {
+        String r;
         try {
             Validator.isValidArgument(this);
 
@@ -36,13 +37,15 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
             if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 address = InputManager.inputAddress();
             }else {
+                Validator.isXmlAddressValid(this);
+
+                if (getInvokerFather().getRunner() instanceof UdpClient){
+                    return createRequest(this);
+                }
                 address = XmlUtil.readAddressFromString(getXmlArgument());
             }
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequestWith(address);
-                return;
-            }
+
 
             List<Organization> container = invokerFather.getContainer().getAll();
 
@@ -69,11 +72,12 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
         }catch (InvalidInput e){
             logger.warn(e);
             r= e.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override

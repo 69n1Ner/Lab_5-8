@@ -1,45 +1,40 @@
 package net;
 
 import commands.Command;
-import io.InputManager;
-import main.Invoker;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
-import java.net.SocketAddress;
 import java.util.UUID;
 
 public record Request (
-        //todo можно добавить id request'а и время, чтобы выполнять команды последовательно, а не в хаосе + отсекать по времени повторки
+        //todo можно добавить runnerId request'а и время, чтобы выполнять команды последовательно, а не в хаосе + отсекать по времени повторки
         boolean isScript,
         RequestType requestType,
-        UUID id,
+        UUID runnerId,
         String feedback,
         Command command,
         UUID requestId
         ) implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public static Request build(Request request){
-        return new Request(false,null,request.id,"",null,UUID.randomUUID());
-    }
-
-    public static Request build(UUID uuid){
-        return new Request(false,null,uuid,"",null,UUID.randomUUID());
+    public static Request build(){
+        return new Request(false,null,null,"",null,UUID.randomUUID());
     }
 
     public Request setRequestType(RequestType requestType){
-        return new Request(isScript,requestType,id,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
     }
 
     public Request setCommand(Command command){
         command = command.setRequest(true);
-        return new Request(isScript,requestType,id,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
     }
 
     public Request setFeedback(String feedback){
-        return new Request(isScript,requestType,id,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+    }
+
+    public Request setRunnerId(UUID runnerId){
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
     }
 
 
@@ -49,7 +44,7 @@ public record Request (
     public String toString() {
         return "Request{" +
                 "\n requestType=" + requestType +
-                "\n id=" + id +
+                "\n runnerId=" + runnerId +
                 "\n feedback='" + feedback + '\'' +
                 "\n "+ command+
                 "\n "+command.isRequest()+

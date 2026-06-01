@@ -5,6 +5,7 @@ import exceptions.InvalidInput;
 import io.Validator;
 import main.Container;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,14 +24,13 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         String r = "непредвиденная";
         try {
             Validator.isValidArgument(this);
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequest();
-                return;
+                return createRequest(this);
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -52,11 +52,12 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
         }catch (InvalidInput i){
             logger.warn(i);
             r= i.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override

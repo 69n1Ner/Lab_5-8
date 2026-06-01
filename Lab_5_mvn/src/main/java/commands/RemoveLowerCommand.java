@@ -7,6 +7,7 @@ import io.Validator;
 import io.XmlUtil;
 import main.Container;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +24,7 @@ public class RemoveLowerCommand extends Command implements Serializable {
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
 
         String r ="непредвиденная";
         try {
@@ -37,8 +38,7 @@ public class RemoveLowerCommand extends Command implements Serializable {
             }
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequestWith(newOrganization);
-                return;
+                return createRequest(this);
             }
 
             Invoker invokerFather = getInvokerFather();
@@ -67,11 +67,12 @@ public class RemoveLowerCommand extends Command implements Serializable {
         }catch (InvalidInput e){
             logger.warn(e);
             r= e.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override

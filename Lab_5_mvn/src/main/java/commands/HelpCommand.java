@@ -3,6 +3,7 @@ package commands;
 import exceptions.InvalidInput;
 import io.Validator;
 import main.Invoker;
+import net.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +24,7 @@ public class HelpCommand extends Command  implements Serializable {
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         try {
             Validator.isValidArgument(this);
 
@@ -38,13 +39,7 @@ public class HelpCommand extends Command  implements Serializable {
             }catch (InvalidInput i){
             logger.warn(i);
         }
-    }
-
-    @Override
-    public void createRequest(){
-        RuntimeException ex = new RuntimeException("Этот метод не должен использоваться");
-        getLogger().fatal(ex);
-        throw ex;
+        return null;
     }
 
     @Override

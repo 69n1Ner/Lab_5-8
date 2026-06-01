@@ -4,6 +4,7 @@ import exceptions.InvalidInput;
 import io.Validator;
 import io.XmlUtil;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,13 +28,12 @@ public class SaveCommand extends Command{
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         try {
             Validator.isValidArgument(this);
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequest();
-                return;
+                return createRequest(this);
             }
 
             Path dir = Paths.get(System.getProperty("user.dir"));
@@ -64,12 +64,12 @@ public class SaveCommand extends Command{
                 logger.info(t);
         }catch (InvalidInput i){
             logger.warn(i);
-        }finally {
-            String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
-                createResponse(response);
-            }
         }
+        String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
+        if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(response);
+        }
+        return null;
     }
 
     @Override

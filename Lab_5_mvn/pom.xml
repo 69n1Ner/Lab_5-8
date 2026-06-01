@@ -42,7 +42,7 @@
                 <executions>
                     <!-- Тестовый ввод -->
 <!--                    <execution>-->
-<!--                        <id>make-test-jar</id>-->
+<!--                        <runnerId>make-test-jar</runnerId>-->
 <!--                        <phase>package</phase>-->
 <!--                        <goals>-->
 <!--                            <goal>single</goal>-->

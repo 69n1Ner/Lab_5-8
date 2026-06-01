@@ -4,6 +4,7 @@ import exceptions.InvalidInput;
 import exceptions.NoSuchOrganizationException;
 import io.Validator;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,14 +20,13 @@ public class RemoveByIDCommand extends Command implements Serializable {
 
 
     @Override
-    public void execute() {
+    public Request execute() {
         String r = "непредвиденная";
         try {
             Validator.isValidArgument(this);
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequest();
-                return;
+                return createRequest(this);
             }
 
             Long ID = Long.parseLong(getArgument());
@@ -37,16 +37,17 @@ public class RemoveByIDCommand extends Command implements Serializable {
         } catch (InvalidInput | NoSuchOrganizationException i){
             logger.warn(i);
             r= i.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override
     public String describe() {
-        return "remove_by_id id : удалить элемент из коллекции по его id";
+        return "remove_by_id runnerId : удалить элемент из коллекции по его runnerId";
     }
 
     @Override

@@ -84,7 +84,7 @@
 //                    Command command = invoker.defineCommand(request.commandName() + " "+ request.argument() + " " + request.xmlArgument(), request.isScript());
 //                    System.out.println("Запрос от клиента: $>"+ command);
 //
-//                    Request request1 = Request.build(request.id())
+//                    Request request1 = Request.build(request.runnerId())
 //                            .setRequestType(RequestType.INFORMATION)
 //                            .setErrorOrInformation(command.feedback());
 //

@@ -17,45 +17,37 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class UdpClient implements Runner {
-    private static final String IP_ADDRESS = "localhost";
-    private static final int ARRAY_SIZE = 65000;
-    private final int port;
+public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
-    private static Logger logger;
-    private final Invoker invoker;
-    private BufferedReader br;
-    private boolean isRunning;
-    private final UUID uuid = UUID.randomUUID();
 
-    private UdpClient(Invoker invoker, int port){
-        this.invoker = invoker;
-        this.port = port;
-        this.invoker.setRunner(this);
+    public UdpClient(Invoker invoker, int port) {
+        super(port, invoker);
+        super.invoker.setRunner(this);
         logger = LogManager.getLogger(UdpClient.class);
     }
 
     public static void main(String[] args) throws IOException {
         Invoker invoker = new Invoker(null);
-        UdpClient client = new UdpClient(invoker,9898);
+        UdpClient client = new UdpClient(invoker, 9898);
 
         client.applyParams();
 
         client.run();
     }
+    @Override
     public void connect() {
         try {
             CHANNEL = DatagramChannel.open();
             CHANNEL.configureBlocking(false);
-            SocketAddress socketAddress = new InetSocketAddress(IP_ADDRESS,port);
+            SocketAddress socketAddress = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.connect(socketAddress);
-            Request ping = Request.build(uuid).setRequestType(RequestType.PING);
-            sendMessage(ping);
+            Thread.sleep(100);
 
             logger.info("Клиент запущен и готов отправлять данные");
         } catch (IOException e) {
-            logger.error("Сервер не смог подключиться к сети по порту {}",port,e);
-            logger.warn("Сервер не подключен к сети");
+            logger.error("Клиент не смог подключиться к сети по порту {}", port, e);
+        } catch (InterruptedException e) {
+            logger.warn("interrupt");
         }
     }
 
@@ -65,17 +57,16 @@ public class UdpClient implements Runner {
             ByteBuffer buffer = ByteBuffer.wrap(ByteUtil.toByteArray(request, ARRAY_SIZE));
             SocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.send(buffer, address);
-            if (request.requestType() != RequestType.PING) logger.info("Сообщение направлено на сервер #{}",address);
         }catch (PortUnreachableException e){
-            logger.warn("Сервер не подключен к сети");
-            connect();
-        }catch (IOException e){
+            isUnreachable = true;
+        } catch (IOException e) {
             logger.warn(e);
         }
     }
 
+
     @Override
-    public  Request receiveMessage() {
+    public Request receiveMessage() {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(ARRAY_SIZE);
             SocketAddress address = CHANNEL.receive(buffer);
@@ -83,32 +74,32 @@ public class UdpClient implements Runner {
             if (address == null) {
                 return null;
             }
+            ping();
 
             buffer.flip();
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
-            logger.info("Сообщение получено от сервера #{}", address);
-            return ByteUtil.fromBytesTo(data, Request.class);
-        }catch (SocketTimeoutException e) {
+            Request request = ByteUtil.fromBytesTo(data, Request.class);
+            if (request.requestType() != RequestType.PING) logger.info("Сообщение получено от сервера #{}", address);
+            return request;
+        } catch (SocketTimeoutException | PortUnreachableException e) {
             return null;
-        }catch (PortUnreachableException e){
-            logger.warn("Сервер не подключен к сети");
-            return Request.build(uuid);
-        }catch (IOException | ClassNotFoundException e){
-            logger.warn(Arrays.toString(e.getStackTrace()).replace(",","\n"),e);
+        } catch (IOException | ClassNotFoundException e) {
+            logger.warn(Arrays.toString(e.getStackTrace()).replace(",", "\n"), e);
             return null;
         }
     }
 
     @Override
-    public void run(){
-        run(false,"");
+    public void run() {
+        run(false, "");
     }
+
     @Override
-    public void run(boolean isScript, String path){
+    public void run(boolean isScript, String path) {
         isRunning = true;
         Path path1 = Path.of(path);
-        if (isScript){
+        if (isScript) {
             try {
                 br = new BufferedReader(new InputStreamReader(new FileInputStream(path1.toFile())));
             } catch (FileNotFoundException e) {
@@ -127,6 +118,7 @@ public class UdpClient implements Runner {
 
         while (isRunning) {
             try {
+                ping();
                 Thread.sleep(300);
 
                 if (br.ready()) {
@@ -145,23 +137,26 @@ public class UdpClient implements Runner {
                         logger.info(input);
                     }
 
-                    invoker.defineCommand(input, isScript,uuid).execute();
+                    //sending
+                    Request request = invoker.defineCommand(input, isScript, runnerId).execute();
+                    if (isRunning && CHANNEL != null && request != null) {
+                        request.setRunnerId(runnerId);
+                        sendAndWait(request);
+                    }
                     if (!isScript && isRunning) {
                         System.out.print("$user: ");
                         System.out.flush();
                     }
                 }
 
+                //receiving
                 if (isRunning && CHANNEL != null) {
                     Request request1 = receiveMessage();
 
                     if (request1 != null) {
-                        if (request1.requestType() == null){
-                            if (!isScript && isRunning) {
-                                System.out.print("$user: ");
-                                System.out.flush();
-                            }
-                            continue;
+                        if (!isScript && isRunning) {
+                            System.out.print("$user: ");
+                            System.out.flush();
                         }
 
                         logger.info(request1.feedback());
@@ -172,11 +167,12 @@ public class UdpClient implements Runner {
                     }
 
                 }
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.warn(e.getMessage());
-            } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException | IOException e) {
-                logger.warn("{}",e.getMessage());
+            } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException |
+                     IOException e) {
+                logger.warn("{}", e.getMessage());
 
                 if (!isScript && isRunning) {
                     System.out.print("$user: ");
@@ -190,7 +186,6 @@ public class UdpClient implements Runner {
     public Closeable getTunnel() {
         return CHANNEL;
     }
-
 
 
     @Override
@@ -222,7 +217,7 @@ public class UdpClient implements Runner {
     }
 
     @Override
-    public UUID getUuid() {
-        return uuid;
+    public UUID getRunnerId() {
+        return runnerId;
     }
 }

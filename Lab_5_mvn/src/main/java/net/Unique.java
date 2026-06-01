@@ -3,5 +3,5 @@ package net;
 import java.util.UUID;
 
 public interface Unique {
-    UUID getUuid();
+    UUID getRunnerId();
 }

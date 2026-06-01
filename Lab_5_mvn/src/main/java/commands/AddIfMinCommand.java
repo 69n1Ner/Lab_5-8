@@ -8,6 +8,7 @@ import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +26,7 @@ public class AddIfMinCommand extends Command implements Serializable {
 
 
     @Override
-    public void execute() {
+    public Request execute() {
         String response = "непредвиденная";
         try {
             Validator.isValidArgument(this);
@@ -40,13 +41,14 @@ public class AddIfMinCommand extends Command implements Serializable {
                     newOrganization = InputManager.inputOrganization();
                 } else {
                     Validator.isXmlOrgValid(this);
+
+                    if (getInvokerFather().getRunner() instanceof UdpClient){
+                        return createRequest(this);
+                    }
                     newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
                 }
 
-                if (getInvokerFather().getRunner() instanceof UdpClient){
-                    createRequestWith(newOrganization);
-                    return;
-                }
+
 
             if (!container.getAll().isEmpty()) {
 
@@ -73,11 +75,12 @@ public class AddIfMinCommand extends Command implements Serializable {
         } catch (InvalidInput e){
             logger.warn(e);
             response = e.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(response);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(response);
+        }
+        return null;
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,12 +22,12 @@ public class UpdateCommand extends Command  implements Serializable {
 
     @Override
     public String describe() {
-        return "update id {element} : Обновляет значения элемента по id, нужно ввести весь объект." +
+        return "update runnerId {element} : Обновляет значения элемента по runnerId, нужно ввести весь объект." +
                 " Поля без значения не будут изменены.";
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         String r = "непредвиденная";
 
         try{
@@ -37,13 +38,14 @@ public class UpdateCommand extends Command  implements Serializable {
             if((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()){
                 parametrizedOrg = InputManager.inputOrganization(true);
             }else {
+                Validator.isXmlOrgValid(this);
+                if (getInvokerFather().getRunner() instanceof UdpClient){
+                    return createRequest(this);
+                }
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequestWith(parametrizedOrg);
-                return;
-            }
+
 
             Invoker invokerFather = getInvokerFather();
             Container<Organization> container = invokerFather.getContainer();
@@ -67,11 +69,12 @@ public class UpdateCommand extends Command  implements Serializable {
         }catch (InvalidInput | NoSuchOrganizationException i){
             logger.warn(i);
             r=i.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override

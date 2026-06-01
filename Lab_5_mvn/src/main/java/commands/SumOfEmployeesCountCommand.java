@@ -4,6 +4,7 @@ import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,15 +22,14 @@ public class SumOfEmployeesCountCommand extends Command implements Serializable 
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         String r = "непредвиденная";
 
         try{
             Validator.isValidArgument(this);
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequest();
-                return;
+                return createRequest(this);
             }
 
             List<Organization> container = getInvokerFather().getContainer().getAll();
@@ -48,11 +48,12 @@ public class SumOfEmployeesCountCommand extends Command implements Serializable 
         } catch (InvalidInput i){
             logger.warn(i);
             r= i.getMessage();
-        }finally {
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
 
     }
 

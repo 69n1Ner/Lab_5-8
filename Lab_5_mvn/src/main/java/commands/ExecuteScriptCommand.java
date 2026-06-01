@@ -4,6 +4,7 @@ import exceptions.InvalidInput;
 import exceptions.RecursionLimitReached;
 import io.Validator;
 import main.Invoker;
+import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,8 +36,8 @@ public class ExecuteScriptCommand extends Command{
 
     //TODO при посылке реквеста не должна посылаться команда, а сразу выполняться и посылать другие команды. Т.е. добавить флаг isScript и в этот execute
     @Override
-    public void execute() {
-        String r = "непредвиденная";
+    public Request execute() {
+        String r;
         try {
             Validator.isValidArgument(this);
             incrementCurrentRecursion();
@@ -51,12 +52,12 @@ public class ExecuteScriptCommand extends Command{
             logger.warn(i);
             logger.debug(Arrays.toString(i.getStackTrace()).replace(",","\n"));
             r = i.getMessage();
-        } finally {
-            decrementCurrentRecursion();
-            if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)){
-                createResponse(r);
-            }
         }
+
+//        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+//            return createRequest(r);
+//        }
+        return null;
     }
 
     @Override

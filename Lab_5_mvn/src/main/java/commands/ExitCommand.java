@@ -3,6 +3,7 @@ package commands;
 import exceptions.InvalidInput;
 import io.Validator;
 import main.Invoker;
+import net.Request;
 import net.Runner;
 import net.UdpServer;
 import org.apache.logging.log4j.LogManager;
@@ -21,14 +22,14 @@ public class ExitCommand extends Command{
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         try {
             Validator.isValidArgument(this);
             Runner runner = getInvokerFather().getRunner();
             runner.setRunning(false);
 
             if (!isInterrupt){
-                return;
+                return null;
             }
 
             Closeable tunnel = runner.getTunnel();
@@ -50,6 +51,7 @@ public class ExitCommand extends Command{
             logger.warn(i);
 
         }
+        return null;
     }
 
     @Override

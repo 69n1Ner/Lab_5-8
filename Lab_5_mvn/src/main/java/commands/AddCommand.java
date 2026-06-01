@@ -7,6 +7,8 @@ import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.Request;
+import net.RequestType;
 import net.UdpClient;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
@@ -28,7 +30,7 @@ public class AddCommand extends Command implements Serializable {
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         String response = "непредвиденная";
 
         try {
@@ -41,13 +43,14 @@ public class AddCommand extends Command implements Serializable {
                 newOrganization = InputManager.inputOrganization();
             } else {
                 Validator.isXmlOrgValid(this);
-                newOrganization = XmlUtil.readOrganizationFromString(invokerFather.getInputManager().getXmlArgument());
+
+                if (getInvokerFather().getRunner() instanceof UdpClient){
+                    return createRequest(this);
+                }
+                newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 //---
-            if (getInvokerFather().getRunner() instanceof UdpClient){
-                createRequestWith(newOrganization);
-                return;
-            }
+
 
             Container<Organization> container =  invokerFather.getContainer();
 
@@ -56,14 +59,15 @@ public class AddCommand extends Command implements Serializable {
             logger.info(text);
             response = text;
 
-        }catch (InvalidInput i){
+        }catch (InvalidInput i) {
             logger.warn(i);
             response = i.getMessage();
-        }finally {
-            if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
-                createResponse(response);
-            }
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+                return createRequest(response);
+        }
+        return null;
     }
 
     @Override

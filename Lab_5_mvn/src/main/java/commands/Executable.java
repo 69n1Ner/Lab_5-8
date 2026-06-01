@@ -1,5 +1,7 @@
 package commands;
 
+import net.Request;
+
 public interface Executable {
-    void execute();
+    Request execute();
 }

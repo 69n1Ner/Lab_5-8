@@ -74,62 +74,16 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
         return invokerFather;
     }
 
-    public void setInvokerFather(Invoker invoker){
-        this.invokerFather = invoker;
+
+
+    protected Request createRequest(String feedback) {
+        return Request.build().setRequestType(RequestType.FEEDBACK).setFeedback(feedback);
     }
 
-    public String basicExecuteError() {
-        RuntimeException re = new RuntimeException();
-        getLogger().fatal("Непредвиденная ошибка в {}", getCommandName(),re);
-        return "Непредвиденная ошибка в" + getCommandName() +" | "+ re;
+    protected Request createRequest(Command command) {
+        return Request.build().setRequestType(RequestType.COMMAND).setCommand(command);
     }
 
-
-    protected void createRequest() {
-        Runner runner = getInvokerFather().getRunner();
-//        runner.sendAndWait(
-        runner.sendMessage(
-                Request.build(runner.getUuid())
-                        .setRequestType(RequestType.COMMAND)
-                        .setCommand(this)
-        );
-//        ,);
-    }
-    protected void createRequestWith(Address address) {
-        String xmlOrg = XmlUtil.adrToXml(address);
-        Runner runner = getInvokerFather().getRunner();
-
-        setXmlArgument(xmlOrg);
-            runner.sendMessage(
-                    Request.build(runner.getUuid())
-                            .setRequestType(RequestType.COMMAND)
-                            .setCommand(this)
-            );
-    }
-
-    protected void createRequestWith(Organization organization) {
-        String xmlOrg = XmlUtil.orgToXml(organization);
-        getLogger().debug("{} --commandIN",xmlOrg);
-        Runner runner = getInvokerFather().getRunner();
-
-        setXmlArgument(xmlOrg);
-            runner.sendMessage(
-                    Request.build(runner.getUuid())
-                    .setRequestType(RequestType.COMMAND)
-                    .setCommand(this)
-            );
-    }
-
-    protected void createResponse(String response) {
-        getLogger().debug("before");
-        Runner runner = getInvokerFather().getRunner();
-        getLogger().debug("{} response", id);
-        runner.sendMessage(
-                Request.build(id)
-                .setFeedback(response)
-                .setRequestType(RequestType.FEEDBACK)
-        );
-    }
 
     @Override
     public String toString() {
