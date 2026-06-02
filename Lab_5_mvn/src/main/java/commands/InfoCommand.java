@@ -51,7 +51,7 @@ public class InfoCommand extends Command implements Serializable {
             r= i.getMessage();
         }
 
-        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+        if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
             return createRequest(r);
         }
         return null;

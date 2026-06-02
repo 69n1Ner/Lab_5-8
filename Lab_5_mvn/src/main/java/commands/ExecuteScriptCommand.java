@@ -37,21 +37,26 @@ public class ExecuteScriptCommand extends Command{
     //TODO при посылке реквеста не должна посылаться команда, а сразу выполняться и посылать другие команды. Т.е. добавить флаг isScript и в этот execute
     @Override
     public Request execute() {
-        String r;
         try {
-            Validator.isValidArgument(this);
+            String file = getArgument();
+//            logger.debug("file0={}",file);
+            if (file.contains("\"")){
+//                logger.debug("contains");
+                file = file.replace("\"","");
+//                logger.debug("file1={}",file);
+                Command command = this.setArgument(file);
+                Validator.isValidArgument(command);
+            }else Validator.isValidArgument(this);
+
             incrementCurrentRecursion();
 
 
-            getInvokerFather().getRunner().run(true,getArgument());
+            getInvokerFather().getRunner().run(true,file);
             String t = "Скрипт " +getArgument()+  " выполнен";
             logger.info(t);
-            r = t;
 
         }catch (InvalidInput | RecursionLimitReached i){
             logger.warn(i);
-            logger.debug(Arrays.toString(i.getStackTrace()).replace(",","\n"));
-            r = i.getMessage();
         }
 
 //        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {

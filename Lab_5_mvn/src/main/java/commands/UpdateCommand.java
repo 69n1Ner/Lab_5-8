@@ -39,12 +39,15 @@ public class UpdateCommand extends Command  implements Serializable {
                 parametrizedOrg = InputManager.inputOrganization(true);
             }else {
                 Validator.isXmlOrgValid(this);
-                if (getInvokerFather().getRunner() instanceof UdpClient){
-                    return createRequest(this);
-                }
+
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                String xmlOrg = XmlUtil.orgToXml(parametrizedOrg);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
+            }
 
 
             Invoker invokerFather = getInvokerFather();

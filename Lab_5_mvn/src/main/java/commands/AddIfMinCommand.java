@@ -41,13 +41,14 @@ public class AddIfMinCommand extends Command implements Serializable {
                     newOrganization = InputManager.inputOrganization();
                 } else {
                     Validator.isXmlOrgValid(this);
-
-                    if (getInvokerFather().getRunner() instanceof UdpClient){
-                        return createRequest(this);
-                    }
                     newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
                 }
 
+                if (getInvokerFather().getRunner() instanceof UdpClient){
+                    String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                    Command command = this.setXmlArgument(xmlOrg);
+                    return createRequest(command);
+                }
 
 
             if (!container.getAll().isEmpty()) {

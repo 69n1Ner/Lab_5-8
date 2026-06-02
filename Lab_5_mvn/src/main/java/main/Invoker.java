@@ -41,7 +41,7 @@ public class Invoker {
         this.commandHashMap.put(command.getCommandName(), command);
     }
 
-    public Command defineCommand(String string, boolean isScript, UUID id) throws NoSuchCommandException {
+    public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
         this.inputManager = new InputManager();
         inputManager.separate(string);
         if (Validator.isCommandExists(inputManager.getCommandName(),this)) {
@@ -49,10 +49,9 @@ public class Invoker {
                                 .get(inputManager.getCommandName())
                                 .setArgument(inputManager.getMainArgument())
                                 .setXmlArgument(inputManager.getXmlArgument())
-                                .setIsScript(isScript)
-                                .setId(id);
-            if (id != null){
-                command.setRequest(true);
+                                .setIsScript(isScript);
+            if (command.isRequest()){
+                command = command.setRequest(true);
             }
             return command;
         }

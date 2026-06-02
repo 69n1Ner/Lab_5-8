@@ -39,10 +39,13 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
             }else {
                 Validator.isXmlAddressValid(this);
 
-                if (getInvokerFather().getRunner() instanceof UdpClient){
-                    return createRequest(this);
-                }
                 address = XmlUtil.readAddressFromString(getXmlArgument());
+            }
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                String xmlOrg = XmlUtil.adrToXml(address);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
             }
 
 

@@ -18,7 +18,6 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
     private String xmlArgument;
     private final ArgumentType argumentType;
     private boolean isScript;
-    private UUID id;
     private boolean isRequest = false;
 
     protected Command(String commandName,Invoker invoker, ArgumentType argumentType){
@@ -90,15 +89,6 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
         return commandName+ " "+ argument + " "+ xmlArgument;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public Command setId(UUID id) {
-        this.id = id;
-        return this;
-    }
-
     public boolean isRequest() {
         return isRequest;
     }
@@ -108,5 +98,9 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
         return this;
     }
 
+    public Command setInvokerFather(Invoker invokerFather) {
+        this.invokerFather = invokerFather;
+        return this;
+    }
 }
 

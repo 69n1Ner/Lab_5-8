@@ -39,17 +39,23 @@ public class AddCommand extends Command implements Serializable {
             Invoker invokerFather = getInvokerFather();
             Organization newOrganization;
 
+//            logger.debug("before xmls");
             if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 newOrganization = InputManager.inputOrganization();
+//                logger.debug("it's input");
             } else {
+//                logger.debug("it's request");
                 Validator.isXmlOrgValid(this);
-
-                if (getInvokerFather().getRunner() instanceof UdpClient){
-                    return createRequest(this);
-                }
+//                logger.debug("it's server");
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
-//---
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+//                logger.debug("it's client");
+                String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
+            }
 
 
             Container<Organization> container =  invokerFather.getContainer();
@@ -63,7 +69,7 @@ public class AddCommand extends Command implements Serializable {
             logger.warn(i);
             response = i.getMessage();
         }
-
+        logger.debug("isRequest={}",isRequest());
         if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
                 return createRequest(response);
         }

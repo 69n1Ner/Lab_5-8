@@ -19,18 +19,13 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected static final int ARRAY_SIZE = 65000;
     protected final int port;
     protected static Logger logger;
-    protected final Invoker invoker;
+    protected Invoker invoker;
     protected BufferedReader br;
     protected boolean isRunning;
     protected final UUID runnerId = UUID.randomUUID();
     protected boolean isUnreachable = false;
     private boolean silentConnectionError = false;
-
-
-    protected Runner(int port, Invoker invoker) {
-        this.port = port;
-        this.invoker = invoker;
-    }
+    private boolean silentConnection = false;
 
     public abstract void connect();
     public abstract void run();
@@ -39,41 +34,70 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     public abstract void setRunning(boolean condition);
     public abstract Invoker getInvokerFather();
 
-    public void ping() throws PortUnreachableException {
-        sendAndWait(Request.build().setRequestType(RequestType.PING).setRunnerId(runnerId));
+    protected Runner(int port, Invoker invoker) {
+        this.port = port;
+        this.invoker = invoker;
+    }
+
+    public void ping(UUID runnerId) throws PortUnreachableException {
+        if (this instanceof UdpClient) {
+            sendAndWait(Request.build().setRequestType(RequestType.PING).setRunnerId(runnerId));
+        } else {
+            sendMessage(Request.build().setRequestType(RequestType.PING).setRunnerId(runnerId));
+        }
     }
 
     public void sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 300;
+        long timeout = 200;
+        sendMessage(request);
+        if (this instanceof UdpServer) {
+            runnerSentMsg(request);
+            return;
+        }
         while (System.currentTimeMillis() - start < timeout) {
-            sendMessage(request);
-            if (isUnreachable) break;
-            try {
-                Request response = receiveMessage();
-                if (response != null && runnerId.equals(response.runnerId())
-                        && response.requestType() == RequestType.PING) {
-                    String runner;
-                    if (this instanceof UdpServer) {
-                        runner = "клиенту # " + request.runnerId();
-                    } else runner = "серверу";
-                    if (request.requestType() != RequestType.PING) {
-                        getLogger().info("Сообщение отправлено {}", runner);
+//            logger.debug("msg sent");
+//            logger.debug("not unreachable");
+            //receiving ping msg
+            var response = receiveMessage();
+//                logger.debug("before if");
+                if (response != null) {
+//                    logger.debug("{} {}", runnerId, response.runnerId());
+                    if (runnerId.equals(response.runnerId())) {
+                        if (!silentConnection) {
+                            logger.info("сервер/клиент в сети");
+                            silentConnection = true;
+                        }
+                        runnerSentMsg(request);
+                        silentConnectionError = false;
+                        return;
                     }
-                    silentConnectionError = false;
-                    return;
                 }
-                Thread.sleep(30);
-
+//                logger.debug("after if");
+            try {
+                Thread.sleep(50);
+                sendMessage(request);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+                throw new RuntimeException(e);
             }
         }
+        //connection error cause
+        silentConnection = false;
         if (request.requestType() != RequestType.PING) runnerNotConnected();
         if (!silentConnectionError) {
             runnerNotConnected();
             silentConnectionError = true;
+        }
+    }
+
+    private void runnerSentMsg(Request request){
+        String runner;
+        if (this instanceof UdpServer) {
+            runner = "клиенту # " + request.runnerId();
+        } else runner = "серверу";
+
+        if (request.requestType() != RequestType.PING) {
+            logger.info("Сообщение отправлено {}", runner);
         }
     }
 

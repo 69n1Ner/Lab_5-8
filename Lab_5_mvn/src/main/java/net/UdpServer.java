@@ -19,25 +19,17 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
-    private static final int ARRAY_SIZE = 65000;
-    private final int port;
-    private static final Logger logger = LogManager.getLogger(UdpServer.class);
-    private Invoker invoker;
-    private volatile boolean isRunning;
     private DatagramSocket SOCKET;
     private final HashMap<UUID,SocketAddress> socketAddressMap = new HashMap<>();
 
-    private UdpServer(Invoker invoker, int port) {
+    public UdpServer(Invoker invoker, int port) {
         super(port, invoker);
-        this.invoker = invoker;
-        this.port = port;
         invoker.setRunner(this);
+        logger = LogManager.getLogger(UdpServer.class);
 
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-
-
         Container<Organization> container = new Container<>();
         Invoker invoker = new Invoker(container);
         invoker.setCommand(new SaveCommand("save", invoker));
@@ -58,7 +50,7 @@ public class UdpServer extends Runner {
     public void connect() {
         try {
             SOCKET = new DatagramSocket(port);
-            SOCKET.setSoTimeout(20);
+            SOCKET.setSoTimeout(35);
             logger.info("Сервер подключился к сети");
             //todo добавть селектор
         } catch (SocketException e) {
@@ -70,14 +62,19 @@ public class UdpServer extends Runner {
     public void sendMessage(Request request) {
         try {
             byte[] buf = ByteUtil.toByteArray(request, ARRAY_SIZE);
-            logger.debug("принят буфер");
             SocketAddress address = socketAddressMap.get(request.runnerId());
+//            logger.debug("address={}",address);
+            isUnreachable = false;
+            if (address == null){
+                isUnreachable = true;
+//                logger.debug("клиент не достижим");
+                return;
+            }
             DatagramPacket toClient = new DatagramPacket(buf, buf.length, address);
-            logger.debug("создан пакет");
+//            logger.debug("создан пакет");
             SOCKET.send(toClient);
-            logger.info("Сообщение отправлено клиенту #{}#{}", address, request.runnerId());
         } catch (IOException e) {
-            logger.warn(e);
+            logger.warn("{} {}", this.getClass().getSimpleName(), e);
         }
     }
 
@@ -92,14 +89,19 @@ public class UdpServer extends Runner {
 
             Request request;
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
-            ping();
-
             socketAddressMap.put(request.runnerId(),fromClient.getSocketAddress());
+//            logger.debug("map={}",socketAddressMap);
+            ping(request.runnerId());
+
             SocketAddress address = socketAddressMap.get(request.runnerId());
-            if (request.requestType() != RequestType.PING) logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
+            if (request.requestType() != RequestType.PING) {
+                logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
+            }
             return request;
+        } catch (SocketTimeoutException | PortUnreachableException e) {
+            return null;
         } catch (IOException | ClassNotFoundException e) {
-            logger.warn(e);
+            logger.warn("recieveMsg{}", e,e);
             return null;
         }
     }
@@ -132,9 +134,8 @@ public class UdpServer extends Runner {
         }
 
         while (isRunning) {
-
             try {
-                Thread.sleep(300);
+                Thread.sleep(5);
                 if (br.ready()) {
                     String input = br.readLine();
 
@@ -150,14 +151,12 @@ public class UdpServer extends Runner {
                         //shows what command was
                         logger.info(input);
                     }
-                    logger.debug("---------1----");
+//                    logger.debug("---------1----");
 
                     //sending
-                    invoker.defineCommand(input, isScript, null).execute();
-                    Request request = invoker.defineCommand(input, isScript, runnerId).execute();
+                    Request request = invoker.defineCommand(input, isScript).execute();
                     if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
-                        request.setRunnerId(runnerId);
-                        sendMessage(request);
+                        sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
                         System.out.print("$user: ");
@@ -173,10 +172,13 @@ public class UdpServer extends Runner {
                         Command command = request.command();
                         logger.info(command);
                         //todo можно добавить проверку на корректный реквест
-                        logger.debug("---------2----");
-                        logger.debug("{} -- req", request);
-
-                        invoker.defineCommand(command.toString(), request.isScript(), request.runnerId()).execute();
+//                        logger.debug("---------2----");
+                        logger.debug("{} \n-- req", request);
+                        Request request1 = request.command().setInvokerFather(invoker).execute();
+                        if (request1 != null){
+                            logger.debug("отправил");
+                            sendAndWait(request1.setRunnerId(request.runnerId()));
+                        }
                     }
                 }
 
@@ -194,7 +196,7 @@ public class UdpServer extends Runner {
                     System.out.flush();
                 }
             }catch (NullPointerException e){
-                logger.debug(Arrays.toString(e.getStackTrace()).replace(",","\n"));
+                logger.debug("{}", e,e);
             }
         }
     }
@@ -225,7 +227,7 @@ public class UdpServer extends Runner {
     }
 
     public void setInvokerFather(Invoker invoker){
-        this.invoker = invoker;
+        super.invoker = invoker;
     }
 
     public BufferedReader getBr() {

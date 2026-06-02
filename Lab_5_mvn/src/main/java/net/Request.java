@@ -37,17 +37,17 @@ public record Request (
         return new Request(isScript,requestType, runnerId,feedback,command,requestId);
     }
 
-
-
-
     @Override
     public String toString() {
-        return "Request{" +
+        String ret = "Request{" +
                 "\n requestType=" + requestType +
                 "\n runnerId=" + runnerId +
                 "\n feedback='" + feedback + '\'' +
-                "\n "+ command+
-                "\n "+command.isRequest()+
-                '}';
+                "\n "+ command;
+        if (command() != null){
+            ret += "\n "+ command.isRequest();
+        }
+        ret += "}";
+        return ret;
     }
 }

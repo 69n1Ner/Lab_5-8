@@ -57,7 +57,9 @@ public class UdpClient extends Runner {
             ByteBuffer buffer = ByteBuffer.wrap(ByteUtil.toByteArray(request, ARRAY_SIZE));
             SocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.send(buffer, address);
+            isUnreachable = false;
         }catch (PortUnreachableException e){
+//            logger.debug("Client unreachable set to true");
             isUnreachable = true;
         } catch (IOException e) {
             logger.warn(e);
@@ -74,13 +76,15 @@ public class UdpClient extends Runner {
             if (address == null) {
                 return null;
             }
-            ping();
 
             buffer.flip();
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
             Request request = ByteUtil.fromBytesTo(data, Request.class);
-            if (request.requestType() != RequestType.PING) logger.info("Сообщение получено от сервера #{}", address);
+            if (request.requestType() != RequestType.PING) {
+                logger.info("Сообщение получено от сервера #{}", address);
+                logger.debug(request);
+            }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
             return null;
@@ -104,7 +108,6 @@ public class UdpClient extends Runner {
                 br = new BufferedReader(new InputStreamReader(new FileInputStream(path1.toFile())));
             } catch (FileNotFoundException e) {
                 logger.warn(e.getMessage());
-                System.out.println(e.getMessage());
                 return;
             }
         } else {
@@ -117,9 +120,10 @@ public class UdpClient extends Runner {
         }
 
         while (isRunning) {
+//            logger.debug("cycle started");
             try {
-                ping();
-                Thread.sleep(300);
+                ping(runnerId);
+                Thread.sleep(10);
 
                 if (br.ready()) {
                     String input = br.readLine();
@@ -138,10 +142,9 @@ public class UdpClient extends Runner {
                     }
 
                     //sending
-                    Request request = invoker.defineCommand(input, isScript, runnerId).execute();
+                    Request request = invoker.defineCommand(input, isScript).execute();
                     if (isRunning && CHANNEL != null && request != null) {
-                        request.setRunnerId(runnerId);
-                        sendAndWait(request);
+                        sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
                         System.out.print("$user: ");
@@ -153,17 +156,18 @@ public class UdpClient extends Runner {
                 if (isRunning && CHANNEL != null) {
                     Request request1 = receiveMessage();
 
+                    logger.debug("request1={}", request1);
+                    logger.debug("request1 != null={}",request1 != null);
                     if (request1 != null) {
-                        if (!isScript && isRunning) {
-                            System.out.print("$user: ");
-                            System.out.flush();
-                        }
+                        logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);
+                    }
 
-                        logger.info(request1.feedback());
+                    if (request1 != null && request1.requestType() != RequestType.PING) {
                         if (!isScript && isRunning) {
                             System.out.print("$user: ");
                             System.out.flush();
                         }
+                        logger.info(request1.feedback());
                     }
 
                 }
@@ -179,6 +183,7 @@ public class UdpClient extends Runner {
                     System.out.flush();
                 }
             }
+//            logger.debug("cycle ended");
         }
     }
 
