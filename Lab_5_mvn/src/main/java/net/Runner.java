@@ -117,14 +117,30 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     }
 
     private void runnerOnline(){
+        if (initialShowUser) {
+            if (isRunning) {
+                System.out.print("$user: ");
+                System.out.flush();
+            }
+            initialShowUser = false;
+            return;
+        }else {
+            System.out.println();
+        }
         logger.info("сервер в сети");
         if (isRunning) {
             System.out.print("$user: ");
             System.out.flush();
         }
+
     }
 
     private void runnerNotConnected(){
+        if (initialShowUser) {
+            initialShowUser = false;
+        }else {
+            System.out.println();
+        }
         String runner;
         if (this instanceof UdpServer) {
             runner = "клиент";

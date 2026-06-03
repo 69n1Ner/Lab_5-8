@@ -117,8 +117,6 @@ public class UdpClient extends Runner {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
-
-
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
