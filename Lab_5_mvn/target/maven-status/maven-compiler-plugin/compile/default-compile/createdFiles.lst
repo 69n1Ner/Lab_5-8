@@ -36,6 +36,7 @@ commands\UpdateCommand.class
 commands\RemoveLowerCommand.class
 exceptions\XmlUtilException.class
 commands\RemoveByIDCommand.class
+io\OrganizationWithFeedback.class
 io\ContainerWrapper.class
 commands\FilterGreaterThanPostalAddress.class
 exceptions\EmptyContainerException.class

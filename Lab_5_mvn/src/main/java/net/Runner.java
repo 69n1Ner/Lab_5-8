@@ -26,6 +26,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected boolean isUnreachable = false;
     private boolean silentConnectionError = false;
     private boolean silentConnection = false;
+    protected boolean initialShowUser = true;
 
     public abstract void connect();
     public abstract void run();
@@ -54,7 +55,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 
     public void sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 20;
+        long timeout = 200;
         sendMessage(request);
         if (this instanceof UdpServer) {
             runnerSentMsg(request);
@@ -69,9 +70,10 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 //                logger.debug("before if");
                 if (response != null) {
 //                    logger.debug("{} {}", runnerId, response.runnerId());
+                    //online
                     if (runnerId.equals(response.runnerId())) {
                         if (!silentConnection) {
-                            logger.info("сервер/клиент в сети");
+                            runnerOnline();
                             silentConnection = true;
                         }
                         runnerSentMsg(request);
@@ -89,7 +91,9 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
         //connection error cause
         silentConnection = false;
-        if (request.requestType() != RequestType.PING) runnerNotConnected();
+        if (request.requestType() != RequestType.PING) {
+            runnerNotConnected();
+        }
         if (!silentConnectionError) {
             runnerNotConnected();
             silentConnectionError = true;
@@ -107,12 +111,24 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
+    private void runnerOnline(){
+        logger.info("сервер в сети");
+        if (isRunning) {
+            System.out.print("$user: ");
+            System.out.flush();
+        }
+    }
+
     private void runnerNotConnected(){
         String runner;
         if (this instanceof UdpServer) {
             runner = "клиент";
         } else runner = "сервер";
         getLogger().info("{} не подключен к сети1", runner);
+        if (isRunning) {
+            System.out.print("$user: ");
+            System.out.flush();
+        }
     }
 
     public void applyParams(){

@@ -117,15 +117,18 @@ public class UdpClient extends Runner {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
-        if (!isScript) {
-            System.out.print("$user: ");
-        }
+
 
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
                 ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
-                Thread.sleep(10);
+                Thread.sleep(100);
+
+                if (!isScript && initialShowUser) {
+                    System.out.print("$user: ");
+                    initialShowUser = false;
+                }
 
                 if (br.ready()) {
                     String input = br.readLine();
@@ -171,11 +174,11 @@ public class UdpClient extends Runner {
                     }
 
                     if (request1 != null && request1.requestType() != RequestType.PING) {
+                        logger.info(request1.feedback());
                         if (!isScript && isRunning) {
                             System.out.print("$user: ");
                             System.out.flush();
                         }
-                        logger.info(request1.feedback());
                     }
 
                 }

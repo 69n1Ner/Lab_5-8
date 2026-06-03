@@ -4,6 +4,7 @@ import exceptions.InvalidInput;
 import exceptions.NoSuchOrganizationException;
 import exceptions.SameOrganizationExistsException;
 import io.InputManager;
+import io.OrganizationWithFeedback;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
@@ -16,6 +17,7 @@ import organization.Organization;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.Serializable;
+import java.util.stream.Collectors;
 
 public class AddCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(AddCommand.class);
@@ -59,12 +61,16 @@ public class AddCommand extends Command implements Serializable {
 
 
             Container<Organization> container =  invokerFather.getContainer();
-
-            container.add(InputManager.generateOrganizationFields(newOrganization, isScript()));
+            OrganizationWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+            newOrganization = organizationWithFeedback.organization();
+            String feedback = organizationWithFeedback
+                    .feedback()
+                    .stream()
+                    .collect(Collectors.joining("\n","","\n"));
+            container.add(newOrganization);
             String text = "ID созданной организации: " + container.getIdBy(newOrganization);
             logger.info(text);
-            response = text;
-
+            response = feedback + text;
         }catch (InvalidInput i) {
             logger.warn(i);
             response = i.getMessage();

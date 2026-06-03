@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 import static java.lang.Math.abs;
@@ -337,7 +338,9 @@ public class InputManager {
     }
 
 
-    public static Organization generateOrganizationFields(Organization organization, boolean isReadFile) {
+    public static OrganizationWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
+        OrganizationWithFeedback organizationWithFeedback = new OrganizationWithFeedback(organization,new  ArrayList<>());
+
         if (!isReadFile) {
             if (organization.getId() == null || organization.getId() <= 0) {
                 organization.setId((long) abs(hash(ZonedDateTime.now()) + organization.hashCode()));
@@ -346,55 +349,58 @@ public class InputManager {
         }
 
         if (organization.getAnnualTurnover() == 0) {
-            System.out.println("Значение годовой выручки не было установлено");
+            organizationWithFeedback.feedback().add("Значение годовой выручки не было установлено");
         }
 
         long xC = organization.getCoordinates().getX();
         Double yC = organization.getCoordinates().getY();
         if (xC == 0) {
-            System.out.println("Значение координаты X организации не было установлено");
+            organizationWithFeedback.feedback().add("Значение координаты X организации не было установлено");
         } else if (xC > 623) {
             organization.getCoordinates().setX(623);
-            System.out.println("Значение координаты X организации получило максимальное значение (623)");
+            organizationWithFeedback.feedback().add("Значение координаты X организации получило максимальное значение (623)");
         }
         if (yC == null) {
-            System.out.println("Значение координаты Y организации не было установлено");
+            organizationWithFeedback.feedback().add("Значение координаты Y организации не было установлено");
         }
 
         if (organization.getEmployeesCount() == 0) {
-            System.out.println("Значение количества сотрудников не было установлено");
+            organizationWithFeedback.feedback().add("Значение количества сотрудников не было установлено");
         }
 
         if (organization.getName().isEmpty()) {
-            System.out.println("Значение названия организации не было установлено");
+            organizationWithFeedback.feedback().add("Значение названия организации не было установлено");
         }
 
-        generateAddressFields(organization.getPostalAddress());
+        organizationWithFeedback.feedback().addAll(generateAddressFields(organization.getPostalAddress()));
 
-        return organization;
+        return organizationWithFeedback;
     }
 
-    public static void generateAddressFields(Address address){
+    public static List<String> generateAddressFields(Address address){
         String zip = address.getZipCode();
         Float xL = address.getTown().getX();
         Integer yL = address.getTown().getY();
         Integer zL = address.getTown().getZ();
         String name = address.getTown().getName();
+        List<String> feedback = new ArrayList<>();
+
         if (zip == null || zip.length() < 4) {
-            System.out.println("Значение почтового индекса не было установлено");
+            feedback.add("Значение почтового индекса не было установлено");
         }
         if (xL == null) {
-            System.out.println("Значение координаты X города не было установлено");
+            feedback.add("Значение координаты X города не было установлено");
         }
         if (yL == null) {
-            System.out.println("Значение координаты Y города не было установлено");
+            feedback.add("Значение координаты Y города не было установлено");
         }
         if (zL == null) {
-            System.out.println("Значение координаты Z города не было установлено");
+            feedback.add("Значение координаты Z города не было установлено");
         }
         if (name == null || name.isEmpty()) {
-            System.out.println("Значение названия города не было установлено");
+            feedback.add("Значение названия города не было установлено");
         }
+        return feedback;
     }
 
     public static Level parseLevel(String string) {

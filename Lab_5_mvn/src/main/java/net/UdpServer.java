@@ -95,6 +95,7 @@ public class UdpServer extends Runner {
 
             SocketAddress address = socketAddressMap.get(request.runnerId());
             if (request.requestType() != RequestType.PING) {
+                System.out.println();
                 logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
             }
             return request;
@@ -128,14 +129,18 @@ public class UdpServer extends Runner {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
-        if (!isScript) {
-            System.out.print("$user: ");
-            System.out.flush();
-        }
+//        if (!isScript) {
+//            System.out.print("$user: ");
+//            System.out.flush();
+//        }
 
         while (isRunning) {
             try {
-                Thread.sleep(5);
+                Thread.sleep(50);
+                if (!isScript && initialShowUser) {
+                    System.out.print("$user: ");
+                    initialShowUser = false;
+                }
                 if (br.ready()) {
                     String input = br.readLine();
 
@@ -178,6 +183,10 @@ public class UdpServer extends Runner {
                         if (request1 != null){
                             logger.debug("отправил");
                             sendAndWait(request1.setRunnerId(request.runnerId()));
+                            if (!isScript && isRunning) {
+                                System.out.print("$user: ");
+                                System.out.flush();
+                            }
                         }
                     }
                 }

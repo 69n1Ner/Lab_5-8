@@ -5,6 +5,7 @@ import exceptions.InvalidInput;
 import exceptions.NoSuchOrganizationException;
 import exceptions.SameOrganizationExistsException;
 import io.InputManager;
+import io.OrganizationWithFeedback;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
@@ -16,6 +17,7 @@ import organization.Organization;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AddIfMinCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(AddIfMinCommand.class);
@@ -58,10 +60,17 @@ public class AddIfMinCommand extends Command implements Serializable {
                         .toList();
 
                 if (list.isEmpty()){
-                    container.add(InputManager.generateOrganizationFields(newOrganization,isScript()));
-                    String text = "ID созданной организации: " + container.getIdBy(newOrganization);
+                    OrganizationWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+                    Organization newOrganization1 = organizationWithFeedback.organization();
+
+                    String feedback = organizationWithFeedback
+                            .feedback()
+                            .stream()
+                            .collect(Collectors.joining("\n","","\n"));
+                    container.add(newOrganization1);
+                    String text = "ID созданной организации: " + container.getIdBy(newOrganization1);
                     logger.info(text);
-                    response = text;
+                    response = feedback + text;
                 }else {
                     String text = "Значение введенной организации больше минимальной";
                     logger.info(text);
