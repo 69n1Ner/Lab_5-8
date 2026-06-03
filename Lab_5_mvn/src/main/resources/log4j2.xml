@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" shutdownHook="disable">
+    <Appenders>
+
+        <Console name="ConsoleInfo" target="SYSTEM_OUT">
+            <LevelRangeFilter minLevel="INFO" maxLevel="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%-4level] %msg%n"/>
+        </Console>
+
+
+        <Console name="ConsoleWarn" target="SYSTEM_ERR">
+            <LevelRangeFilter minLevel="WARN" maxLevel="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-4level] %msg%n"/>
+        </Console>
+
+        <Console name="ConsoleDebug" target="SYSTEM_ERR">
+            <LevelMatchFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-4level] %msg%n"/>
+        </Console>
+
+
+        <Console name="ConsoleError" target="SYSTEM_ERR">
+            <LevelMatchFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %msg%n"/>
+        </Console>
+
+        <File name="FileAll" fileName="logs/app.log" append="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n%ex"/>
+        </File>
+
+        <File name="FileErrors" fileName="logs/errors.log" append="true">
+            <LevelMatchFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{36} - %msg%n%ex"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <Root level="all">
+            <AppenderRef ref="ConsoleInfo"/>
+            <AppenderRef ref="ConsoleWarn"/>
+            <AppenderRef ref="ConsoleDebug"/>
+            <AppenderRef ref="ConsoleError"/>
+            <AppenderRef ref="FileErrors"/>
+            <AppenderRef ref="FileAll"/>
+        </Root>
+    </Loggers>
+</Configuration>

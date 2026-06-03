@@ -1,0 +1,3 @@
+2026-05-19 22:21:14 [INFO ] net.UdpServer - Сервер подключился к сети
+2026-05-19 22:21:15 [INFO ] commands.SaveCommand - Коллекция сохранена в collection3.xml
+2026-05-19 22:21:15 [INFO ] commands.ExitCommand - UdpServer завершил работу

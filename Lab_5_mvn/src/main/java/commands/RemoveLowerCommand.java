@@ -1,65 +1,87 @@
 package commands;
 
 import exceptions.EmptyContainerException;
+import exceptions.InvalidInput;
 import io.InputManager;
+import io.Validator;
 import io.XmlUtil;
 import main.Container;
-import exceptions.InvalidInput;
 import main.Invoker;
+import net.Request;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.io.Serializable;
 import java.util.NoSuchElementException;
 
-public class RemoveLowerCommand extends Command{
+public class RemoveLowerCommand extends Command implements Serializable {
+    private static final Logger logger = LogManager.getLogger(RemoveLowerCommand.class);
 
     public RemoveLowerCommand(String name, Invoker invoker){
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.NO_ARGUMENT);
     }
 
     @Override
-    public void execute() throws IOException {
-        Invoker invokerFather = getInvokerFather();
-        Container<Organization> container = invokerFather.getContainer();
-        InputManager inputManager = invokerFather.getInputManager();
+    public Request execute() {
 
+        String r ="непредвиденная";
         try {
+            Validator.isValidArgument(this);
+
+            Organization newOrganization;
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+                newOrganization = InputManager.inputOrganization();
+            } else {
+                newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
+            }
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                return createRequest(this);
+            }
+
+            Invoker invokerFather = getInvokerFather();
+            Container<Organization> container = invokerFather.getContainer();
+
             if (!container.getAll().isEmpty()) {
-                Organization newOrganization;
-                if (isNotValidForScript(inputManager)) {
-                    newOrganization = inputManager.inputOrganization(false);
-                } else {
-                    newOrganization = XmlUtil.readObjectFromString(inputManager.getXmlArgument());
-                }
-
-                Iterator<Organization> iterator = container.getAll().iterator();
-                ArrayList<Organization> resultList = new ArrayList<>(container.getAll());
-                int removedCount = 0;
-
-                while (iterator.hasNext()) {
-                    Organization org = iterator.next();
-                    if (org.compareTo(newOrganization) < 0) {
-                        resultList.remove(org);
-                        System.out.println("~~Организация с ID " + org.getId() + " удалена~~");
-                        removedCount++;
+                StringBuilder sb = new StringBuilder();
+                boolean isOneDeleted = container.removeIf(organization -> {
+                    if (organization.compareTo(newOrganization) < 0){
+                        logger.info("Организация с ID {} удалена",organization.getId());
+                        sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
+                        return true;
                     }
-                }
-                container.clear();
-                container.addList(resultList);
-                if (removedCount == 0) {
-                    throw new NoSuchElementException("Нет организаций, меньше заданной");
-                }
-            }else throw new EmptyContainerException("Список пуст, не с чем сравнивать");
+                    return false;
+                });
+                if (!isOneDeleted) {
+                    NoSuchElementException ee = new NoSuchElementException("Нет организаций, меньших заданной");
+                    logger.warn(ee);
+                    r=  ee.getMessage();
+                }else r = sb.toString().strip();
+            }else {
+                EmptyContainerException ec = new EmptyContainerException();
+                logger.warn(ec);
+                r= ec.getMessage();
+            }
         }catch (InvalidInput e){
-            System.err.println("!! "+e.getMessage()+" !!");
+            logger.warn(e);
+            r= e.getMessage();
         }
+
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override
     public String describe() {
         return "remove_lower {element} : удалить из коллекции все элементы, меньшие, чем заданный. Сравнение идет по выручке и количеству сотрудников";
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

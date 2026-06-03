@@ -1,38 +1,69 @@
 package commands;
 
-import io.InputManager;
+import exceptions.InvalidInput;
+import io.Validator;
 import main.Container;
 import main.Invoker;
+import net.Request;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
-public class InfoCommand extends Command{
+public class InfoCommand extends Command implements Serializable {
+    private static final Logger logger = LogManager.getLogger(InfoCommand.class);
+
     public InfoCommand(String name, Invoker invoker) {
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.NO_ARGUMENTS);
     }
 
     @Override
-    public void execute() {
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
-        Container<Organization> container = invokerFather.getContainer();
+    public Request execute() {
+        String r = "непредвиденная";
+        try {
+            Validator.isValidArgument(this);
 
-            if (isValid(inputMan)){
-                System.out.println("-------------------------------------------------------------------------------------");
-                //noinspection OptionalGetWithoutIsPresent
-                System.out.println("Информация: "+
-                        "\n-Тип: "+ Arrays.stream(container.getClass().getDeclaredFields()).findFirst().get().getType().getSimpleName()+
-                        "\n-Дата создания: "+container.getCreationDate()+
-                        "\n-Количество элементов: "+container.size());
-                System.out.println("-------------------------------------------------------------------------------------");
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                return createRequest(this);
             }
 
+            Invoker invokerFather = getInvokerFather();
+            Container<Organization> container = invokerFather.getContainer();
+            String t = String.join("\n",
+                    "Информация:",
+                    "-Тип:" + Arrays.stream(container
+                                    .getClass()
+                                    .getDeclaredFields())
+                                    .findFirst()
+                                    .get()
+                                    .getType()
+                                    .getSimpleName(),
+                    "-Дата создания:" + container.getCreationDate(),
+                    "-Количество элементов:" + container.size());
+            logger.info(t);
+            r= t;
+        }catch (InvalidInput i){
+            logger.warn(i);
+            r= i.getMessage();
+        }
+
+        if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override
     public String describe() {
         return "info : выводит информацию о коллекции (тип, дата инициализации, количество элементов)";
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

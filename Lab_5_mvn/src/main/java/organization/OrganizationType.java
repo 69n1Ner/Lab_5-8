@@ -2,8 +2,10 @@ package organization;
 
 import jakarta.xml.bind.annotation.*;
 
+import java.io.Serializable;
+
 @XmlEnum
-public enum OrganizationType {
+public enum OrganizationType implements Serializable {
     @XmlEnumValue("public")
     PUBLIC("Публичная"),
     @XmlEnumValue("government")

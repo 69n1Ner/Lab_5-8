@@ -1,13 +1,26 @@
 package commands;
 
 import exceptions.EmptyContainerException;
+import exceptions.InvalidInput;
+import io.Validator;
 import main.Invoker;
+import net.Request;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import organization.Organization;
 
-public class ShowCommand extends Command{
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+
+public class ShowCommand extends Command implements Serializable {
+    private static final Logger logger = LogManager.getLogger(ShowCommand.class);
 
     public ShowCommand(String name, Invoker invoker){
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.NO_ARGUMENTS);
     }
 
     @Override
@@ -16,21 +29,43 @@ public class ShowCommand extends Command{
     }
 
     @Override
-    public void execute() {
+    public Request execute() {
         //todo пофиксить вывод первой строки
-        if (isValid(getInvokerFather().getInputManager()) && !getInvokerFather().getContainer().getAll().isEmpty()){
-            boolean hatFlag = true;
-            for (Object org: getInvokerFather().getContainer().getAll()){
-                if (hatFlag) {
-                    System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
-                    hatFlag = false;
-                }
-                System.out.println(org.toString());
-                System.out.println("____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____-____");
+        String r ="непредвиденная";
+        try {
+            Validator.isValidArgument(this);
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                return createRequest(this);
             }
-        } else {
-            throw new EmptyContainerException("Пустой контейнер");
+
+            List<Organization> container = getInvokerFather().getContainer().getAll();
+
+            if (!container.isEmpty()) {
+                String s = container.stream()
+                        .map(Organization::toString)
+                        .collect(Collectors.joining("\n"));
+                logger.info(s);
+                r = s;
+            } else {
+                EmptyContainerException ec = new EmptyContainerException();
+                logger.warn(ec);
+                logger.debug(Arrays.toString(ec.getStackTrace()).replace(",","\n"));
+                r = ec.getMessage();
+            }
+        }catch (InvalidInput i){
+            logger.warn(i);
+            r = i.getMessage();
         }
 
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

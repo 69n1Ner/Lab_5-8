@@ -5,9 +5,11 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import java.io.Serializable;
+
 @XmlRootElement(name = "postal_address")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Address implements Comparable<Object> {
+public class Address implements Comparable<Object>, Serializable {
     @XmlElement(name = "zip_code")
     private String zipCode; //Длина строки должна быть не меньше 4, Поле может быть null
     @XmlElement
@@ -51,6 +53,10 @@ public class Address implements Comparable<Object> {
         if (o== null){
             return 1;
         }
+        if (getZipCode() == null || getZipCode().isEmpty()){
+            return 1;
+        }
+
         return zipCode.compareTo(((Address) o).getZipCode());
     }
 }

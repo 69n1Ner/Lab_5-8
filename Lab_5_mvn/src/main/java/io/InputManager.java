@@ -1,7 +1,10 @@
 package io;
 
-import exceptions.NullCommandException;
-import main.*;
+import exceptions.InvalidInput;
+import exceptions.NoSuchCommandException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.*;
 
 import java.io.BufferedReader;
@@ -9,21 +12,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
+
+import static java.lang.Math.abs;
+import static java.util.Objects.hash;
 
 
 public class InputManager {
-    private final Invoker invoker;
-    private String command;
+    private String commandName;
     private String mainArgument;
     private String xmlArgument;
-    private BufferedReader br;
-    private boolean isScript;
     private final List<Character> asciiChars = new ArrayList<>();
 
-    public InputManager(Invoker invoker,boolean isScript) {
-        this.invoker = invoker;
-        this.isScript = isScript;
+    public InputManager() {
+
         for (int code = 0; code <= 31; code++) {
             asciiChars.add((char) code);
         }
@@ -31,34 +37,32 @@ public class InputManager {
 
 
     public void separate(String input) {
-
-
         if (input == null || input.isEmpty()) {
-            throw new NullCommandException("Пустая строка");
+            throw new NoSuchCommandException("Пустая строка, введите help для справки");
         }
 
         int charNum = 0;
-        for (Character asciiChar: asciiChars){
+        for (Character asciiChar : asciiChars) {
 
             //Ctrl+Z
-            if (input.contains("\u001A")){
-                throw new NullCommandException("""
-                    
-                    /﹋\\
-                    (҂`_´)
-                    ︻╦╤─ ҉ -- - - -- - --
-                    /﹋\\
-                    """);
+            if (input.contains("\u001A")) {
+                throw new NoSuchCommandException("""
+                        
+                        /﹋\\
+                        (҂`_´)
+                        ︻╦╤─ ҉ -- - - -- - --
+                        /﹋\\
+                        """);
 
                 //Ctrl+C (doesn't catch)
-            } else if (input.contains(String.valueOf(asciiChar))){
-                String asciiPrint =Integer.toHexString(charNum);
-                if (asciiPrint.length() == 1){
+            } else if (input.contains(String.valueOf(asciiChar))) {
+                String asciiPrint = Integer.toHexString(charNum);
+                if (asciiPrint.length() == 1) {
                     asciiPrint = "\\u000" + asciiPrint.toUpperCase();
                 } else {
-                    asciiPrint ="\\u00" + asciiPrint.toUpperCase();
+                    asciiPrint = "\\u00" + asciiPrint.toUpperCase();
                 }
-                throw new NullCommandException("Найден спец символ: "+ asciiPrint);
+                throw new NoSuchCommandException("Найден спец символ: " + asciiPrint);
             }
 
             ++charNum;
@@ -99,7 +103,6 @@ public class InputManager {
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
                     this.xmlArgument = input.substring(end);
-                    isScript = true;
                 }
                 continue;
 
@@ -131,65 +134,47 @@ public class InputManager {
             }
         }
 
-        this.command = wordList.get(0);
+        this.commandName = wordList.get(0);
 
         if (wordList.size() >= 2) {
             this.mainArgument = wordList.get(1);
         }
     }
-    public boolean isValid(String input) {
-        String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
-        for (int i = 0; i < input.length(); i++) {
-            if (specialSymbols.indexOf(input.charAt(i)) != -1) {
-                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
-                return false;
-            }
-        }
-        if (input.length() > 255) {
-            System.err.println("Слишком длинная строка! Максимальная длина 255");
-            return false;
-        }
-        return true;
-    }
 
-    public boolean isValidCommand(String command) {
-        if (!invoker.contains(command)) {
-            return false;
-        }
-        return isValid(command);
-    }
-
-    public String separateAttribute(String input) {
+    private static String separateAttribute(String input) {
         return input.trim();
     }
 
-    public Organization inputOrganization(boolean isUpdate) throws IOException {
-        if (br == null) {
-            br = new BufferedReader(new InputStreamReader(System.in));
-        }
+    public static Organization inputOrganization() {
+        return inputOrganization(false);
+    }
+
+    public static Organization inputOrganization(boolean isUpdate) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         System.out.print("Введите название организации");
-        String name = getValueOf(String.class, isUpdate).toString();
+        String name = (String) getValueOf(String.class, isUpdate,br);
 
         System.out.print("Введите тип организации");
-        OrganizationType type = (OrganizationType) getOrganizationType(isUpdate,false);
+        OrganizationType type = (OrganizationType) getOrganizationType(isUpdate, false,br);
 
         System.out.println("Введите координаты организации");
         //todo недоработка
         System.out.print("Координата x (максимум 623)");
-        Long xC = (Long) getValueOf(Long.class, isUpdate);
+        Long xC = (Long) getValueOf(Long.class, isUpdate,br);
 
         System.out.print("Координата y");
-        Double yC = (Double) getValueOf(Double.class, isUpdate);
-        Coordinates coordinates = new Coordinates(xC,yC);
+        Double yC = (Double) getValueOf(Double.class, isUpdate,br);
+        Coordinates coordinates = new Coordinates(xC, yC);
 
 
         Address address = inputAddress(isUpdate);
 
         System.out.print("Введите количество сотрудников");
-        Long employeesCount = (Long) getValueOf(Long.class, isUpdate,true);
+        Long employeesCount = (Long) getValueOf(Long.class, isUpdate, true,br);
 
         System.out.print("Введите годовую выручку");
-        Integer annualTurnover = (Integer) getValueOf(Integer.class, isUpdate,true);
+        Integer annualTurnover = (Integer) getValueOf(Integer.class, isUpdate, true,br);
+
 
         return new Organization(
                 name,
@@ -201,35 +186,36 @@ public class InputManager {
         );
     }
 
-    public Address inputAddress() throws IOException {
+    public static Address inputAddress() {
         return inputAddress(false);
     }
 
-    public Address inputAddress(boolean isUpdate) throws IOException {
-        if (br == null) {
-            br = new BufferedReader(new InputStreamReader(System.in));
-        }
+    public static Address inputAddress(boolean isUpdate) {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
         System.out.println("Введите адрес");
         System.out.print("Почтовый индекс (минимум 4 символа)");
-        String zip = getZipCode(isUpdate);
+        String zip = getZipCode(isUpdate,false,br);
         System.out.print("Название города");
-        String city = getValueOf(String.class, isUpdate).toString();
+        String city = (String) getValueOf(String.class, isUpdate,br);
         System.out.print("Координата x");
-        Float xL = (Float) getValueOf(Float.class, isUpdate);
+        Float xL = (Float) getValueOf(Float.class, isUpdate,br);
         System.out.print("Координата y");
-        Integer yL = (Integer) getValueOf(Integer.class, isUpdate);
+        Integer yL = (Integer) getValueOf(Integer.class, isUpdate,br);
         System.out.print("Координата z");
-        Integer zL = (Integer) getValueOf(Integer.class, isUpdate);
+        Integer zL = (Integer) getValueOf(Integer.class, isUpdate,br);
 
-        return new Address( zip,new Location(city,xL,yL,zL));
+
+        return new Address(zip, new Location(city, xL, yL, zL));
     }
 
-    private <T> Object oneMoreTime(Class<T> type, boolean positive) {
+    private static  <T> Object oneMoreTime(Class<T> type, boolean positive, BufferedReader br) {
         System.out.println("Введите еще раз " + "[" + type.getSimpleName() + "]");
 
         try {
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa)) {
+            if (Validator.isValidInput(sa)) {
                 if (type == String.class) {
                     return sa;
                 }
@@ -241,17 +227,17 @@ public class InputManager {
                 }
 
                 return method.invoke(null, sa);
-            } else{
+            } else {
                 return null;
             }
         } catch (IllegalArgumentException |
-                 InvocationTargetException e){
+                 InvocationTargetException e) {
             return null;
 
         } catch (IOException |
-               NoSuchMethodException |
-               IllegalAccessException |
-               RuntimeException e) {
+                 NoSuchMethodException |
+                 IllegalAccessException |
+                 RuntimeException e) {
             System.out.println(Arrays.toString(e.getStackTrace()) + e.getMessage());
 
         }
@@ -260,18 +246,17 @@ public class InputManager {
     }
 
 
-
-    private <T> Object getValueOf(Class<T> classType, boolean isUpdate){
-        return getValueOf(classType,isUpdate,false);
+    private static  <T> Object getValueOf(Class<T> classType, boolean isUpdate, BufferedReader br) {
+        return getValueOf(classType, isUpdate, false, br);
     }
 
-    private <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive){
+    private static  <T> Object getValueOf(Class<T> classType, boolean isUpdate, boolean positive, BufferedReader br) {
         System.out.println(" [" + classType.getSimpleName() + "]");
 
 
         try {
             String sa = separateAttribute(br.readLine());
-            if (isValid(sa)) {
+            if (Validator.isValidInput(sa)) {
                 if (classType == String.class && !sa.isEmpty()) {
                     return sa;
                 }
@@ -279,12 +264,12 @@ public class InputManager {
 
                 Number number = (Number) classType.getMethod("valueOf", String.class).invoke(null, sa);
                 if (positive && (number.doubleValue() <= 0)) {
-                    return !isUpdate ? oneMoreTime(classType, true) : null;
+                    return !isUpdate ? oneMoreTime(classType, true, br) : null;
                 }
 
                 return method.invoke(null, sa);
             } else {
-                return !isUpdate ? oneMoreTime(classType,positive) : null;
+                return !isUpdate ? oneMoreTime(classType, positive,br) : null;
             }
 
         } catch (IOException |
@@ -294,54 +279,209 @@ public class InputManager {
                  InvocationTargetException |
                  IllegalArgumentException e) {
 
-            return !isUpdate ? oneMoreTime(classType,positive) : null;
+            return !isUpdate ? oneMoreTime(classType, positive,br) : null;
         }
 
     }
 
-    private Object getOrganizationType(boolean isUpdate, boolean isOMT) throws IOException {
-        if (isOMT){
+    private static Object getOrganizationType(boolean isUpdate, boolean isOMT, BufferedReader br) {
+        if (isOMT) {
             System.out.println("Введите еще раз");
-        }else {
+        } else {
             System.out.println();
         }
         Arrays.stream(OrganizationType.values()).forEach(e -> System.out.println(e.name()));
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa)){
-            try{
+
+
+        try {
+            String sa = separateAttribute(br.readLine());
+            if (Validator.isValidInput(sa)) {
                 return OrganizationType.valueOf(sa);
-            } catch (IllegalArgumentException e){
-                if (isOMT){
-                    return null;
-                } else {
-                    return !isUpdate ? getOrganizationType(false,true) : null;
-                }
+            } else if (isOMT) {
+                return null;
+            } else {
+                return !isUpdate ? getOrganizationType(false, true,br) : null;
             }
-        } return !isUpdate ? getOrganizationType(false,true) : null;
-    }
 
-    private String getZipCode(boolean isUpdate) throws IOException {
-        System.out.println(" [String]");
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa) && sa.length() >=4){
-            return sa;
-        }else{
-            return !isUpdate? oneMoreTimeZipCode() : null;
+        } catch (IllegalArgumentException | IOException e) {
+            if (isOMT) {
+                return null;
+            } else {
+                return !isUpdate ? getOrganizationType(false, true, br) : null;
+            }
         }
     }
 
-    private String oneMoreTimeZipCode() throws IOException {
-        System.out.println("Введите еще раз " + "[String]");
-        String sa = separateAttribute(br.readLine());
-        if (isValid(sa) && sa.length() >=4){
-            return sa;
-        }else{
-            return null;
+    private static String getZipCode(boolean isUpdate, boolean isOMT, BufferedReader br) {
+        if (isOMT) {
+            System.out.println("Введите еще раз");
+        } else {
+            System.out.println(" [String]");
+        }
+        try {
+
+            String sa = separateAttribute(br.readLine());
+            if (Validator.isValidInput(sa) && sa.length() >= 4) {
+                return sa;
+            } else if (isOMT) {
+                return null;
+            } else {
+                return !isUpdate ? getZipCode(false,true,br) : null;
+            }
+        } catch (IllegalArgumentException | IOException e) {
+            if (isOMT) {
+                return null;
+            } else {
+                return !isUpdate ? getZipCode(false, true, br) : null;
+            }
         }
     }
 
 
+    public static OrganizationWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
+        OrganizationWithFeedback organizationWithFeedback = new OrganizationWithFeedback(organization,new  ArrayList<>());
 
+        if (!isReadFile) {
+            if (organization.getId() == null || organization.getId() <= 0) {
+                organization.setId((long) abs(hash(ZonedDateTime.now()) + organization.hashCode()));
+            }
+            organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
+        }
+
+        if (organization.getAnnualTurnover() == 0) {
+            organizationWithFeedback.feedback().add("Значение годовой выручки не было установлено");
+        }
+
+        long xC = organization.getCoordinates().getX();
+        Double yC = organization.getCoordinates().getY();
+        if (xC == 0) {
+            organizationWithFeedback.feedback().add("Значение координаты X организации не было установлено");
+        } else if (xC > 623) {
+            organization.getCoordinates().setX(623);
+            organizationWithFeedback.feedback().add("Значение координаты X организации получило максимальное значение (623)");
+        }
+        if (yC == null) {
+            organizationWithFeedback.feedback().add("Значение координаты Y организации не было установлено");
+        }
+
+        if (organization.getEmployeesCount() == 0) {
+            organizationWithFeedback.feedback().add("Значение количества сотрудников не было установлено");
+        }
+
+        if (organization.getName().isEmpty()) {
+            organizationWithFeedback.feedback().add("Значение названия организации не было установлено");
+        }
+
+        organizationWithFeedback.feedback().addAll(generateAddressFields(organization.getPostalAddress()));
+
+        return organizationWithFeedback;
+    }
+
+    public static List<String> generateAddressFields(Address address){
+        String zip = address.getZipCode();
+        Float xL = address.getTown().getX();
+        Integer yL = address.getTown().getY();
+        Integer zL = address.getTown().getZ();
+        String name = address.getTown().getName();
+        List<String> feedback = new ArrayList<>();
+
+        if (zip == null || zip.length() < 4) {
+            feedback.add("Значение почтового индекса не было установлено");
+        }
+        if (xL == null) {
+            feedback.add("Значение координаты X города не было установлено");
+        }
+        if (yL == null) {
+            feedback.add("Значение координаты Y города не было установлено");
+        }
+        if (zL == null) {
+            feedback.add("Значение координаты Z города не было установлено");
+        }
+        if (name == null || name.isEmpty()) {
+            feedback.add("Значение названия города не было установлено");
+        }
+        return feedback;
+    }
+
+    public static Level parseLevel(String string) {
+        if (string == null || string.isEmpty()){
+            System.out.println("Уровень логирования установлен по умолчанию: info");
+            return Level.INFO;
+        }
+
+        string = string.toLowerCase();
+        switch (string){
+            case "info" -> {
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.INFO;
+            }
+            case "warn" -> {
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.WARN;
+            }
+            case "error" ->{
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.ERROR;
+            }
+            case "debug" ->{
+                System.out.println("Уровень логирования установлен: "+ string);
+                return Level.DEBUG;
+            }
+            default -> {
+                System.err.println("Неопознанное значения уровня логирования: "+string);
+                System.out.println("Уровень логирования установлен по умолчанию: info");
+                return Level.INFO;
+            }
+        }
+    }
+
+    public static boolean parseConsole(String s) {
+        if (s == null || s.isEmpty()) {
+            System.out.println("Логирование будет выведено на консоль");
+            return true;
+        }
+        s = s.toLowerCase();
+
+        switch (s) {
+            case "true" -> {
+                System.out.println("Логирование будет выведено на консоль");
+                return true;
+            }
+            case "false" -> {
+                System.out.println("Логирование не будет выведено на консоль");
+                return false;
+            }
+            default -> {
+                System.err.println("Неопознанное значения флага вывода на консоль: "+s);
+                System.out.println("Логирование будет выведено на консоль");
+                return true;
+            }
+        }
+    }
+
+    public static boolean parseFile(String s){
+        if (s == null || s.isEmpty()) {
+            System.out.println("Логирование будет выведено в файл");
+            return true;
+        }
+        s = s.toLowerCase();
+
+        switch (s) {
+            case "true" -> {
+                System.out.println("Логирование будет выведено в файл");
+                return true;
+            }
+            case "false" -> {
+                System.out.println("Логирование не будет выведено в файл");
+                return false;
+            }
+            default -> {
+                System.err.println("Неопознанное значения флага вывода в файл: "+s);
+                System.out.println("Логирование будет выведено в файл");
+                return true;
+            }
+        }
+    }
 
     public String getMainArgument() {
         return mainArgument;
@@ -351,13 +491,8 @@ public class InputManager {
         return xmlArgument;
     }
 
-    public String getCommand() {
-        return command;
+    public String getCommandName() {
+        return commandName;
     }
 
-
-
-    public boolean isScript() {
-        return isScript;
-    }
 }

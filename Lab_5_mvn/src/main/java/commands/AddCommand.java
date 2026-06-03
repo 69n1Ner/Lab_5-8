@@ -1,63 +1,85 @@
 package commands;
 
 import exceptions.InvalidInput;
-import exceptions.SameObjectExistsException;
+import exceptions.NoSuchOrganizationException;
+import exceptions.SameOrganizationExistsException;
 import io.InputManager;
+import io.OrganizationWithFeedback;
+import io.Validator;
 import io.XmlUtil;
 import main.*;
+import net.Request;
+import net.RequestType;
+import net.UdpClient;
+import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
-import java.io.IOException;
-import java.util.NoSuchElementException;
+import org.apache.logging.log4j.LogManager;
 
-public class AddCommand extends Command {
+import java.io.Serializable;
+import java.util.stream.Collectors;
+
+public class AddCommand extends Command implements Serializable {
+    private static final Logger logger = LogManager.getLogger(AddCommand.class);
+
+    @Override
+    public Logger getLogger(){
+        return logger;
+    }
 
     public AddCommand(String name, Invoker invoker) {
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.NO_ARGUMENT);
     }
 
     @Override
-    public void execute() throws IOException {
-        Invoker invokerFather = getInvokerFather();
-        Container<Organization> container =  invokerFather.getContainer();
-        InputManager inputManager = invokerFather.getInputManager();
+    public Request execute() {
+        String response = "непредвиденная";
 
         try {
+            Validator.isValidArgument(this);
 
-            if (isNotValidForScript(inputManager)) {
+            Invoker invokerFather = getInvokerFather();
+            Organization newOrganization;
 
-                Organization newOrganization = inputManager.inputOrganization(false);
-                try {
-                    container.getById(newOrganization.getId());
-                    throw new SameObjectExistsException("Такой объект уже есть");
-
-                } catch (NoSuchElementException e) {
-                    container.add(container.generateFields(newOrganization, false));
-                    System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
-                }
-
+//            logger.debug("before xmls");
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+                newOrganization = InputManager.inputOrganization();
+//                logger.debug("it's input");
             } else {
-                Organization newOrganization = XmlUtil.readObjectFromString(inputManager.getXmlArgument());
-                if (newOrganization != null) {
-
-                    if (newOrganization.getId() == null || newOrganization.getCreationDate() == null) {
-                        throw new InvalidInput("Не указан ID или дата создания объекта");
-                    }
-
-                    try {
-                        container.getById(newOrganization.getId());
-                        throw new SameObjectExistsException("Такой объект уже есть");
-
-                    } catch (NoSuchElementException e) {
-                        container.add(container.generateFields(newOrganization, false));
-                        System.out.println("~~ID созданной организации: " + container.getIdBy(newOrganization) + "~~");
-                    }
-                }
+//                logger.debug("it's request");
+                Validator.isXmlOrgValid(this);
+//                logger.debug("it's server");
+                newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
-        } catch (InvalidInput e) {
-            System.err.println("!! "+e.getMessage()+" !!");
+
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+//                logger.debug("it's client");
+                String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
+            }
+
+
+            Container<Organization> container =  invokerFather.getContainer();
+            OrganizationWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+            newOrganization = organizationWithFeedback.organization();
+            String feedback = organizationWithFeedback
+                    .feedback()
+                    .stream()
+                    .collect(Collectors.joining("\n","","\n"));
+            container.add(newOrganization);
+            String text = "ID созданной организации: " + container.getIdBy(newOrganization);
+            logger.info(text);
+            response = feedback + text;
+        }catch (InvalidInput i) {
+            logger.warn(i);
+            response = i.getMessage();
         }
+        logger.debug("isRequest={}",isRequest());
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+                return createRequest(response);
+        }
+        return null;
     }
 
     @Override

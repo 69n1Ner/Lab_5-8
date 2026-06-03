@@ -1,40 +1,57 @@
 package commands;
 
-import io.InputManager;
+import exceptions.InvalidInput;
+import exceptions.NoSuchOrganizationException;
+import io.Validator;
 import main.Invoker;
+import net.Request;
+import net.UdpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class RemoveByIDCommand extends Command{
+import java.io.Serializable;
+
+public class RemoveByIDCommand extends Command implements Serializable {
+    private static final Logger logger = LogManager.getLogger(RemoveByIDCommand.class);
 
     public RemoveByIDCommand(String name, Invoker invoker){
-        this.setName(name);
-        setInvokerFather(invoker);
+        super(name,invoker,ArgumentType.ID_ONLY);
     }
 
+
     @Override
-    public boolean isValid(InputManager inputManager) {
+    public Request execute() {
+        String r = "непредвиденная";
         try {
-            getInvokerFather().getContainer().getById(Long.parseLong(getInvokerFather().getInputManager().getMainArgument()));
-            return true;
-        } catch (NumberFormatException e) {
-            System.err.println("Неверно задан ID");
-            return false;
-        }
-    }
+            Validator.isValidArgument(this);
 
-    @Override
-    public void execute() {
-        Invoker invokerFather = getInvokerFather();
-        InputManager inputMan = invokerFather.getInputManager();
-            if (isValid(inputMan)){
-                invokerFather.getContainer().removeById(Long.parseLong(inputMan.getMainArgument()));
-                System.out.println("~~Организация успешно удалена~~");
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                return createRequest(this);
             }
 
+            Long ID = Long.parseLong(getArgument());
+            getInvokerFather().getContainer().removeById(ID);
+            String text = "Организация с ID "+ID+" успешно удалена";
+            logger.info(text);
+            r= text;
+        } catch (InvalidInput | NoSuchOrganizationException i){
+            logger.warn(i);
+            r= i.getMessage();
+        }
 
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+            return createRequest(r);
+        }
+        return null;
     }
 
     @Override
     public String describe() {
-        return "remove_by_id id : удалить элемент из коллекции по его id";
+        return "remove_by_id runnerId : удалить элемент из коллекции по его runnerId";
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

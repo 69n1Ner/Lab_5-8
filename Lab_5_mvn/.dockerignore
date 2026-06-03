@@ -1,0 +1,27 @@
+# Папки сборки
+target/
+*.class
+
+# Логи и временные файлы
+*.log
+tmp/
+temp/
+
+# Git и IDE
+.git/
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Docker-файлы (не нужны внутри образа)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Документация
+README.md
+*.md
+
+# Тесты (если не нужны в образе)
+src/test/
