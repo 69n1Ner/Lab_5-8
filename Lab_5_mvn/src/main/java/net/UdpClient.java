@@ -125,11 +125,6 @@ public class UdpClient extends Runner {
                 ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
                 Thread.sleep(100);
 
-                if (!isScript && initialShowUser) {
-                    System.out.print("$user: ");
-                    initialShowUser = false;
-                }
-
                 if (br.ready()) {
                     String input = br.readLine();
 
@@ -189,10 +184,7 @@ public class UdpClient extends Runner {
                      IOException e) {
                 logger.warn("{}", e.getMessage());
 
-                if (!isScript && isRunning) {
-                    System.out.print("$user: ");
-                    System.out.flush();
-                }
+
             }
 //            logger.debug("cycle ended");
         }

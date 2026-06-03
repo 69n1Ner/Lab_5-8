@@ -10,6 +10,7 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
+import java.lang.annotation.Documented;
 import java.net.PortUnreachableException;
 import java.util.Map;
 import java.util.UUID;
@@ -55,7 +56,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 
     public void sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 200;
+        long timeout = 500;
         sendMessage(request);
         if (this instanceof UdpServer) {
             runnerSentMsg(request);
@@ -64,12 +65,13 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         while (System.currentTimeMillis() - start < timeout) {
 //            logger.debug("msg sent");
 //            logger.debug("not unreachable");
+
             //receiving ping msg
-            //todo сделать условную таблицу для не пинговых сообщений, чтобы выводить их оттуда в info
             var response = receiveMessage();
 //                logger.debug("before if");
                 if (response != null) {
 //                    logger.debug("{} {}", runnerId, response.runnerId());
+
                     //online
                     if (runnerId.equals(response.runnerId())) {
                         if (!silentConnection) {
@@ -83,12 +85,15 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
                 }
 //                logger.debug("after if");
             try {
-                Thread.sleep(5);
+                ///Может возникать ошибка, если время сна здесь будет ниже, чем время сна у сервера
+                ///Важно ставить время сна больше (или столько же) чем у сервера
+                Thread.sleep(100);
                 sendMessage(request);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+
         //connection error cause
         silentConnection = false;
         if (request.requestType() != RequestType.PING) {
@@ -124,7 +129,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         if (this instanceof UdpServer) {
             runner = "клиент";
         } else runner = "сервер";
-        getLogger().info("{} не подключен к сети1", runner);
+        getLogger().info("{} не подключен к сети", runner);
         if (isRunning) {
             System.out.print("$user: ");
             System.out.flush();
