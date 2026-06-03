@@ -40,4 +40,4 @@ RUN mkdir -p ${DATA_DIR} && chown appuser:appgroup ${DATA_DIR}
 EXPOSE 9898/udp
 
 # Запуск
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar \"$@\"", "--"]
