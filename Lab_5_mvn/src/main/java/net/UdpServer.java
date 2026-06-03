@@ -5,6 +5,8 @@ import commands.ExitCommand;
 import commands.SaveCommand;
 import exceptions.*;
 import io.ByteUtil;
+import io.InputManager;
+import io.XmlUtil;
 import main.Container;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +32,10 @@ public class UdpServer extends Runner {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        String filePath = System.getenv("LAB5_8");
+        Path path = InputManager.parseInitCollection(filePath);
         Container<Organization> container = new Container<>();
+        if (path != null) container.addList(XmlUtil.readListFromFile(path));
         Invoker invoker = new Invoker(container);
         invoker.setCommand(new SaveCommand("save", invoker));
         UdpServer server = new UdpServer(invoker, 9898);

@@ -10,6 +10,7 @@ import organization.Organization;
 
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -84,8 +85,8 @@ public class XmlUtil {
     }
 
 
-    public static ArrayList<Organization> readListFromFile(String resourceName) throws XmlUtilException{
-        InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(resourceName);
+    public static ArrayList<Organization> readListFromFile(Path path) throws XmlUtilException{
+        InputStream inputStream = XmlUtil.class.getClassLoader().getResourceAsStream(path.toString());
 
         try (inputStream) {
             try {
@@ -95,7 +96,7 @@ public class XmlUtil {
 
                 Unmarshaller unmarshaller = CONTEXT_WRAPPER.createUnmarshaller();
                 ContainerWrapper wrapper = (ContainerWrapper) unmarshaller.unmarshal(inputStream);
-                System.out.println("Загружено из " + resourceName + ": " + wrapper.getOrganizations().size() + " организаций");
+                System.out.println("Загружено из " + path + ": " + wrapper.getOrganizations().size() + " организаций");
                 return new ArrayList<>(wrapper.getOrganizations());
             } catch (JAXBException e) {
                 throw new XmlUtilException("Ошибка парсинга XML: " + e.getMessage());

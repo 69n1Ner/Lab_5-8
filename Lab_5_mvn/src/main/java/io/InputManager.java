@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -481,6 +482,16 @@ public class InputManager {
                 return true;
             }
         }
+    }
+    public static Path parseInitCollection(String string){
+        if (string == null || string.isEmpty()){
+            System.out.println("Не указана начальная коллекция или переменная LAB5_8 не задана");
+            return null;
+        }
+        if (string.contains("\"")){
+            string = string.replace("\"","");
+        }
+        return Path.of(string);
     }
 
     public String getMainArgument() {
