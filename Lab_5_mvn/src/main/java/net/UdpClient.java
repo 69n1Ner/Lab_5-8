@@ -14,11 +14,11 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 
 public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
+    private final Deque<Request> cachedMessages = new ArrayDeque<>();
 
     public UdpClient(Invoker invoker, int port) {
         super(port, invoker);
@@ -81,7 +81,9 @@ public class UdpClient extends Runner {
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
             Request request = ByteUtil.fromBytesTo(data, Request.class);
+            logger.debug("получен реквест {}",request.requestType());
             if (request.requestType() != RequestType.PING) {
+                cachedMessages.addFirst(request);
                 logger.info("Сообщение получено от сервера #{}", address);
                 logger.debug(request);
             }
@@ -122,7 +124,7 @@ public class UdpClient extends Runner {
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
-                ping(runnerId);
+                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
                 Thread.sleep(10);
 
                 if (br.ready()) {
@@ -154,9 +156,15 @@ public class UdpClient extends Runner {
 
                 //receiving
                 if (isRunning && CHANNEL != null) {
-                    Request request1 = receiveMessage();
+                    logger.debug("before receiveMessage");
+                    Request request1 = null;
+                    if (!cachedMessages.isEmpty()){
+                         request1 = cachedMessages.removeFirst();
+                    }
+                    logger.debug("after receiveMessage");
 
-                    logger.debug("request1={}", request1);
+
+                    logger.debug("request1={}",request1);
                     logger.debug("request1 != null={}",request1 != null);
                     if (request1 != null) {
                         logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);

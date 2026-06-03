@@ -37,6 +37,10 @@ public record Request (
         return new Request(isScript,requestType, runnerId,feedback,command,requestId);
     }
 
+    public Request setRequestId(UUID requestId){
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+    }
+
     @Override
     public String toString() {
         String ret = "Request{" +

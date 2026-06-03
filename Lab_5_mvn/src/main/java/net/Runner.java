@@ -39,17 +39,22 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         this.invoker = invoker;
     }
 
-    public void ping(UUID runnerId) throws PortUnreachableException {
+    public void ping(Request request) throws PortUnreachableException {
+        Request request1 = Request.build()
+                .setRequestType(RequestType.PING)
+                .setRunnerId(request.runnerId())
+                .setRequestId(request.requestId());
+
         if (this instanceof UdpClient) {
-            sendAndWait(Request.build().setRequestType(RequestType.PING).setRunnerId(runnerId));
+            sendAndWait(request1);
         } else {
-            sendMessage(Request.build().setRequestType(RequestType.PING).setRunnerId(runnerId));
+            sendMessage(request1);
         }
     }
 
     public void sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 200;
+        long timeout = 20;
         sendMessage(request);
         if (this instanceof UdpServer) {
             runnerSentMsg(request);
@@ -59,6 +64,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 //            logger.debug("msg sent");
 //            logger.debug("not unreachable");
             //receiving ping msg
+            //todo сделать условную таблицу для не пинговых сообщений, чтобы выводить их оттуда в info
             var response = receiveMessage();
 //                logger.debug("before if");
                 if (response != null) {
@@ -75,7 +81,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
                 }
 //                logger.debug("after if");
             try {
-                Thread.sleep(50);
+                Thread.sleep(5);
                 sendMessage(request);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

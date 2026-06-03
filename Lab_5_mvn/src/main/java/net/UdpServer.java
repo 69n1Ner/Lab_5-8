@@ -91,7 +91,7 @@ public class UdpServer extends Runner {
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
             socketAddressMap.put(request.runnerId(),fromClient.getSocketAddress());
 //            logger.debug("map={}",socketAddressMap);
-            ping(request.runnerId());
+            ping(request);
 
             SocketAddress address = socketAddressMap.get(request.runnerId());
             if (request.requestType() != RequestType.PING) {
