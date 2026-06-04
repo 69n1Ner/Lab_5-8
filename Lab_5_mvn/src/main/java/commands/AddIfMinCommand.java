@@ -2,10 +2,8 @@ package commands;
 
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
-import exceptions.NoSuchOrganizationException;
-import exceptions.SameOrganizationExistsException;
 import io.InputManager;
-import io.OrganizationWithFeedback;
+import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
 import main.*;
@@ -60,7 +58,7 @@ public class AddIfMinCommand extends Command implements Serializable {
                         .toList();
 
                 if (list.isEmpty()){
-                    OrganizationWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+                    ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
                     Organization newOrganization1 = organizationWithFeedback.organization();
 
                     String feedback = organizationWithFeedback
@@ -68,7 +66,7 @@ public class AddIfMinCommand extends Command implements Serializable {
                             .stream()
                             .collect(Collectors.joining("\n","","\n"));
                     container.add(newOrganization1);
-                    String text = "ID созданной организации: " + container.getIdBy(newOrganization1);
+                    String text = "ID созданной организации: " + newOrganization1.getId();
                     logger.info(text);
                     response = feedback + text;
                 }else {

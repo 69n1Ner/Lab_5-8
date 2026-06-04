@@ -55,10 +55,9 @@ public class UpdateCommand extends Command  implements Serializable {
 
             if (!container.getAll().isEmpty()) {
                 Long ID = Long.parseLong(getArgument());
-                Organization oldOrg = container.getById(ID);
 
-                container.update(parametrizedOrg, oldOrg);
-                String t = "Организация с ID " + oldOrg.getId() + " успешно изменена";
+                container.update(parametrizedOrg, ID);
+                String t = "Организация с ID " + ID + " успешно изменена";
                 logger.info(t);
                 r = t;
 

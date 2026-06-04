@@ -15,12 +15,22 @@ public enum OrganizationType implements Serializable {
 
     private final String name;
 
-    OrganizationType(String name){
+     OrganizationType(String name){
         this.name = name;
     }
 
     public String getName(){
         return name;
+    }
+
+    static public OrganizationType ofName(String name){
+        for (OrganizationType ot : values()){
+            String v = ot.name;
+            if (name.equals(v)){
+                return ot;
+            }
+        }
+        return null;
     }
 
     @Override

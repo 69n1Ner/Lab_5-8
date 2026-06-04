@@ -23,7 +23,7 @@ public class Organization implements Comparable<Object>, Serializable {
     @XmlElement(name = "type")
     private OrganizationType type; //Поле может быть null
     @XmlElement(name = "coordinates")
-    private final Coordinates coordinates; //Поле не может быть null
+    private Coordinates coordinates; //Поле не может быть null
     @XmlElement(name = "postal_address")
     private Address postalAddress; //Поле не может быть null
     @XmlElement(name = "employees_count")
@@ -43,6 +43,46 @@ public class Organization implements Comparable<Object>, Serializable {
         this.name = name != null ? name : "";
         this.postalAddress = postalAddress;
         this.type = type;
+    }
+
+    public Organization update(Organization newOrg){
+        Organization oldOrg = this;
+
+        oldOrg.setAnnualTurnover(newOrg.getAnnualTurnover() > 0 ? newOrg.getAnnualTurnover() : oldOrg.getAnnualTurnover());
+        long xC = newOrg.getCoordinates().getX();
+        Double yC = newOrg.getCoordinates().getY();
+
+        oldOrg.getCoordinates().setX(xC);
+        if (yC != null){
+            oldOrg.getCoordinates().setY(yC);
+        }
+
+        oldOrg.setEmployeesCount(newOrg.getEmployeesCount() > 0 ? newOrg.getEmployeesCount() : oldOrg.getEmployeesCount());
+        oldOrg.setName((newOrg.getName() != null && !newOrg.getName().isEmpty()) ? newOrg.getName() : oldOrg.getName());
+
+        String zip = newOrg.getPostalAddress().getZipCode();
+        Float xL = newOrg.getPostalAddress().getTown().getX();
+        Integer yL = newOrg.getPostalAddress().getTown().getY();
+        Integer zL = newOrg.getPostalAddress().getTown().getZ();
+        String name = newOrg.getPostalAddress().getTown().getName();
+        if (zip != null && zip.length() >= 4){
+            oldOrg.getPostalAddress().setZipCode(zip);
+        }
+        if (xL != null){
+            oldOrg.getPostalAddress().getTown().setX(xL);
+        }
+        if (yL != null){
+            oldOrg.getPostalAddress().getTown().setY(yL);
+        }
+        if (zL != null){
+            oldOrg.getPostalAddress().getTown().setZ(zL);
+        }
+        if (name != null && !name.isEmpty()){
+            oldOrg.getPostalAddress().getTown().setName(name);
+        }
+
+        oldOrg.setType(newOrg.getType() != null ? newOrg.getType() : oldOrg.getType());
+        return oldOrg;
     }
 
     public Organization() {
@@ -141,6 +181,10 @@ public class Organization implements Comparable<Object>, Serializable {
 
     public Coordinates getCoordinates() {
         return coordinates;
+    }
+
+    public void setCoordinates(Coordinates coordinates) {
+        this.coordinates = coordinates;
     }
 
     public int getAnnualTurnover() {

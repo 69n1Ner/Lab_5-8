@@ -1,10 +1,7 @@
 package io;
 
-import exceptions.InvalidInput;
 import exceptions.NoSuchCommandException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import organization.*;
 
 import java.io.BufferedReader;
@@ -16,7 +13,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 import static java.lang.Math.abs;
@@ -339,8 +335,8 @@ public class InputManager {
     }
 
 
-    public static OrganizationWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
-        OrganizationWithFeedback organizationWithFeedback = new OrganizationWithFeedback(organization,new  ArrayList<>());
+    public static ObjWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
+        ObjWithFeedback organizationWithFeedback = new ObjWithFeedback(organization,null,new  ArrayList<>());
 
         if (!isReadFile) {
             if (organization.getId() == null || organization.getId() <= 0) {
@@ -350,58 +346,78 @@ public class InputManager {
         }
 
         if (organization.getAnnualTurnover() == 0) {
-            organizationWithFeedback.feedback().add("Значение годовой выручки не было установлено");
+            organizationWithFeedback.feedback().add("Значение годовой выручки было установлено на: 0");
         }
 
         long xC = organization.getCoordinates().getX();
         Double yC = organization.getCoordinates().getY();
         if (xC == 0) {
-            organizationWithFeedback.feedback().add("Значение координаты X организации не было установлено");
+            organizationWithFeedback.feedback().add("Значение координаты X организации было установлено на: 0");
         } else if (xC > 623) {
             organization.getCoordinates().setX(623);
             organizationWithFeedback.feedback().add("Значение координаты X организации получило максимальное значение (623)");
         }
         if (yC == null) {
-            organizationWithFeedback.feedback().add("Значение координаты Y организации не было установлено");
+            organization.getCoordinates().setY(0D);
+            organizationWithFeedback.feedback().add("Значение координаты Y организации было установлено на: 0");
         }
 
         if (organization.getEmployeesCount() == 0) {
-            organizationWithFeedback.feedback().add("Значение количества сотрудников не было установлено");
+            organizationWithFeedback.feedback().add("Значение количества сотрудников было установлено на: 0");
         }
 
         if (organization.getName().isEmpty()) {
-            organizationWithFeedback.feedback().add("Значение названия организации не было установлено");
+            String name = "Organization#"+String.valueOf(abs(organization.hashCode())).substring(6);
+            organization.setName(name);
+            organizationWithFeedback.feedback().add("Значение названия организации было установлено на: "+ name);
         }
 
-        organizationWithFeedback.feedback().addAll(generateAddressFields(organization.getPostalAddress()));
+        if (organization.getType() == null){
+            organization.setType(OrganizationType.PUBLIC);
+            organizationWithFeedback.feedback().add("Значение типа организации было установлено на: "+OrganizationType.PUBLIC.getName());
+        }
+        ObjWithFeedback objWithFeedback = generateAddressFields(organization.getPostalAddress());
+        Address address = objWithFeedback.address();
+        List<String> feedback = objWithFeedback.feedback();
+
+        organizationWithFeedback.feedback().addAll(feedback);
+        organizationWithFeedback.organization().setPostalAddress(address);
 
         return organizationWithFeedback;
     }
 
-    public static List<String> generateAddressFields(Address address){
+    public static ObjWithFeedback generateAddressFields(Address address){
+        ObjWithFeedback addressWithFeedback = new ObjWithFeedback(null,address,new ArrayList<>());
         String zip = address.getZipCode();
         Float xL = address.getTown().getX();
         Integer yL = address.getTown().getY();
         Integer zL = address.getTown().getZ();
         String name = address.getTown().getName();
-        List<String> feedback = new ArrayList<>();
+        Location town = address.getTown();
 
         if (zip == null || zip.length() < 4) {
-            feedback.add("Значение почтового индекса не было установлено");
+            String zipCode = "0000";
+            address.setZipCode(zipCode);
+            addressWithFeedback.feedback().add("Значение почтового индекса было установлено: "+zipCode);
         }
         if (xL == null) {
-            feedback.add("Значение координаты X города не было установлено");
+            town.setX(0F);
+            addressWithFeedback.feedback().add("Значение координаты X города было установлено на: 0");
         }
         if (yL == null) {
-            feedback.add("Значение координаты Y города не было установлено");
+            town.setY(0);
+            addressWithFeedback.feedback().add("Значение координаты Y города было установлено на: 0");
         }
         if (zL == null) {
-            feedback.add("Значение координаты Z города не было установлено");
+            town.setZ(0);
+            addressWithFeedback.feedback().add("Значение координаты Z города было установлено на: 0");
         }
         if (name == null || name.isEmpty()) {
-            feedback.add("Значение названия города не было установлено");
+            String addressName = "City#"+String.valueOf(abs(address.hashCode())).substring(6);
+            town.setName(addressName);
+            addressWithFeedback.feedback().add("Значение названия города было установлено на: "+addressName);
         }
-        return feedback;
+        return addressWithFeedback;
     }
 
     public static Level parseLevel(String string) {

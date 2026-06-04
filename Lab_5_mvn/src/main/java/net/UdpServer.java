@@ -18,6 +18,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
@@ -34,7 +35,7 @@ public class UdpServer extends Runner {
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         String filePath = System.getenv("LAB5_8");
         Path path = InputManager.parseInitCollection(filePath);
-        Container<Organization> container = new Container<>();
+        Container<Organization> container = Container.getInstance();
         if (path != null) container.addList(XmlUtil.readListFromFile(path));
         Invoker invoker = new Invoker(container);
         invoker.setCommand(new SaveCommand("save", invoker));
