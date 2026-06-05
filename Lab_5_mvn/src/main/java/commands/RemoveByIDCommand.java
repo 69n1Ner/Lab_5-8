@@ -33,11 +33,18 @@ public class RemoveByIDCommand extends Command implements Serializable {
             Long ID = Long.parseLong(getArgument());
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            organizationDao.delete(ID);
+            boolean isDeleted = organizationDao.delete(ID);
 
-            String text = "Организация с ID "+ID+" успешно удалена";
+            String text;
+            if (isDeleted){
+                text = "Организация с ID "+ID+" успешно удалена";
+            }else {
+                text = "Организация с ID "+ID+" не удалена удалена";
+            }
             logger.info(text);
             r= text;
+
+
         } catch (InvalidInput | NoSuchOrganizationException i){
             logger.warn(i);
             r= i.getMessage();

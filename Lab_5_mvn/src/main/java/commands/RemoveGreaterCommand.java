@@ -42,7 +42,9 @@ public class RemoveGreaterCommand extends Command  implements Serializable {
             }
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                return createRequest(this);
+                String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
             }
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
