@@ -339,9 +339,6 @@ public class InputManager {
         ObjWithFeedback organizationWithFeedback = new ObjWithFeedback(organization,null,new  ArrayList<>());
 
         if (!isReadFile) {
-            if (organization.getId() == null || organization.getId() <= 0) {
-                organization.setId((long) abs(hash(ZonedDateTime.now()) + organization.hashCode()));
-            }
             organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
         }
 

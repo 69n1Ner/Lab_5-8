@@ -11,54 +11,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrganizationDao implements Dao<Organization>{
-    private static final OrganizationDao INSTANCE = new OrganizationDao();
     private static final Container<Organization> CONTAINER = Container.getInstance();
+    private static final OrganizationDao INSTANCE = new OrganizationDao();
+
 
         //language=POSTGRES-SQL
         private static final String SELECT_ORGANIZATIONS_SQL = """
-                    select o.id,
-                           o.creation_date,
-                           o.name,
-                           o.employees_count,
-                           o.annual_turnover,
-                           c.x,
-                           c.y,
-                           a.zip_code,
-                           l.name,
-                           l.x,
-                           l.y,
-                           l.z,
-                           ot.name
-                    from organization o
-                    join coordinates c on c.id = coordinates_id
-                    join address a on a.id = postal_address_id
-                    join location l on a.location_id = l.id
-                    join organization_type ot on ot.id = o.type_id
-                    """;
+                select
+                    "annual_turnover",
+                    "coordinates_x",
+                    "coordinates_y",
+                    "creation_date",
+                    "employees_count",
+                    o."id",
+                    "location_name",
+                    "location_x",
+                    "location_y",
+                    "location_z",
+                    o."name",
+                    ot.name as type_name,
+                    "zip_code"
+                from organization o
+                join organization_type ot on o.type_id = ot.id""";
 
     //language=POSTGRES-SQL
     private static final String SAVE_ORGANIZATION_SQL = """
                     insert into organization (
-                                creation_date
-                                ,"name"
-                                ,type_id
-                                ,coordinates_id
-                                ,postal_address_id
-                                ,employees_count
-                                ,annual_turnover)
-                            values (?,?,?,?,?,?,?)
+                        "annual_turnover",
+                        "coordinates_x",
+                        "coordinates_y",
+                        "creation_date",
+                        "employees_count",
+                        "location_name",
+                        "location_x",
+                        "location_y",
+                        "location_z",
+                        "name",
+                        "type_id",
+                        "zip_code")
+                    values (?,?,?,?,?,?,?,?,?,?,?,?)
                     """;
     //language=POSTGRES-SQL
     private static final String UPDATE_ORGANIZATION_SQL = """
                     update organization
-                            set creation_date = ?
-                                ,"name" = ?
-                                ,type_id = ?
-                                ,coordinates_id = ?
-                                ,postal_address_id = ?
-                                ,employees_count = ?
-                                ,annual_turnover = ?
-                            where id = ?
+                    set "annual_turnover" = ?,
+                        "coordinates_x" = ?,
+                        "coordinates_y" = ?,
+                        "creation_date" = ?,
+                        "employees_count" = ?,
+                        "location_name" = ?,
+                        "location_x" = ?,
+                        "location_y" = ?,
+                        "location_z" = ?,
+                        "name" = ?,
+                        "type_id" = ?,
+                        "zip_code" = ?
+                    where id = ?
                     """;
 
     //language=POSTGRES-SQL
@@ -66,51 +74,6 @@ public class OrganizationDao implements Dao<Organization>{
                     delete from organization
                     where id = ?
                     """;
-
-    //language=POSTGRES-SQL
-    private static final String SAVE_COORDINATES_SQL= """
-                    insert into coordinates (x,y)
-                    values (?,?)
-                    """;
-    //language=POSTGRES-SQL
-    private static final String SAVE_LOCATION_SQL="""
-                    insert into "location" (x,y,z,"name")
-                    values (?,?,?,?)
-                    """;
-
-    //language=POSTGRES-SQL
-    private static final String SAVE_ADDRESS_SQL="""
-                    insert into address (zip_code,location_id)
-                    values (?,?)
-                    """;
-
-    //language=POSTGRES-SQL
-    private static final String UPDATE_COORDINATES_SQL= """
-                    update coordinates
-                    set x = ?,
-                        y = ?
-                    where id = ?
-                    """;
-
-    //language=POSTGRES-SQL
-    private static final String UPDATE_LOCATION_SQL= """
-                    update "location"
-                    set "name" = ?,
-                        x = ?,
-                        y = ?,
-                        z = ?
-                    where id = ?
-                    """;
-
-    //language=POSTGRES-SQL
-    private static final String UPDATE_ADDRESS_SQL= """
-                    update address
-                    set location_id = ?,
-                        zip_code = ?
-                    where id = ?
-                    """;
-
-
 
     @Override
     public int save(Organization organization) {
@@ -120,28 +83,42 @@ public class OrganizationDao implements Dao<Organization>{
 
             LocalDate localDate = organization.getCreationDate();
             String name = organization.getName();
-            int typeID = getType(connection,organization.getType().toString());
-            Coordinates coordinates = organization.getCoordinates();
-            int coordinateID = setCoordinates(connection,SAVE_COORDINATES_SQL,coordinates.getX(),coordinates.getY());
-            Address address = organization.getPostalAddress();
-            Location location = address.getTown();
-            int locationID = setLocation(connection,SAVE_LOCATION_SQL,location.getX(),location.getY(),location.getZ(),location.getName());
-            int addressID = setAddress(connection,address.getZipCode(),SAVE_ADDRESS_SQL,locationID);
             long employeesCount = organization.getEmployeesCount();
             int annualTurnover = organization.getAnnualTurnover();
+            int typeID = getType(connection,organization.getType().getName());
+
+            Address address = organization.getPostalAddress();
+            String zipCode = address.getZipCode();
+
+            Location location = address.getTown();
+            Float x = location.getX();
+            Integer y = location.getY();
+            Integer z = location.getZ();
+            String locationName = location.getName();
+
+            Coordinates coordinates = organization.getCoordinates();
+            long coordinateX = coordinates.getX();
+            Double coordinateY = coordinates.getY();
 
             int organizationID = 0;
-            statement.setDate(1, Date.valueOf(localDate));
-            statement.setString(2,name);
-            statement.setInt(3,typeID);
-            statement.setInt(4,coordinateID);
-            statement.setInt(5,addressID);
-            statement.setLong(6,employeesCount);
-            statement.setLong(7,annualTurnover);
+            statement.setInt(1,annualTurnover);
+            statement.setLong(2,coordinateX);
+            statement.setDouble(3,coordinateY);
+            statement.setDate(4, Date.valueOf(localDate));
+            statement.setLong(5,employeesCount);
+            statement.setString(6,locationName);
+            statement.setFloat(7,x);
+            statement.setInt(8,y);
+            statement.setInt(9,z);
+            statement.setString(10,name);
+            statement.setInt(11,typeID);
+            statement.setString(12,zipCode);
 
             statement.executeUpdate();
 
+
             try (ResultSet resultSet = statement.getGeneratedKeys()){
+
                 if (resultSet.next()){
                     organizationID = resultSet.getInt(1);
                 }else {
@@ -150,6 +127,8 @@ public class OrganizationDao implements Dao<Organization>{
                 }
             }
             connection.commit();
+            organization.setId((long) organizationID);
+            CONTAINER.add(organization);
             return organizationID;
 
         }catch (SQLException e){
@@ -168,25 +147,37 @@ public class OrganizationDao implements Dao<Organization>{
 
             LocalDate localDate = organization.getCreationDate();
             String name = organization.getName();
-            int typeID = getType(connection,organization.getType().toString());
-            Coordinates coordinates = organization.getCoordinates();
-            int coordinateID = setCoordinates(connection,UPDATE_COORDINATES_SQL,coordinates.getX(),coordinates.getY());
-            Address address = organization.getPostalAddress();
-            Location location = address.getTown();
-            int locationID = setLocation(connection,UPDATE_LOCATION_SQL,location.getX(),location.getY(),location.getZ(),location.getName());
-            int addressID = setAddress(connection,address.getZipCode(),UPDATE_ADDRESS_SQL,locationID);
             long employeesCount = organization.getEmployeesCount();
             int annualTurnover = organization.getAnnualTurnover();
+            int typeID = getType(connection,organization.getType().getName());
+
+            Address address = organization.getPostalAddress();
+            String zipCode = address.getZipCode();
+
+            Location location = address.getTown();
+            Float x = location.getX();
+            Integer y = location.getY();
+            Integer z = location.getZ();
+            String locationName = location.getName();
+
+            Coordinates coordinates = organization.getCoordinates();
+            long coordinateX = coordinates.getX();
+            Double coordinateY = coordinates.getY();
 
             int organizationID = 0;
-            statement.setDate(1, Date.valueOf(localDate));
-            statement.setString(2,name);
-            statement.setInt(3,typeID);
-            statement.setInt(4,coordinateID);
-            statement.setInt(5,addressID);
-            statement.setLong(6,employeesCount);
-            statement.setLong(7,annualTurnover);
-            statement.setLong(8,ID);
+            statement.setInt(1,annualTurnover);
+            statement.setLong(2,coordinateX);
+            statement.setDouble(3,coordinateY);
+            statement.setDate(4, Date.valueOf(localDate));
+            statement.setLong(5,employeesCount);
+            statement.setString(6,locationName);
+            statement.setFloat(7,x);
+            statement.setInt(8,y);
+            statement.setInt(9,z);
+            statement.setString(10,name);
+            statement.setInt(11,typeID);
+            statement.setString(12,zipCode);
+            statement.setLong(13,ID);
 
             statement.executeUpdate();
 
@@ -199,6 +190,7 @@ public class OrganizationDao implements Dao<Organization>{
                 }
             }
             connection.commit();
+            CONTAINER.update(organization,ID);
             return organizationID > 0;
 
 
@@ -271,103 +263,35 @@ public class OrganizationDao implements Dao<Organization>{
         }
     }
 
-    private static int setCoordinates(Connection connection,String SQL,long x, Double y){
-        try (PreparedStatement psCoordinates = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)) {
-            int coordiantesId = 0;
-
-            psCoordinates.setLong(1,x);
-            psCoordinates.setDouble(2,y);
-
-            psCoordinates.executeUpdate();
-            try (ResultSet resultSet = psCoordinates.getGeneratedKeys()){
-                if (resultSet.next()){
-                    coordiantesId = resultSet.getInt(1);
-                }else {
-                    throw new SQLException("Не удалось вытащить ID у координат");
-                }
-            }
-            return coordiantesId;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static int setLocation(Connection connection,String SQL,Float x, Integer y, Integer z, String name){
-        try (PreparedStatement psLocation = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);) {
-            int locationId = 0;
-
-            psLocation.setFloat(1,x);
-            psLocation.setInt(2,y);
-            psLocation.setInt(3,z);
-            psLocation.setString(4,name);
-
-            psLocation.executeUpdate();
-            try (ResultSet resultSet = psLocation.getGeneratedKeys()){
-                if (resultSet.next()){
-                    locationId = resultSet.getInt(1);
-                }else {
-                    throw new SQLException("Не удалось вытащить ID у локации");
-                }
-            }
-            return locationId;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static int setAddress(Connection connection,
-                                  String SQL,
-                                  String zipCode,
-                                  int locationId){
-        try (PreparedStatement psAddress = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);) {
-            int addressId = 0;
-
-            psAddress.setString(1,zipCode);
-            psAddress.setInt(2,locationId);
-
-            psAddress.executeUpdate();
-            try (ResultSet resultSet = psAddress.getGeneratedKeys()){
-                if (resultSet.next()){
-                    addressId = resultSet.getInt(1);
-                }else {
-                    throw new SQLException("Не удалось вытащить ID у адреса");
-                }
-            }
-            return addressId;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private OrganizationDao() {
         try (Connection connection = ConnectionManager.open();
-             PreparedStatement psOrganization = connection.prepareStatement(SELECT_ORGANIZATIONS_SQL)){
+             PreparedStatement psOrganization = connection.prepareStatement(SELECT_ORGANIZATIONS_SQL,Statement.RETURN_GENERATED_KEYS)){
             psOrganization.executeQuery();
 
             try (ResultSet resultSet = psOrganization.getResultSet()){
                 List<Organization> organizations = new ArrayList<>();
                 while (resultSet.next()){
                     Organization organization = new Organization();
-                    organization.setId(resultSet.getLong("o.id"));
-                    organization.setCreationDate(resultSet.getDate("o.creation_date").toLocalDate());
-                    organization.setName(resultSet.getString("o.name"));
-                    organization.setType(OrganizationType.ofName(resultSet.getString("ot.name")));
-                    organization.setEmployeesCount(resultSet.getLong("o.employees_count"));
-                    organization.setAnnualTurnover(resultSet.getInt("o.annual_turnover"));
+                    organization.setId(resultSet.getLong("id"));
+                    organization.setCreationDate(resultSet.getDate("creation_date").toLocalDate());
+                    organization.setName(resultSet.getString("name"));
+                    organization.setType(OrganizationType.ofName(resultSet.getString("type_name")));
+                    organization.setEmployeesCount(resultSet.getLong("employees_count"));
+                    organization.setAnnualTurnover(resultSet.getInt("annual_turnover"));
 
                     Coordinates coordinates = new Coordinates();
-                    coordinates.setX(resultSet.getLong("c.x"));
-                    coordinates.setY(resultSet.getDouble("c.y"));
+                    coordinates.setX(resultSet.getLong("coordinates_x"));
+                    coordinates.setY(resultSet.getDouble("coordinates_y"));
                     organization.setCoordinates(coordinates);
 
                     Location location = new Location();
-                    location.setX(resultSet.getFloat("l.x"));
-                    location.setY(resultSet.getInt("l.y"));
-                    location.setZ(resultSet.getInt("l.z"));
-                    location.setName(resultSet.getString("l.name"));
+                    location.setX(resultSet.getFloat("location_x"));
+                    location.setY(resultSet.getInt("location_y"));
+                    location.setZ(resultSet.getInt("location_z"));
+                    location.setName(resultSet.getString("location_name"));
 
                     Address address = new Address();
-                    address.setZipCode(resultSet.getString("a.zip_code"));
+                    address.setZipCode(resultSet.getString("zip_code"));
                     address.setTown(location);
                     organization.setPostalAddress(address);
                     organizations.add(organization);
