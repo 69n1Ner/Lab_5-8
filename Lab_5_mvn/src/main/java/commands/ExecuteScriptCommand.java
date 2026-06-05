@@ -5,6 +5,7 @@ import exceptions.RecursionLimitReached;
 import io.Validator;
 import main.Invoker;
 import net.Request;
+import net.Runner;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,8 +51,8 @@ public class ExecuteScriptCommand extends Command{
 
             incrementCurrentRecursion();
 
-
-            getInvokerFather().getRunner().run(true,file);
+            Runner runner = getInvokerFather().getRunner();
+            runner.run(true,file,runner.isLab7());
             String t = "Скрипт " +getArgument()+  " выполнен";
             logger.info(t);
 

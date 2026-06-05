@@ -28,17 +28,23 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     private boolean silentConnectionError = false;
     private boolean silentConnection = false;
     protected boolean initialShowUser = true;
+    protected final boolean isLab7;
 
     public abstract void connect();
     public abstract void run();
-    public abstract void run(boolean isScript, String path);
+    public abstract void run(boolean isScript, String path, boolean isLab7);
     public abstract Closeable getTunnel();
     public abstract void setRunning(boolean condition);
     public abstract Invoker getInvokerFather();
 
-    protected Runner(int port, Invoker invoker) {
+    protected Runner(int port, Invoker invoker,boolean isLab7) {
         this.port = port;
         this.invoker = invoker;
+        this.isLab7 = isLab7;
+    }
+
+    public boolean isLab7() {
+        return isLab7;
     }
 
     public void ping(Request request) throws PortUnreachableException {

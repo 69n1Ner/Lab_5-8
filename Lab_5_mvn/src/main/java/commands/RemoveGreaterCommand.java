@@ -2,9 +2,11 @@ package commands;
 
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
+import exceptions.NoSuchOrganizationException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
+import io.db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -13,7 +15,9 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RemoveGreaterCommand extends Command  implements Serializable {
     private static final Logger logger = LogManager.getLogger(RemoveGreaterCommand.class);
@@ -38,23 +42,31 @@ public class RemoveGreaterCommand extends Command  implements Serializable {
             }
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
-                return createRequest(this);
+                String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
             }
 
-            Invoker invokerFather = getInvokerFather();
-            Container<Organization> container = invokerFather.getContainer();
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
 
-            if (!container.getAll().isEmpty()) {
+            if (!container.isEmpty()) {
                 StringBuilder sb = new StringBuilder();
-                boolean isOneDeleted = container.removeIf(organization -> {
+                AtomicBoolean isOneDeleted = new AtomicBoolean(false);
+
+                container.forEach(organization -> {
                     if (organization.compareTo(newOrganization) > 0){
-                        logger.info("Организация с ID {} удалена",organization.getId());
-                        sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
-                        return true;
+                        try {
+                            organizationDao.delete(organization.getId());
+                            logger.info("Организация с ID {} удалена",organization.getId());
+                            sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
+                            isOneDeleted.set(true);
+                        } catch (NoSuchOrganizationException ignored) {
+                        }
                     }
-                    return false;
                 });
-                if (!isOneDeleted) {
+
+                if (!isOneDeleted.get()) {
                     NoSuchElementException ns = new NoSuchElementException("Нет организаций, больших заданной");
                     logger.warn(ns);
                     r= ns.getMessage();

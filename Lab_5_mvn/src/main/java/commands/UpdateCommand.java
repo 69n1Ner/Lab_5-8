@@ -4,6 +4,7 @@ import exceptions.*;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
+import io.db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class UpdateCommand extends Command  implements Serializable {
     private static final Logger logger = LogManager.getLogger(UpdateCommand.class);
@@ -22,7 +24,7 @@ public class UpdateCommand extends Command  implements Serializable {
 
     @Override
     public String describe() {
-        return "update runnerId {element} : Обновляет значения элемента по runnerId, нужно ввести весь объект." +
+        return "update ID {element} : Обновляет значения элемента по ID, нужно ввести весь объект." +
                 " Поля без значения не будут изменены.";
     }
 
@@ -49,18 +51,25 @@ public class UpdateCommand extends Command  implements Serializable {
                 return createRequest(command);
             }
 
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
 
-            Invoker invokerFather = getInvokerFather();
-            Container<Organization> container = invokerFather.getContainer();
 
-            if (!container.getAll().isEmpty()) {
+            if (!container.isEmpty()) {
                 Long ID = Long.parseLong(getArgument());
-                Organization oldOrg = container.getById(ID);
 
-                container.update(parametrizedOrg, oldOrg);
-                String t = "Организация с ID " + oldOrg.getId() + " успешно изменена";
-                logger.info(t);
-                r = t;
+                boolean isOk = organizationDao.update(parametrizedOrg, ID);
+                String t;
+
+                if (isOk) {
+                    t = "Организация с ID " + ID + " успешно изменена";
+                    logger.info(t);
+                    r = t;
+                } else {
+                    t = "Организация с ID " + ID + " не изменена";
+                    logger.info(t);
+                    r = t;
+                }
 
             } else{
                 EmptyContainerException ec = new EmptyContainerException();

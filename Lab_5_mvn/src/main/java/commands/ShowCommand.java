@@ -3,6 +3,7 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
+import io.db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
@@ -39,7 +40,8 @@ public class ShowCommand extends Command implements Serializable {
                 return createRequest(this);
             }
 
-            List<Organization> container = getInvokerFather().getContainer().getAll();
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
 
             if (!container.isEmpty()) {
                 String s = container.stream()

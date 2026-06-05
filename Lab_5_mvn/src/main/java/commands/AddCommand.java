@@ -1,15 +1,13 @@
 package commands;
 
 import exceptions.InvalidInput;
-import exceptions.NoSuchOrganizationException;
-import exceptions.SameOrganizationExistsException;
 import io.InputManager;
-import io.OrganizationWithFeedback;
+import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
+import io.db.OrganizationDao;
 import main.*;
 import net.Request;
-import net.RequestType;
 import net.UdpClient;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
@@ -60,15 +58,16 @@ public class AddCommand extends Command implements Serializable {
             }
 
 
-            Container<Organization> container =  invokerFather.getContainer();
-            OrganizationWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+            ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
             newOrganization = organizationWithFeedback.organization();
             String feedback = organizationWithFeedback
                     .feedback()
                     .stream()
                     .collect(Collectors.joining("\n","","\n"));
-            container.add(newOrganization);
-            String text = "ID созданной организации: " + container.getIdBy(newOrganization);
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            int id = organizationDao.save(newOrganization);
+
+            String text = "ID созданной организации: " + id;
             logger.info(text);
             response = feedback + text;
         }catch (InvalidInput i) {

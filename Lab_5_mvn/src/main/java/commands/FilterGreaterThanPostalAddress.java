@@ -6,6 +6,7 @@ import exceptions.XmlUtilException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
+import io.db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -49,8 +50,8 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
             }
 
 
-
-            List<Organization> container = invokerFather.getContainer().getAll();
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
 
             if (!container.isEmpty()) {
 

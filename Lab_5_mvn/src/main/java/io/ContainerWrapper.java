@@ -18,8 +18,6 @@ public class ContainerWrapper implements Serializable {
         this.organizations = new ArrayList<>();
     }
 
-
-
     public List<Organization> getOrganizations() {
         return organizations;
     }

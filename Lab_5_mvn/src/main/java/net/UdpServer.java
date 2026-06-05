@@ -18,27 +18,33 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
     private DatagramSocket SOCKET;
     private final HashMap<UUID,SocketAddress> socketAddressMap = new HashMap<>();
 
-    public UdpServer(Invoker invoker, int port) {
-        super(port, invoker);
+    public UdpServer(Invoker invoker, int port,boolean isLab7) {
+        super(port, invoker,isLab7);
         invoker.setRunner(this);
         logger = LogManager.getLogger(UdpServer.class);
 
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        String filePath = System.getenv("LAB5_8");
-        Path path = InputManager.parseInitCollection(filePath);
-        Container<Organization> container = new Container<>();
-        if (path != null) container.addList(XmlUtil.readListFromFile(path));
+
+        Container<Organization> container = Container.getInstance();
         Invoker invoker = new Invoker(container);
-        invoker.setCommand(new SaveCommand("save", invoker));
-        UdpServer server = new UdpServer(invoker, 9898);
+        UdpServer server = new UdpServer(invoker, 9898,true);
+
+        if (!server.isLab7){
+            invoker.setCommand(new SaveCommand("save", invoker));
+            String filePath = System.getenv("LAB5_8");
+            Path path = InputManager.parseInitCollection(filePath);
+            if (path != null) container.addList(XmlUtil.readListFromFile(path));
+        }
+
 
         server.applyParams();
 
@@ -114,11 +120,11 @@ public class UdpServer extends Runner {
 
     @Override
     public void run() {
-        run(false, "");
+        run(false, "",isLab7);
     }
 
     @Override
-    public void run(boolean isScript, String path) {
+    public void run(boolean isScript, String path,boolean isLab7) {
         isRunning = true;
         Path path1 = Path.of(path);
 

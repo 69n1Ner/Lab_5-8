@@ -31,8 +31,7 @@ public class InfoCommand extends Command implements Serializable {
                 return createRequest(this);
             }
 
-            Invoker invokerFather = getInvokerFather();
-            Container<Organization> container = invokerFather.getContainer();
+            Container<Organization> container = Container.getInstance();
             String t = String.join("\n",
                     "Информация:",
                     "-Тип:" + Arrays.stream(container

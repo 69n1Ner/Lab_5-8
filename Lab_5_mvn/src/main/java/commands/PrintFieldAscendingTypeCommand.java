@@ -3,6 +3,7 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
+import io.db.OrganizationDao;
 import main.Container;
 import main.Invoker;
 import net.Request;
@@ -14,6 +15,7 @@ import sorts.SortByType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class PrintFieldAscendingTypeCommand extends Command implements Serializable {
@@ -33,10 +35,11 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
                 return createRequest(this);
             }
 
-            Invoker invokerFather = getInvokerFather();
-            Container<Organization> container = invokerFather.getContainer();
-            if (!container.getAll().isEmpty()) {
-                ArrayList<Organization> sortedOrgs = new ArrayList<>(container.getAll());
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
+
+            if (!container.isEmpty()) {
+                ArrayList<Organization> sortedOrgs = new ArrayList<>(container);
                 String s = sortedOrgs.stream()
                                 .sorted(new SortByType())
                                 .map(Organization::toString)
