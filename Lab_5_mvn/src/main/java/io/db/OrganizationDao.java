@@ -2,6 +2,8 @@ package io.db;
 
 import exceptions.NoSuchOrganizationException;
 import main.Container;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jaxb.core.v2.model.core.ID;
 import organization.*;
 
@@ -74,6 +76,8 @@ public class OrganizationDao implements Dao<Organization>{
                     delete from organization
                     where id = ?
                     """;
+
+    private static final Logger log = LogManager.getLogger(OrganizationDao.class);
 
     @Override
     public int save(Organization organization) {
@@ -200,31 +204,46 @@ public class OrganizationDao implements Dao<Organization>{
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(Long id) throws NoSuchOrganizationException {
         try (Connection connection = ConnectionManager.open();
-             PreparedStatement statement = connection.prepareStatement(DELETE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
+             PreparedStatement statement = connection.prepareStatement(DELETE_ORGANIZATION_SQL)) {
             connection.setAutoCommit(false);
 
             statement.setLong(1, id);
 
-            int organizationID = 0;
+            int deletedRows = statement.executeUpdate();
 
-            statement.executeUpdate();
-
-            try (ResultSet resultSet = statement.getGeneratedKeys()){
-                if (resultSet.next()){
-                    organizationID = resultSet.getInt(1);
-                }else {
-                    connection.rollback();
-                    throw new SQLException("Не удалось вытащить ID у организации");
-                }
+            if (deletedRows > 0) {
+                connection.commit();
+                CONTAINER.removeById(id);
+                return true;
+            } else {
+                connection.rollback();
+                return false;
             }
-            connection.commit();
-            return organizationID > 0;
 
-        }catch (SQLException e){
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public int clear(){
+        List<Organization> list = findAll();
+        int counter = 0;
+        for (Organization organization : list){
+            long id = organization.getId();
+            boolean isDeleted = false;
+            try {
+                isDeleted = delete(id);
+
+            if (isDeleted){
+               counter++;
+            }
+            // it's just easier, that's why no processing
+            } catch (NoSuchOrganizationException e) {
+            }
+        }
+        return counter;
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.InputManager;
 import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
+import io.db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -57,15 +58,16 @@ public class AddCommand extends Command implements Serializable {
             }
 
 
-            Container<Organization> container =  invokerFather.getContainer();
             ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
             newOrganization = organizationWithFeedback.organization();
             String feedback = organizationWithFeedback
                     .feedback()
                     .stream()
                     .collect(Collectors.joining("\n","","\n"));
-            container.add(newOrganization);
-            String text = "ID созданной организации: " + newOrganization.getId();
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            int id = organizationDao.save(newOrganization);
+
+            String text = "ID созданной организации: " + id;
             logger.info(text);
             response = feedback + text;
         }catch (InvalidInput i) {

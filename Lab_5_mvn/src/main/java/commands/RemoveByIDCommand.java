@@ -3,6 +3,7 @@ package commands;
 import exceptions.InvalidInput;
 import exceptions.NoSuchOrganizationException;
 import io.Validator;
+import io.db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
@@ -30,7 +31,10 @@ public class RemoveByIDCommand extends Command implements Serializable {
             }
 
             Long ID = Long.parseLong(getArgument());
-            getInvokerFather().getContainer().removeById(ID);
+
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            organizationDao.delete(ID);
+
             String text = "Организация с ID "+ID+" успешно удалена";
             logger.info(text);
             r= text;
@@ -47,7 +51,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
 
     @Override
     public String describe() {
-        return "remove_by_id runnerId : удалить элемент из коллекции по его runnerId";
+        return "remove_by_id ID : удалить элемент из коллекции по его ID";
     }
 
     @Override

@@ -36,7 +36,9 @@ public class ExitCommand extends Command{
             if (tunnel != null) {
                 try {
                     if (runner instanceof UdpServer) {
-                        runner.getInvokerFather().getAllCommands().get("save").execute();
+                        if (!runner.isLab7()) {
+                            runner.getInvokerFather().getAllCommands().get("save").execute();
+                        }
                     }
                     tunnel.close();
                 } catch (Exception e) {

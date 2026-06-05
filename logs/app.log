@@ -4,3 +4,118 @@
 2026-06-03 19:26:50 [INFO ] net.UdpServer - Сервер подключился к сети
 2026-06-03 19:27:08 [INFO ] commands.SaveCommand - Коллекция сохранена в collection4.xml
 2026-06-03 19:27:08 [INFO ] commands.ExitCommand - UdpServer завершил работу
+2026-06-05 14:18:56 [INFO ] io.db.OrganizationDao - Коллекция очищена. Удалено 0 организаций
+2026-06-05 15:33:44 [INFO ] net.UdpServer - Сервер подключился к сети
+2026-06-05 15:33:49 [INFO ] commands.InfoCommand - Информация:
+-Тип:TreeSet
+-Дата создания:2026-06-05
+-Количество элементов:0
+2026-06-05 15:33:52 [WARN ] commands.ShowCommand - exceptions.EmptyContainerException: Контейнер пуст
+2026-06-05 15:34:02 [INFO ] commands.AddCommand - ID созданной организации: 5
+2026-06-05 15:34:05 [INFO ] commands.ShowCommand - Organization:
+ Id: 5
+ Дата создания объекта: 2026-06-05
+ Название: 1
+ Тип организации: Публичная
+ Координаты: 
+  x: 1
+  y: 1.0
+ Адрес: 
+  Расположение: 
+   Город: 1
+   x: 1.0
+   y: 1
+   z: 11
+  Почтовый индекс: 0000
+ Количество сотрудников: 1
+ Годовая выручка: 1
+2026-06-05 15:34:20 [INFO ] commands.HelpCommand - 
+add {element} : добавить новый элемент в коллекцию. Поля введенные неверно будут сгенерированы
+add_if_min {element} : добавить новый элемент в коллекцию, если его значение меньше, чем у наименьшего элемента этой коллекции. Сравнение идет по выручке и количеству сотрудников
+clear : очистить коллекцию
+execute_script file_name : считать и исполнить скрипт из указанного файла. Команды которым необходимы на вход организации или адрес должны вводится в xml формате в строке с командой
+exit : завершить программу
+filter_greater_than_postal_address {postalAddress} : вывести элементы, значение поля postalAddress которых больше заданного. Сравнение идет по почтовому индексу
+help : Выводит справку по командам.
+info : выводит информацию о коллекции (тип, дата инициализации, количество элементов)
+print_field_ascending_type : вывести значения поля type всех элементов в порядке возрастания
+remove_by_id runnerId : удалить элемент из коллекции по его runnerId
+remove_greater {element} : удалить из коллекции все элементы, превышающие заданный. Сравнение идет по выручке и количеству сотрудников
+remove_lower {element} : удалить из коллекции все элементы, меньшие, чем заданный. Сравнение идет по выручке и количеству сотрудников
+show : вывести все элементы коллекции
+sum_of_employees_count : вывести сумму значений поля employeesCount для всех элементов коллекции
+update runnerId {element} : Обновляет значения элемента по runnerId, нужно ввести весь объект. Поля без значения не будут изменены.
+2026-06-05 15:34:30 [WARN ] commands.RemoveGreaterCommand - java.util.NoSuchElementException: Нет организаций, больших заданной
+2026-06-05 15:34:38 [WARN ] commands.RemoveGreaterCommand - java.util.NoSuchElementException: Нет организаций, больших заданной
+2026-06-05 15:34:44 [INFO ] commands.AddCommand - ID созданной организации: 6
+2026-06-05 15:34:50 [INFO ] commands.RemoveGreaterCommand - Организация с ID 6 удалена
+2026-06-05 15:34:58 [INFO ] commands.HelpCommand - 
+add {element} : добавить новый элемент в коллекцию. Поля введенные неверно будут сгенерированы
+add_if_min {element} : добавить новый элемент в коллекцию, если его значение меньше, чем у наименьшего элемента этой коллекции. Сравнение идет по выручке и количеству сотрудников
+clear : очистить коллекцию
+execute_script file_name : считать и исполнить скрипт из указанного файла. Команды которым необходимы на вход организации или адрес должны вводится в xml формате в строке с командой
+exit : завершить программу
+filter_greater_than_postal_address {postalAddress} : вывести элементы, значение поля postalAddress которых больше заданного. Сравнение идет по почтовому индексу
+help : Выводит справку по командам.
+info : выводит информацию о коллекции (тип, дата инициализации, количество элементов)
+print_field_ascending_type : вывести значения поля type всех элементов в порядке возрастания
+remove_by_id runnerId : удалить элемент из коллекции по его runnerId
+remove_greater {element} : удалить из коллекции все элементы, превышающие заданный. Сравнение идет по выручке и количеству сотрудников
+remove_lower {element} : удалить из коллекции все элементы, меньшие, чем заданный. Сравнение идет по выручке и количеству сотрудников
+show : вывести все элементы коллекции
+sum_of_employees_count : вывести сумму значений поля employeesCount для всех элементов коллекции
+update runnerId {element} : Обновляет значения элемента по runnerId, нужно ввести весь объект. Поля без значения не будут изменены.
+2026-06-05 15:35:05 [INFO ] commands.RemoveLowerCommand - Организация с ID 5 удалена
+2026-06-05 15:35:05 [WARN ] net.UdpServer - Пустая строка, введите help для справки
+2026-06-05 15:35:10 [WARN ] net.UdpServer - Такой команды не существует, введите help для справки
+2026-06-05 15:35:14 [WARN ] commands.ShowCommand - exceptions.EmptyContainerException: Контейнер пуст
+2026-06-05 15:35:26 [INFO ] commands.HelpCommand - 
+add {element} : добавить новый элемент в коллекцию. Поля введенные неверно будут сгенерированы
+add_if_min {element} : добавить новый элемент в коллекцию, если его значение меньше, чем у наименьшего элемента этой коллекции. Сравнение идет по выручке и количеству сотрудников
+clear : очистить коллекцию
+execute_script file_name : считать и исполнить скрипт из указанного файла. Команды которым необходимы на вход организации или адрес должны вводится в xml формате в строке с командой
+exit : завершить программу
+filter_greater_than_postal_address {postalAddress} : вывести элементы, значение поля postalAddress которых больше заданного. Сравнение идет по почтовому индексу
+help : Выводит справку по командам.
+info : выводит информацию о коллекции (тип, дата инициализации, количество элементов)
+print_field_ascending_type : вывести значения поля type всех элементов в порядке возрастания
+remove_by_id runnerId : удалить элемент из коллекции по его runnerId
+remove_greater {element} : удалить из коллекции все элементы, превышающие заданный. Сравнение идет по выручке и количеству сотрудников
+remove_lower {element} : удалить из коллекции все элементы, меньшие, чем заданный. Сравнение идет по выручке и количеству сотрудников
+show : вывести все элементы коллекции
+sum_of_employees_count : вывести сумму значений поля employeesCount для всех элементов коллекции
+update runnerId {element} : Обновляет значения элемента по runnerId, нужно ввести весь объект. Поля без значения не будут изменены.
+2026-06-05 15:39:15 [INFO ] commands.AddCommand - ID созданной организации: 7
+2026-06-05 15:39:31 [INFO ] commands.UpdateCommand - Организация с ID 7 успешно изменена
+2026-06-05 15:39:33 [INFO ] commands.ShowCommand - Organization:
+ Id: 7
+ Дата создания объекта: 2026-06-05
+ Название: 12345678
+ Тип организации: Публичная
+ Координаты: 
+  x: 0
+  y: 3.0
+ Адрес: 
+  Расположение: 
+   Город: 3
+   x: 3.0
+   y: 3
+   z: 3
+  Почтовый индекс: 0000
+ Количество сотрудников: 3
+ Годовая выручка: 3
+2026-06-05 15:39:44 [INFO ] commands.ExitCommand - UdpServer завершил работу
+2026-06-05 15:39:44 [WARN ] net.UdpServer - recieveMsgjava.net.SocketException: Socket closed
+java.net.SocketException: Socket closed
+	at java.base/sun.nio.ch.DatagramSocketAdaptor.receive(DatagramSocketAdaptor.java:252)
+	at java.base/java.net.DatagramSocket.receive(DatagramSocket.java:700)
+	at net.UdpServer.receiveMessage(UdpServer.java:99)
+	at net.UdpServer.run(UdpServer.java:186)
+	at net.UdpServer.run(UdpServer.java:123)
+	at net.UdpServer.main(UdpServer.java:58)
+Caused by: java.nio.channels.AsynchronousCloseException
+	at java.base/sun.nio.ch.DatagramChannelImpl.endRead(DatagramChannelImpl.java:523)
+	at java.base/sun.nio.ch.DatagramChannelImpl.trustedBlockingReceive(DatagramChannelImpl.java:718)
+	at java.base/sun.nio.ch.DatagramChannelImpl.blockingReceive(DatagramChannelImpl.java:633)
+	at java.base/sun.nio.ch.DatagramSocketAdaptor.receive(DatagramSocketAdaptor.java:240)
+	... 5 more

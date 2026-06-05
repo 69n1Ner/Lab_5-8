@@ -2,6 +2,7 @@ package commands;
 
 import exceptions.InvalidInput;
 import io.Validator;
+import io.db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
@@ -27,8 +28,9 @@ public class ClearCommand extends Command implements Serializable {
                 return createRequest(this);
             }
 
-            getInvokerFather().getContainer().clear();
-            String t = "Коллекция успешно удалена";
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            int counter = organizationDao.clear();
+            String t = "Коллекция успешно удалена. Удалено "+counter+" организаций";
             logger.info(t);
             r = t;
 

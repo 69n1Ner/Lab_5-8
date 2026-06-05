@@ -20,15 +20,15 @@ public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
     private final Deque<Request> cachedMessages = new ArrayDeque<>();
 
-    public UdpClient(Invoker invoker, int port) {
-        super(port, invoker);
+    public UdpClient(Invoker invoker, int port,boolean isLab7) {
+        super(port, invoker,isLab7);
         super.invoker.setRunner(this);
         logger = LogManager.getLogger(UdpClient.class);
     }
 
     public static void main(String[] args) throws IOException {
         Invoker invoker = new Invoker(null);
-        UdpClient client = new UdpClient(invoker, 9898);
+        UdpClient client = new UdpClient(invoker, 9898,true);
 
         client.applyParams();
 
@@ -98,11 +98,11 @@ public class UdpClient extends Runner {
 
     @Override
     public void run() {
-        run(false, "");
+        run(false, "",isLab7);
     }
 
     @Override
-    public void run(boolean isScript, String path) {
+    public void run(boolean isScript, String path,boolean isLab7) {
         isRunning = true;
         Path path1 = Path.of(path);
         if (isScript) {

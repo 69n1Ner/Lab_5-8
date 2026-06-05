@@ -10,5 +10,5 @@ public interface Dao<E> {
     boolean update(E e,Long id) throws NoSuchOrganizationException;
     List<E> findAll();
     E findById(Long id) throws NoSuchOrganizationException;
-    boolean delete(Long id);
+    boolean delete(Long id) throws NoSuchOrganizationException;
 }
