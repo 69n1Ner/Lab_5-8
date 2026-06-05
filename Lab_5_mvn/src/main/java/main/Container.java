@@ -1,54 +1,59 @@
 package main;
 
+import exceptions.NoSuchEntityException;
 import exceptions.NoSuchOrganizationException;
-import exceptions.SameOrganizationExistsException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import organization.Organization;
-import sorts.SortById;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import static java.lang.Math.abs;
 
 
-public class Container<T extends Organization> {
-    private final TreeSet<Organization> container;
+public class Container<T extends IdGettable<T>> {
+    private final TreeSet<T> container;
     private final LocalDate creationDate;
-    private static final Container<Organization> INSTANCE = new Container<>();
 
-    private Container(){
+    public Container(Comparator<T> comparator){
         this.creationDate = LocalDate.now();
-        this.container = new TreeSet<>(new SortById());
+        this.container = new TreeSet<>(comparator);
     }
 
-    public static Container<Organization> getInstance() {
-        return INSTANCE;
-    }
-
-    public Organization getById(Long id) throws NoSuchOrganizationException{
+    public T getById(Long id) throws NoSuchEntityException {
         return container.stream()
-                .filter(org -> Objects.equals(org.getId(), id))
+                .filter(t -> t.getId().equals(id))
                 .findFirst()
-                .orElseThrow(NoSuchOrganizationException::new);
+                .orElseThrow(() -> {
+                    Type type = getClass().getGenericSuperclass();
+                    ParameterizedType parameterizedType = (ParameterizedType) type;
+                    Class<T> clazz = (Class<T>) parameterizedType.getActualTypeArguments()[0];
+                    try {
+                        return getNseeFrom((clazz.getDeclaredConstructor().newInstance()));
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                             NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
-    public void update(Organization newOrg,Long id) throws NoSuchOrganizationException {
-        Organization oldOrg = getById(id);
-        oldOrg.update(newOrg);
+    private NoSuchEntityException getNseeFrom(T t){
+        return t.createNsee();
     }
 
+    public void update(T t,Long id) throws NoSuchEntityException {
+        T t1 = getById(id);
+        t1.update(t);
+    }
 
-
-
-    public void add(T newOrganization) {
+    public void add(T t) {
         try {
-            getById(newOrganization.getId());
-        } catch (NoSuchOrganizationException e) {
-            container.add(newOrganization);
+            getById(t.getId());
+        } catch (NoSuchEntityException e) {
+            container.add(t);
         }
     }
 
@@ -57,14 +62,14 @@ public class Container<T extends Organization> {
     }
 
     public List<T> getAll(){
-        return new ArrayList<>((Collection<? extends T>) container);
+        return new ArrayList<>(container);
     }
 
     public int size(){
         return container.size();
     }
 
-    public void removeById(Long id) throws NoSuchOrganizationException{
+    public void removeById(Long id) throws NoSuchEntityException {
         container.remove(getById(id));
     }
 
@@ -76,7 +81,7 @@ public class Container<T extends Organization> {
         container.remove(t);
     }
 
-    public boolean removeIf(Predicate<Organization> filter) {
+    public boolean removeIf(Predicate<T> filter) {
         return container.removeIf(filter);
     }
 
