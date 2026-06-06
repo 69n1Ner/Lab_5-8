@@ -6,7 +6,7 @@ import io.InputManager;
 import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -32,33 +32,32 @@ public class AddIfMinCommand extends Command implements Serializable {
         try {
             Validator.isValidArgument(this);
 
-            Invoker invokerFather = getInvokerFather();
-            Container<Organization> container = invokerFather.getContainer();
             Organization newOrganization;
 
+            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+                newOrganization = InputManager.inputOrganization();
+            } else {
+                Validator.isXmlOrgValid(this);
+                newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
+            }
 
+            if (getInvokerFather().getRunner() instanceof UdpClient){
+                String xmlOrg = XmlUtil.orgToXml(newOrganization);
+                Command command = this.setXmlArgument(xmlOrg);
+                return createRequest(command);
+            }
 
-                if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
-                    newOrganization = InputManager.inputOrganization();
-                } else {
-                    Validator.isXmlOrgValid(this);
-                    newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
-                }
+            OrganizationDao organizationDao = OrganizationDao.getInstance();
+            List<Organization> container = organizationDao.findAll();
 
-                if (getInvokerFather().getRunner() instanceof UdpClient){
-                    String xmlOrg = XmlUtil.orgToXml(newOrganization);
-                    Command command = this.setXmlArgument(xmlOrg);
-                    return createRequest(command);
-                }
+            if (!container.isEmpty()) {
 
-
-            if (!container.getAll().isEmpty()) {
-
-                List<Organization> list = container.getAll().stream()
+                container = container.stream()
                         .filter(o -> o.compareTo(newOrganization) <= 0)
                         .toList();
 
-                if (list.isEmpty()){
+
+                if (container.isEmpty()){
                     ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
                     Organization newOrganization1 = organizationWithFeedback.organization();
 
@@ -66,7 +65,6 @@ public class AddIfMinCommand extends Command implements Serializable {
                             .feedback()
                             .stream()
                             .collect(Collectors.joining("\n","","\n"));
-                    OrganizationDao organizationDao = OrganizationDao.getInstance();
                     int id = organizationDao.save(newOrganization1);
 
                     String text = "ID созданной организации: " + id;

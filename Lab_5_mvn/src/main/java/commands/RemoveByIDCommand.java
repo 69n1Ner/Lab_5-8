@@ -1,9 +1,10 @@
 package commands;
 
 import exceptions.InvalidInput;
+import exceptions.NoSuchEntityException;
 import exceptions.NoSuchOrganizationException;
 import io.Validator;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
@@ -45,7 +46,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
             r= text;
 
 
-        } catch (InvalidInput | NoSuchOrganizationException i){
+        } catch (InvalidInput | NoSuchEntityException i){
             logger.warn(i);
             r= i.getMessage();
         }

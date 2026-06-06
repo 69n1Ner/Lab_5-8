@@ -4,7 +4,7 @@ import exceptions.*;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -78,7 +78,7 @@ public class UpdateCommand extends Command  implements Serializable {
             }
 
 
-        }catch (InvalidInput | NoSuchOrganizationException i){
+        }catch (InvalidInput | NoSuchEntityException i){
             logger.warn(i);
             r=i.getMessage();
         }

@@ -12,6 +12,7 @@ import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import sorts.SortById;
 
 import java.io.*;
 import java.net.*;
@@ -34,11 +35,11 @@ public class UdpServer extends Runner {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
 
-        Container<Organization> container = Container.getInstance();
-        Invoker invoker = new Invoker(container);
+        Invoker invoker = new Invoker();
         UdpServer server = new UdpServer(invoker, 9898,true);
 
         if (!server.isLab7){
+            Container<Organization> container = new Container<>(new SortById<Organization>());
             invoker.setCommand(new SaveCommand("save", invoker));
             String filePath = System.getenv("LAB5_8");
             Path path = InputManager.parseInitCollection(filePath);
@@ -209,7 +210,7 @@ public class UdpServer extends Runner {
                 if (!isRunning) break;
                 logger.warn("Ошибка сокета: {}", e.getMessage());
 
-            } catch (NoSuchCommandException | RecursionLimitReached | XmlUtilException | IOException e) {
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
                     System.out.print("$user: ");

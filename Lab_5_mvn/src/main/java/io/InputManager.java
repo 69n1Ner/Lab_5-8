@@ -1,8 +1,13 @@
 package io;
 
+import db.UserDao;
 import exceptions.NoSuchCommandException;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.*;
+import security.MD2Hash;
+import security.User;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,61 +15,138 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 
 import static java.lang.Math.abs;
-import static java.util.Objects.hash;
 
 
 public class InputManager {
+    private static final Logger log = LogManager.getLogger(InputManager.class);
     private String commandName;
     private String mainArgument;
     private String xmlArgument;
-    private final List<Character> asciiChars = new ArrayList<>();
 
-    public InputManager() {
+    public static User authorize(){
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))){
+            log.info("У вас уже есть аккаунт");
 
-        for (int code = 0; code <= 31; code++) {
-            asciiChars.add((char) code);
+        } catch (IOException e) {
+            log.warn(e);
         }
     }
 
+    private static User inputUser(BufferedReader br,boolean isRegistration){
+        String name = getUserString(br,false,isRegistration);
+        String password = getUserString(br,true,isRegistration);
+        User user = new User().setUserName(name).setPassword(password);
 
-    public void separate(String input) {
+        UserDao userDao = UserDao.getInstance();
+        if (!isRegistration) {
+            Optional<User> optionalUser = userDao
+                    .findAll()
+                    .stream()
+                    .filter(u -> u.getUserName().equals(user.getUserName()))
+                    .findFirst();
+            if (optionalUser.isEmpty()) {
+                log.warn("Такого пользователя не существует");
+                return null;
+            } else if (optionalUser.get().getPassword().equals(user.getPassword())) {
+                log.info("Вы успешно авторизовались");
+                return optionalUser.get();
+            } else {
+                log.warn("Неверный пароль");
+                return null;
+            }
+
+        } else {
+            int counter = userDao.save(user);
+            if (counter > 0){
+                log.info("Вы успешно зарегистрировались");
+                return user;
+            }return null;
+
+        }
+    }
+
+    /* isOMT отвечает за повторный ввод 1 раз после неудачной попытки
+        isAgain отвечает за полный ввод заново и пароля и имени
+     */
+    private static String getUserString(BufferedReader br,boolean isPassword, boolean isRegistration){
+        return getUserString(br,isPassword,false,isRegistration);
+    }
+
+    private static String  getUserString(BufferedReader br,boolean isPassword,boolean isOMT, boolean isRegistration){
+
+        try {
+            String input;
+            if (isOMT){
+                if (isPassword){
+                    log.info("Введите пароль еще раз");
+
+                } else {
+                    log.info("Введите имя еще раз");
+
+                }
+            } else {
+                if (isPassword) {
+                    log.info("Введите пароль");
+                } else {
+                    log.info("Введите имя");
+                }
+            }
+
+            input = br.readLine().trim().strip();
+            input = separateSecurity(input);
+
+
+            if (input != null && !input.isEmpty() && Validator.isValidInput(input)){
+                if (isPassword){
+                    return MD2Hash.hashWithMD2(input);
+                }else return input;
+
+            }else {
+                return isOMT
+                        ? isRegistration
+                                ? getUserString(br,isPassword, true,true)
+                                : null
+                        : getUserString(br,isPassword,true,isRegistration);
+            }
+
+        } catch (IOException | NoSuchAlgorithmException e) {
+            log.warn(e);
+        }
+        return null;
+    }
+
+
+    public static String separateSecurity(String input){
+        input = input.trim().strip();
+        if (input.contains(" ")){
+            log.warn("В строке не должно быть пробелов");
+            return null;
+        }
+
+        String text = Validator.hasSpecialSymbol(input);
+        if (text !=null){
+            log.warn(text);
+            return null;
+        }
+
+        return input;
+    }
+
+    public void separateCommand(String input) throws NoSuchCommandException {
         if (input == null || input.isEmpty()) {
             throw new NoSuchCommandException("Пустая строка, введите help для справки");
         }
 
-        int charNum = 0;
-        for (Character asciiChar : asciiChars) {
-
-            //Ctrl+Z
-            if (input.contains("\u001A")) {
-                throw new NoSuchCommandException("""
-                        
-                        /﹋\\
-                        (҂`_´)
-                        ︻╦╤─ ҉ -- - - -- - --
-                        /﹋\\
-                        """);
-
-                //Ctrl+C (doesn't catch)
-            } else if (input.contains(String.valueOf(asciiChar))) {
-                String asciiPrint = Integer.toHexString(charNum);
-                if (asciiPrint.length() == 1) {
-                    asciiPrint = "\\u000" + asciiPrint.toUpperCase();
-                } else {
-                    asciiPrint = "\\u00" + asciiPrint.toUpperCase();
-                }
-                throw new NoSuchCommandException("Найден спец символ: " + asciiPrint);
-            }
-
-            ++charNum;
+        String text = Validator.hasSpecialSymbol(input);
+        if (text !=null){
+            throw new NoSuchCommandException(text);
         }
-
 
         /* todo <ОТВЕРГНУТО> сделать обработку строки с выбором:
             1. если введена строка только с нужным количеством параметров),
@@ -449,7 +531,7 @@ public class InputManager {
         }
     }
 
-    public static boolean parseConsole(String s) {
+    public static boolean parseConsoleLogger(String s) {
         if (s == null || s.isEmpty()) {
             System.out.println("Логирование будет выведено на консоль");
             return true;

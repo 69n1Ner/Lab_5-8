@@ -3,7 +3,7 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;

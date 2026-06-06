@@ -27,7 +27,7 @@ public class UdpClient extends Runner {
     }
 
     public static void main(String[] args) throws IOException {
-        Invoker invoker = new Invoker(null);
+        Invoker invoker = new Invoker();
         UdpClient client = new UdpClient(invoker, 9898,true);
 
         client.applyParams();
@@ -178,7 +178,7 @@ public class UdpClient extends Runner {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.warn(e.getMessage());
-            } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException |
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException |
                      IOException e) {
                 logger.warn("{}", e.getMessage());
 

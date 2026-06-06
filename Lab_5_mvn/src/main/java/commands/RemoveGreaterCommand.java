@@ -2,11 +2,12 @@ package commands;
 
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
+import exceptions.NoSuchEntityException;
 import exceptions.NoSuchOrganizationException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -61,7 +62,7 @@ public class RemoveGreaterCommand extends Command  implements Serializable {
                             logger.info("Организация с ID {} удалена",organization.getId());
                             sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
                             isOneDeleted.set(true);
-                        } catch (NoSuchOrganizationException ignored) {
+                        } catch (NoSuchEntityException ignored) {
                         }
                     }
                 });

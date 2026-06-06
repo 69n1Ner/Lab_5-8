@@ -3,15 +3,25 @@ package io;
 import commands.Command;
 import commands.FilterGreaterThanPostalAddress;
 import exceptions.InvalidInput;
+import exceptions.NoSuchCommandException;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Validator {
     private static final Logger logger = LogManager.getLogger(Validator.class);
+    private static final List<Character> asciiChars = new ArrayList<>();
+
+    static {
+        for (int code = 0; code <= 31; code++) {
+            asciiChars.add((char) code);
+        }
+    }
 
     //inputMan
     public static boolean isValidInput(String input) {
@@ -19,16 +29,50 @@ public class Validator {
         for (int i = 0; i < input.length(); i++) {
             if (specialSymbols.indexOf(input.charAt(i)) != -1) {
                 logger.warn("Строка содержит недопустимый символ: {}", input.charAt(i));
-                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
                 return false;
             }
         }
         if (input.length() > 255) {
             logger.warn("Слишком длинная строка! Максимальная длина 255");
-            System.err.println("Слишком длинная строка! Максимальная длина 255");
+            return false;
+        }
+
+        String text = hasSpecialSymbol(input);
+        if (text != null){
+            logger.warn(text);
             return false;
         }
         return true;
+    }
+
+    public static String hasSpecialSymbol(String input){
+        int charNum = 0;
+        for (Character asciiChar : asciiChars) {
+
+            //Ctrl+Z
+            if (input.contains("\u001A")) {
+                return ("""
+                        
+                        /﹋\\
+                        (҂`_´)
+                        ︻╦╤─ ҉ -- - - -- - --
+                        /﹋\\
+                        """);
+
+                //Ctrl+C (doesn't catch)
+            } else if (input.contains(String.valueOf(asciiChar))) {
+                String asciiPrint = Integer.toHexString(charNum);
+                if (asciiPrint.length() == 1) {
+                    asciiPrint = "\\u000" + asciiPrint.toUpperCase();
+                } else {
+                    asciiPrint = "\\u00" + asciiPrint.toUpperCase();
+                }
+                return ("Найден спец символ: "+ asciiPrint);
+            }
+
+            ++charNum;
+        }
+        return null;
     }
 
     //invoker

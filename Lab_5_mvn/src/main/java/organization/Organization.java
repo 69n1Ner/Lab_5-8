@@ -1,8 +1,12 @@
 package organization;
 
+import exceptions.NoSuchEntityException;
+import exceptions.NoSuchOrganizationException;
 import io.LocalDateAdapter;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import main.IdGettable;
+import security.User;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -12,7 +16,7 @@ import java.util.List;
 
 @XmlRootElement(name = "organization")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Organization implements Comparable<Object>, Serializable {
+public class Organization implements Comparable<Object>, Serializable, IdGettable<Organization> {
     @XmlElement(name = "id")
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     @XmlElement(name = "creation_date")
@@ -30,6 +34,8 @@ public class Organization implements Comparable<Object>, Serializable {
     private long employeesCount; //Значение поля должно быть больше 0
     @XmlElement(name = "annual_turnover")
     private int annualTurnover; //Значение поля должно быть больше 0
+    @XmlElement(name = "user")
+    private User user;
 
     public Organization(String name,
                         Integer annualTurnover,
@@ -138,7 +144,7 @@ public class Organization implements Comparable<Object>, Serializable {
     public void setCreationDate(LocalDate creationDate) {
         this.creationDate = creationDate;
     }
-
+    @Override
     public Long getId() {
         return id;
     }
@@ -209,6 +215,18 @@ public class Organization implements Comparable<Object>, Serializable {
             }
             return C2;
         }
+    }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    @Override
+    public NoSuchEntityException createNsee() {
+        return new NoSuchOrganizationException();
     }
 }

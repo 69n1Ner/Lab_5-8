@@ -2,23 +2,18 @@ package main;
 
 import commands.*;
 import exceptions.NoSuchCommandException;
+import exceptions.NoSuchEntityException;
 import io.InputManager;
 import io.Validator;
 import net.Runner;
-import organization.Organization;
 
-import java.io.Serializable;
 import java.util.HashMap;
-import java.util.UUID;
 
 public class Invoker {
     private final HashMap<String , Command> commandHashMap = new HashMap<>();
-    private final Container<Organization> container;
-    private InputManager inputManager;
     private Runner runner;
 
-    public Invoker(Container<Organization> container){
-
+    public Invoker(){
         setCommand(new HelpCommand("help", this));
         setCommand(new UpdateCommand("update", this));
         setCommand(new AddCommand("add", this));
@@ -34,16 +29,15 @@ public class Invoker {
         setCommand(new FilterGreaterThanPostalAddress("filter_greater_than_postal_address", this));
         setCommand(new PrintFieldAscendingTypeCommand("print_field_ascending_type", this));
         setCommand(new ExecuteScriptCommand("execute_script",this));
-        this.container = container;
     }
 
     public void setCommand(Command command){
         this.commandHashMap.put(command.getCommandName(), command);
     }
 
-    public Command defineCommand(String string, boolean isScript) throws NoSuchCommandException {
-        this.inputManager = new InputManager();
-        inputManager.separate(string);
+    public Command defineCommand(String string, boolean isScript) throws NoSuchEntityException {
+        InputManager inputManager = new InputManager();
+        inputManager.separateCommand(string);
         if (Validator.isCommandExists(inputManager.getCommandName(),this)) {
             Command command = commandHashMap
                                 .get(inputManager.getCommandName())
@@ -67,13 +61,6 @@ public class Invoker {
         return new HashMap<>(commandHashMap);
     }
 
-    public InputManager getInputManager(){
-        return this.inputManager;
-    }
-
-    public Container<Organization> getContainer() {
-        return container;
-    }
 
     public Runner getRunner() {
         return runner;

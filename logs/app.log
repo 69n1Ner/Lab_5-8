@@ -119,3 +119,76 @@ Caused by: java.nio.channels.AsynchronousCloseException
 	at java.base/sun.nio.ch.DatagramChannelImpl.blockingReceive(DatagramChannelImpl.java:633)
 	at java.base/sun.nio.ch.DatagramSocketAdaptor.receive(DatagramSocketAdaptor.java:240)
 	... 5 more
+2026-06-06 17:04:36 [WARN ] io.InputManager - Строка не должна начинаться с цифры
+2026-06-06 17:05:27 [WARN ] io.InputManager - Строка не должна начинаться с цифры
+2026-06-06 17:07:00 [WARN ] io.InputManager - В строке не должно быть пробелов
+2026-06-06 17:08:28 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:08:48 [WARN ] db.UserDao - ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:11:04 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:11:46 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:12:28 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:13:04 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:15:51 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:16:09 [WARN ] db.UserDao - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uniq_usr_name"
+  Подробности: Key (user_name)=(69n1Ner_) already exists.
+2026-06-06 17:18:54 [WARN ] db.UserDao - 23505
+2026-06-06 17:27:07 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:32:09 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:32:31 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:33:01 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:33:59 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:34:15 [WARN ] db.UserDao - Запись с таким уникальным полем уже существует
+2026-06-06 17:44:48 [WARN ] db.UserDao - Это имя занято
+2026-06-06 17:46:52 [WARN ] db.UserDao - Это имя занято
+2026-06-06 19:15:57 [WARN ] db.UserDao - Это имя занято
+2026-06-06 19:16:42 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:16:47 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:16:52 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:18:13 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:18:19 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:18:25 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:18:56 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:19:00 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:19:03 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:19:56 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:20:00 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:20:02 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:20:30 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:20:40 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:20:44 [INFO ] io.InputManager - Вы успешно зарегистрировались
+2026-06-06 19:20:57 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:21:02 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:21:45 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:21:50 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:21:52 [INFO ] io.InputManager - Вы успешно авторизовались
+2026-06-06 19:22:11 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:22:15 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:22:18 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:22:26 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:22:32 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:22:36 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:30:34 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:30:38 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:30:41 [WARN ] io.InputManager - Неверный пароль
+2026-06-06 19:30:46 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:30:51 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:30:52 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:30:57 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:30:59 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:31:02 [WARN ] io.InputManager - Такого пользователя не существует
+2026-06-06 19:34:07 [INFO ] io.InputManager - Введите имя
+2026-06-06 19:34:11 [WARN ] io.InputManager - В строке не должно быть пробелов
+2026-06-06 19:34:11 [INFO ] io.InputManager - Введите имя еще раз
+2026-06-06 19:34:18 [WARN ] io.InputManager - В строке не должно быть пробелов
+2026-06-06 19:34:18 [INFO ] io.InputManager - Введите пароль
+2026-06-06 19:34:44 [WARN ] io.InputManager - В строке не должно быть пробелов
+2026-06-06 19:34:44 [INFO ] io.InputManager - Введите пароль еще раз
+2026-06-06 19:35:51 [WARN ] io.InputManager - В строке не должно быть пробелов
+2026-06-06 19:35:51 [WARN ] io.InputManager - Такого пользователя не существует

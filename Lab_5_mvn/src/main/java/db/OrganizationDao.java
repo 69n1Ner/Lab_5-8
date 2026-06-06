@@ -1,19 +1,23 @@
-package io.db;
+package db;
 
-import exceptions.NoSuchOrganizationException;
+import exceptions.NoSuchEntityException;
 import main.Container;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jaxb.core.v2.model.core.ID;
+import org.postgresql.util.PSQLException;
 import organization.*;
+import security.User;
+import sorts.SortById;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class OrganizationDao implements Dao<Organization>{
-    private static final Container<Organization> CONTAINER = Container.getInstance();
+    private static final Container<Organization> CONTAINER = new Container<>(new SortById<Organization>());
     private static final OrganizationDao INSTANCE = new OrganizationDao();
 
 
@@ -50,8 +54,9 @@ public class OrganizationDao implements Dao<Organization>{
                         "location_z",
                         "name",
                         "type_id",
-                        "zip_code")
-                    values (?,?,?,?,?,?,?,?,?,?,?,?)
+                        "zip_code",
+                        "user_id")
+                    values (?,?,?,?,?,?,?,?,?,?,?,?,?)
                     """;
     //language=POSTGRES-SQL
     private static final String UPDATE_ORGANIZATION_SQL = """
@@ -67,7 +72,8 @@ public class OrganizationDao implements Dao<Organization>{
                         "location_z" = ?,
                         "name" = ?,
                         "type_id" = ?,
-                        "zip_code" = ?
+                        "zip_code" = ?,
+                        "user_id" = ?
                     where id = ?
                     """;
 
@@ -85,6 +91,19 @@ public class OrganizationDao implements Dao<Organization>{
                 PreparedStatement statement = connection.prepareStatement(SAVE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
 
+            //searching for user
+            User user = organization.getUser();
+            UserDao userDao = UserDao.getInstance();
+            long userId;
+            try {
+                userDao.findById(user.getId());
+                userId = user.getId();
+            } catch (NoSuchEntityException e) {
+                log.info("Такого пользователя не нашлось, организация не будет добавлена");
+                return 0;
+            }
+
+            //adding other attributes
             LocalDate localDate = organization.getCreationDate();
             String name = organization.getName();
             long employeesCount = organization.getEmployeesCount();
@@ -117,12 +136,12 @@ public class OrganizationDao implements Dao<Organization>{
             statement.setString(10,name);
             statement.setInt(11,typeID);
             statement.setString(12,zipCode);
+            statement.setLong(13,userId);
 
             statement.executeUpdate();
 
 
             try (ResultSet resultSet = statement.getGeneratedKeys()){
-
                 if (resultSet.next()){
                     organizationID = resultSet.getInt(1);
                 }else {
@@ -136,13 +155,16 @@ public class OrganizationDao implements Dao<Organization>{
             return organizationID;
 
         }catch (SQLException e){
-            throw new RuntimeException(e);
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
+            return 0;
         }
     }
 
 
     @Override
-    public boolean update(Organization organization, Long ID) throws NoSuchOrganizationException {
+    public boolean update(Organization organization, Long ID) throws NoSuchEntityException {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(UPDATE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
@@ -154,6 +176,9 @@ public class OrganizationDao implements Dao<Organization>{
             long employeesCount = organization.getEmployeesCount();
             int annualTurnover = organization.getAnnualTurnover();
             int typeID = getType(connection,organization.getType().getName());
+
+            User user = organization.getUser();
+            long userId = getUser(connection,user.getUserName(),user.getPassword());
 
             Address address = organization.getPostalAddress();
             String zipCode = address.getZipCode();
@@ -181,30 +206,34 @@ public class OrganizationDao implements Dao<Organization>{
             statement.setString(10,name);
             statement.setInt(11,typeID);
             statement.setString(12,zipCode);
-            statement.setLong(13,ID);
+            statement.setLong(13,userId);
+            statement.setLong(14,ID);
+
 
             statement.executeUpdate();
 
             try (ResultSet resultSet = statement.getGeneratedKeys()){
                 if (resultSet.next()){
                     organizationID = resultSet.getInt(1);
+                    connection.commit();
+                    CONTAINER.update(organization,ID);
+                    return organizationID > 0;
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
                 }
             }
-            connection.commit();
-            CONTAINER.update(organization,ID);
-            return organizationID > 0;
-
 
         }catch (SQLException e){
-            throw new RuntimeException(e);
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
+            return false;
         }
     }
 
     @Override
-    public boolean delete(Long id) throws NoSuchOrganizationException {
+    public boolean delete(Long id) throws NoSuchEntityException {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(DELETE_ORGANIZATION_SQL)) {
             connection.setAutoCommit(false);
@@ -223,7 +252,10 @@ public class OrganizationDao implements Dao<Organization>{
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
+            return false;
         }
     }
 
@@ -240,7 +272,7 @@ public class OrganizationDao implements Dao<Organization>{
                counter++;
             }
             // it's just easier, that's why no processing
-            } catch (NoSuchOrganizationException e) {
+            } catch (NoSuchEntityException e) {
             }
         }
         return counter;
@@ -252,11 +284,25 @@ public class OrganizationDao implements Dao<Organization>{
     }
 
     @Override
-    public Organization findById(Long id) throws NoSuchOrganizationException {
+    public Organization findById(Long id) throws NoSuchEntityException {
         return CONTAINER.getById(id);
     }
 
+    public static Class<?> getContainerCollectionName(){
+        return Arrays.stream(CONTAINER
+                .getClass()
+                .getDeclaredFields())
+                .filter(t -> Collection.class.isAssignableFrom(t.getType()))
+                .findFirst().get().getType();
+    }
 
+    public static LocalDate getContainerCreationDate(){
+        return CONTAINER.getCreationDate();
+    }
+
+    public static int getContainerSize(){
+        return CONTAINER.size();
+    }
 
     private static int getType(Connection connection,String locationType){
         try  {
@@ -265,21 +311,53 @@ public class OrganizationDao implements Dao<Organization>{
             String sql = """
                     select id from organization_type
                     where name = ?""";
-            PreparedStatement psType = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            psType.setString(1,locationType);
+            try (PreparedStatement psType = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                psType.setString(1, locationType);
 
-            psType.executeQuery();
-            try (ResultSet resultSet = psType.getResultSet()){
-                if (resultSet.next()){
-                    locationTypeId = resultSet.getInt(1);
-                }else {
-                    throw new SQLException("Не удалось вытащить ID у типа");
+                psType.executeQuery();
+                try (ResultSet resultSet = psType.getResultSet()) {
+                    if (resultSet.next()) {
+                        locationTypeId = resultSet.getInt(1);
+                    } else {
+                        throw new SQLException("Не удалось вытащить ID у типа");
+                    }
+                }
+                return locationTypeId;
+            }
+        } catch (SQLException e) {
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
+            return -1;
+        }
+    }
+
+    private static long getUser(Connection connection, String userName, String password){
+        //language=POSTGRES-SQL
+        String sql = """
+                select user_id as id from users
+                where user_name = ? and password = ?
+                """;
+        try (PreparedStatement psUser = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            long id;
+
+            psUser.setString(1, userName);
+            psUser.setString(2,password);
+
+            psUser.executeQuery();
+
+            try (ResultSet resultSet = psUser.getResultSet()) {
+                if (resultSet.next()) {
+                    id = resultSet.getInt("id");
+                    return id;
+                } else {
+                    throw new SQLException("Не удалось вытащить ID у пользователя");
                 }
             }
-            return locationTypeId;
-        } catch (SQLException e) {
+        }catch (SQLException e){
             throw new RuntimeException(e);
         }
+
     }
 
     private OrganizationDao() {
@@ -319,7 +397,9 @@ public class OrganizationDao implements Dao<Organization>{
             }
 
         }catch (SQLException e){
-            throw new RuntimeException(e);
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
         }
     }
 

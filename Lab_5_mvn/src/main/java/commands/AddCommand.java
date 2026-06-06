@@ -5,7 +5,7 @@ import io.InputManager;
 import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;

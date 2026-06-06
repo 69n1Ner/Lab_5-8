@@ -65,10 +65,10 @@ public class SaveCommand extends Command{
         }catch (InvalidInput i){
             logger.warn(i);
         }
-        String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
-        if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
-            return createRequest(response);
-        }
+//        String response = XmlUtil.writeListToFile((ArrayList<Organization>) getInvokerFather().getContainer().getAll(), "collection" + counter + ".xml");
+//        if (isRequest() && !(getInvokerFather().getRunner() instanceof UdpClient)) {
+//             return createRequest(response);
+//        }
         return null;
     }
 

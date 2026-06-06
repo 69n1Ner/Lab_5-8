@@ -56,6 +56,9 @@ where]]></console>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="27890b4d-4e1f-4168-a43b-70452e5d27e6">
       <session name="Session 1" id="d2c52087-2758-4a3b-bf1b-a2429c288f47" />
+      <session name="Session 1" id="d2c52087-2758-4a3b-bf1b-a2429c288f47" />
+      <session name="Session 1" id="d2c52087-2758-4a3b-bf1b-a2429c288f47" />
+      <session name="Session 1" id="d2c52087-2758-4a3b-bf1b-a2429c288f47" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
@@ -67,8 +70,7 @@ where]]></console>
     <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/Lab_5_mvn/src/main/java/io/db/JdbcRunner.java" connection-id="27890b4d-4e1f-4168-a43b-70452e5d27e6" session-id="MAIN" current-schema="public" />
-    <mapping file-url="file://$PROJECT_DIR$/Lab_5_mvn/src/main/java/io/db/OrganizationDao.java" connection-id="27890b4d-4e1f-4168-a43b-70452e5d27e6" session-id="MAIN" current-schema="public" />
+    <mapping file-url="file://$PROJECT_DIR$/Lab_5_mvn/src/main/java/db/UserDao.java" connection-id="27890b4d-4e1f-4168-a43b-70452e5d27e6" session-id="MAIN" current-schema="public" />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -133,7 +135,7 @@ where]]></console>
           <session-management value="true" />
           <ddl-file-binding value="false" />
           <database-logging value="false" />
-          <connect-automatically value="false" />
+          <connect-automatically value="true" />
           <restore-workspace value="false" />
           <restore-workspace-deep value="false" />
           <environment-type value="default" />

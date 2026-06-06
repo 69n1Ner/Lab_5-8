@@ -10,7 +10,6 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.lang.annotation.Documented;
 import java.net.PortUnreachableException;
 import java.util.Map;
 import java.util.UUID;
@@ -162,7 +161,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         String level = System.getProperty("log.level");
         Level l = InputManager.parseLevel(level);
         String console = System.getProperty("log.console");
-        boolean isConsole = InputManager.parseConsole(console);
+        boolean isConsole = InputManager.parseConsoleLogger(console);
         String file = System.getProperty("log.file");
         boolean isFile = InputManager.parseFile(file);
 
