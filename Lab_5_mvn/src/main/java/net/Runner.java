@@ -4,7 +4,6 @@ import commands.GetLoggerable;
 import io.InputManager;
 import main.Invoker;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import security.User;
@@ -19,7 +18,6 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected static final String IP_ADDRESS = "localhost";
     protected static final int ARRAY_SIZE = 65000;
     protected final int port;
-    protected static Logger logger;
     protected Invoker invoker;
     protected BufferedReader br;
     protected boolean isRunning;
@@ -127,7 +125,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         } else runner = "серверу";
 
         if (request.requestType() != RequestType.PING) {
-            logger.info("Сообщение отправлено {}", runner);
+            getLogger().info("Сообщение отправлено {}", runner);
         }
     }
 
@@ -142,7 +140,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }else {
             System.out.println();
         }
-        logger.info("сервер в сети");
+        getLogger().info("сервер в сети");
         if (isRunning) {
             System.out.print(this.getUser()+": ");
             System.out.flush();
@@ -167,14 +165,13 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
-    public void applyParams(){
+    public void applyParams(boolean isServer){
         String level = System.getProperty("log.level");
         Level l = InputManager.parseLevel(level);
         String console = System.getProperty("log.console");
         boolean isConsole = InputManager.parseConsoleLogger(console);
         String file = System.getProperty("log.file");
         boolean isFile = InputManager.parseFile(file);
-
 
         org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) this.getLogger();
         LoggerConfig rootLogger = coreLogger.getContext().getConfiguration().getRootLogger();
@@ -184,8 +181,12 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             Map<String, Appender> appenders = rootLogger.getAppenders();
 
             if (!isFile) {
+                String appName;
+                if (isServer){
+                    appName = "Client";
+                } else appName = "Server";
                 appenders.values().stream()
-                        .filter(a -> a.getName().startsWith("File"))
+                        .filter(a -> a.getName().startsWith(appName))
                         .forEach(a -> rootLogger.removeAppender(a.getName()));
             }
 
