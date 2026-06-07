@@ -30,12 +30,26 @@ public class InputManager {
     private String xmlArgument;
 
     public static User authorize(){
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))){
-            log.info("У вас уже есть аккаунт");
-
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            log.info("У вас уже есть аккаунт? (введите \"y\" or \"n\")");
+        String input;
+        try {
+            input = br.readLine();
         } catch (IOException e) {
-            log.warn(e);
+            throw new RuntimeException(e);
         }
+        input = separateSecurity(input);
+            User user;
+
+            if (input == null || input.isEmpty() || input.equals("y") || input.equals("Y")){
+                log.info("===== Авторизация =====");
+                user = inputUser(br,false);
+            } else {
+                log.info("===== Регистрация =====");
+                user = inputUser(br,true);
+            }
+            return user;
+
     }
 
     private static User inputUser(BufferedReader br,boolean isRegistration){
@@ -62,7 +76,7 @@ public class InputManager {
             }
 
         } else {
-            int counter = userDao.save(user);
+            int counter = userDao.save(user, null);
             if (counter > 0){
                 log.info("Вы успешно зарегистрировались");
                 return user;
@@ -98,7 +112,7 @@ public class InputManager {
                 }
             }
 
-            input = br.readLine().trim().strip();
+            input = br.readLine();
             input = separateSecurity(input);
 
 
@@ -123,15 +137,14 @@ public class InputManager {
 
 
     public static String separateSecurity(String input){
-        input = input.trim().strip();
-        if (input.contains(" ")){
-            log.warn("В строке не должно быть пробелов");
-            return null;
-        }
-
         String text = Validator.hasSpecialSymbol(input);
         if (text !=null){
             log.warn(text);
+            return null;
+        }
+        input = input.trim().strip();
+        if (input.contains(" ")){
+            log.warn("В строке не должно быть пробелов");
             return null;
         }
 
@@ -139,10 +152,6 @@ public class InputManager {
     }
 
     public void separateCommand(String input) throws NoSuchCommandException {
-        if (input == null || input.isEmpty()) {
-            throw new NoSuchCommandException("Пустая строка, введите help для справки");
-        }
-
         String text = Validator.hasSpecialSymbol(input);
         if (text !=null){
             throw new NoSuchCommandException(text);

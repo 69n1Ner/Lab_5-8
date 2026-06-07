@@ -46,6 +46,9 @@ public class Validator {
     }
 
     public static String hasSpecialSymbol(String input){
+        if (input == null || input.isEmpty()) {
+            return ("Введена пустая строка");
+        }
         int charNum = 0;
         for (Character asciiChar : asciiChars) {
 

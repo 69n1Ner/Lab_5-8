@@ -1,12 +1,8 @@
 package main;
 
 import exceptions.NoSuchEntityException;
-import exceptions.NoSuchOrganizationException;
-import organization.Organization;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Predicate;
@@ -14,35 +10,17 @@ import java.util.function.Predicate;
 import static java.lang.Math.abs;
 
 
-public class Container<T extends IdGettable<T>> {
-    private final TreeSet<T> container;
-    private final LocalDate creationDate;
+public abstract class Container<T extends IdGettable<T>> {
+    protected final TreeSet<T> container;
+    protected final LocalDate creationDate;
 
     public Container(Comparator<T> comparator){
         this.creationDate = LocalDate.now();
         this.container = new TreeSet<>(comparator);
+
     }
 
-    public T getById(Long id) throws NoSuchEntityException {
-        return container.stream()
-                .filter(t -> t.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> {
-                    Type type = getClass().getGenericSuperclass();
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Class<T> clazz = (Class<T>) parameterizedType.getActualTypeArguments()[0];
-                    try {
-                        return getNseeFrom((clazz.getDeclaredConstructor().newInstance()));
-                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                             NoSuchMethodException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
-
-    private NoSuchEntityException getNseeFrom(T t){
-        return t.createNsee();
-    }
+    public abstract T getById(Long id) throws NoSuchEntityException;
 
     public void update(T t,Long id) throws NoSuchEntityException {
         T t1 = getById(id);

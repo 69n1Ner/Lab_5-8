@@ -13,12 +13,12 @@ import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class User implements IdGettable<User>, Serializable {
-    @XmlElement
     private Long id;
-    @XmlElement
     private String password;
     @XmlElement(name = "user_name")
     private String userName;
+
+    private static final long serialVersionUID = 1L;
 
     public User(){}
 
@@ -68,13 +68,20 @@ public class User implements IdGettable<User>, Serializable {
         return this;
     }
 
-
     @Override
     public String toString() {
-        return "\nUser{" +
-                "\n id=" + id +
-                "\n password='" + password + '\'' +
-                "\n userName='" + userName + '\'' +
-                '}';
+        return userName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id) && Objects.equals(password, user.password) && Objects.equals(userName, user.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, password, userName);
     }
 }

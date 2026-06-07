@@ -1,6 +1,7 @@
 package net;
 
 import commands.Command;
+import security.User;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -12,33 +13,38 @@ public record Request (
         UUID runnerId,
         String feedback,
         Command command,
-        UUID requestId
+        UUID requestId,
+        User user
         ) implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static Request build(){
-        return new Request(false,null,null,"",null,UUID.randomUUID());
+        return new Request(false,null,null,"",null,UUID.randomUUID(),null);
     }
 
     public Request setRequestType(RequestType requestType){
-        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
     public Request setCommand(Command command){
         command = command.setRequest(true);
-        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
     public Request setFeedback(String feedback){
-        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
     public Request setRunnerId(UUID runnerId){
-        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
     public Request setRequestId(UUID requestId){
-        return new Request(isScript,requestType, runnerId,feedback,command,requestId);
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
+    }
+
+    public Request setUser(User user){
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
     @Override
@@ -51,6 +57,7 @@ public record Request (
         if (command() != null){
             ret += "\n "+ command.isRequest();
         }
+        ret += "\n "+user;
         ret += "}";
         return ret;
     }

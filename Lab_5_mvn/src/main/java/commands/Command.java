@@ -80,7 +80,7 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
     }
 
     protected Request createRequest(Command command) {
-        return Request.build().setRequestType(RequestType.COMMAND).setCommand(command);
+        return Request.build().setRequestType(RequestType.COMMAND).setCommand(command).setUser(invokerFather.getRunner().getUser());
     }
 
 

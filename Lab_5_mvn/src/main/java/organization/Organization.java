@@ -34,7 +34,7 @@ public class Organization implements Comparable<Object>, Serializable, IdGettabl
     private long employeesCount; //Значение поля должно быть больше 0
     @XmlElement(name = "annual_turnover")
     private int annualTurnover; //Значение поля должно быть больше 0
-    @XmlElement(name = "user")
+    @XmlElement
     private User user;
 
     public Organization(String name,
@@ -108,7 +108,8 @@ public class Organization implements Comparable<Object>, Serializable, IdGettabl
                 "\n Координаты: " ,
                 "\n Адрес: " ,
                 "\n Количество сотрудников: " ,
-                "\n Годовая выручка: "));
+                "\n Годовая выручка: ",
+                "\n Пользователь: "));
         Field[] fields = this.getClass().getDeclaredFields();
 
         for (int i = 0; i < fieldsToPrint.size(); i++){

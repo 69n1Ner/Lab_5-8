@@ -3,7 +3,6 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import exceptions.NoSuchEntityException;
-import exceptions.NoSuchOrganizationException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
@@ -14,6 +13,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
@@ -28,7 +28,7 @@ public class RemoveLowerCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
 
         String r ="непредвиденная";
         try {
@@ -57,7 +57,7 @@ public class RemoveLowerCommand extends Command implements Serializable {
                 container.forEach(organization -> {
                     if (organization.compareTo(newOrganization) < 0){
                         try {
-                            organizationDao.delete(organization.getId());
+                            organizationDao.delete(organization.getId(), user);
                             logger.info("Организация с ID {} удалена",organization.getId());
                             sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
                             isOneDeleted.set(true);

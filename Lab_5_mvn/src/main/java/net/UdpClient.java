@@ -1,10 +1,13 @@
 package net;
 
+import db.OrganizationDao;
 import exceptions.*;
 import io.ByteUtil;
+import io.InputManager;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -29,8 +32,15 @@ public class UdpClient extends Runner {
     public static void main(String[] args) throws IOException {
         Invoker invoker = new Invoker();
         UdpClient client = new UdpClient(invoker, 9898,true);
+        OrganizationDao.setRunner(client);
 
         client.applyParams();
+
+        User user1 = null;
+        while (user1 == null){
+            user1 = InputManager.authorize();
+        }
+        client.setUser(user1);
 
         client.run();
     }
@@ -140,12 +150,12 @@ public class UdpClient extends Runner {
                     }
 
                     //sending
-                    Request request = invoker.defineCommand(input, isScript).execute();
+                    Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && CHANNEL != null && request != null) {
                         sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
-                        System.out.print("$user: ");
+                        System.out.print("$"+this.getUser()+": ");
                         System.out.flush();
                     }
                 }
@@ -169,7 +179,7 @@ public class UdpClient extends Runner {
                     if (request1 != null && request1.requestType() != RequestType.PING) {
                         logger.info(request1.feedback());
                         if (!isScript && isRunning) {
-                            System.out.print("$user: ");
+                            System.out.print("$"+this.getUser()+": ");
                             System.out.flush();
                         }
                     }
@@ -181,7 +191,10 @@ public class UdpClient extends Runner {
             } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException |
                      IOException e) {
                 logger.warn("{}", e.getMessage());
-
+                if (!isScript && isRunning) {
+                    System.out.print("$"+this.getUser()+": ");
+                    System.out.flush();
+                }
 
             }
 //            logger.debug("cycle ended");

@@ -10,6 +10,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class ShowCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(ShowCommand.class);
+    private static final String delimiter = "------------------------------------------------";
 
     public ShowCommand(String name, Invoker invoker){
         super(name,invoker,ArgumentType.NO_ARGUMENTS);
@@ -30,7 +32,7 @@ public class ShowCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         //todo пофиксить вывод первой строки
         String r ="непредвиденная";
         try {
@@ -46,7 +48,7 @@ public class ShowCommand extends Command implements Serializable {
             if (!container.isEmpty()) {
                 String s = container.stream()
                         .map(Organization::toString)
-                        .collect(Collectors.joining("\n"));
+                        .collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
                 logger.info(s);
                 r = s;
             } else {

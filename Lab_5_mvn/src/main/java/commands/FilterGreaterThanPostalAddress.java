@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Address;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
@@ -26,21 +27,12 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r;
         try {
             Validator.isValidArgument(this);
 
-            Invoker invokerFather = getInvokerFather();
-            Address address;
-
-            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
-                address = InputManager.inputAddress();
-            }else {
-                Validator.isXmlAddressValid(this);
-
-                address = XmlUtil.readAddressFromString(getXmlArgument());
-            }
+            Address address = getAddress();
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 String xmlOrg = XmlUtil.adrToXml(address);
@@ -81,6 +73,18 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
             return createRequest(r);
         }
         return null;
+    }
+
+    private Address getAddress() throws InvalidInput {
+        Address address;
+        if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+            address = InputManager.inputAddress();
+        }else {
+            Validator.isXmlAddressValid(this);
+
+            address = XmlUtil.readAddressFromString(getXmlArgument());
+        }
+        return address;
     }
 
     @Override

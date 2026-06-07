@@ -11,6 +11,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +30,7 @@ public class UpdateCommand extends Command  implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r = "непредвиденная";
 
         try{
@@ -58,18 +59,16 @@ public class UpdateCommand extends Command  implements Serializable {
             if (!container.isEmpty()) {
                 Long ID = Long.parseLong(getArgument());
 
-                boolean isOk = organizationDao.update(parametrizedOrg, ID);
+                boolean isOk = organizationDao.update(parametrizedOrg, ID, user);
                 String t;
 
                 if (isOk) {
                     t = "Организация с ID " + ID + " успешно изменена";
-                    logger.info(t);
-                    r = t;
                 } else {
                     t = "Организация с ID " + ID + " не изменена";
-                    logger.info(t);
-                    r = t;
                 }
+                logger.info(t);
+                r = t;
 
             } else{
                 EmptyContainerException ec = new EmptyContainerException();

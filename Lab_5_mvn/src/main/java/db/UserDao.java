@@ -1,9 +1,8 @@
 package db;
 
 import exceptions.NoSuchEntityException;
-import exceptions.NoSuchOrganizationException;
-import exceptions.NoSuchUserException;
 import main.Container;
+import main.UserContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.util.PSQLException;
@@ -12,13 +11,10 @@ import sorts.SortById;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class UserDao implements Dao<User>{
-    private static final Container<User> CONTAINER = new Container<>(new SortById<User>());
+    private static final UserContainer CONTAINER = new UserContainer(new SortById<>());
     private static final UserDao INSTANCE = new UserDao();
 
     private static final String SAVE_USER_SQL= """
@@ -51,7 +47,7 @@ public class UserDao implements Dao<User>{
     private static final Logger log = LogManager.getLogger(UserDao.class);
 
     @Override
-    public int save(User user) {
+    public int save(User user, User user1) {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(SAVE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
@@ -86,7 +82,7 @@ public class UserDao implements Dao<User>{
     }
 
     @Override
-    public boolean update(User user, Long id) throws NoSuchEntityException {
+    public boolean update(User user, Long id, User user1) throws NoSuchEntityException {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(UPDATE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
@@ -134,8 +130,12 @@ public class UserDao implements Dao<User>{
         return CONTAINER.getById(id);
     }
 
+    public User findByUserName(String userName) throws NoSuchEntityException {
+        return CONTAINER.findByUserName(userName);
+    }
+
     @Override
-    public boolean delete(Long id) throws NoSuchEntityException {
+    public boolean delete(Long id, User user) throws NoSuchEntityException {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(DELETE_USER_SQL)) {
             connection.setAutoCommit(false);

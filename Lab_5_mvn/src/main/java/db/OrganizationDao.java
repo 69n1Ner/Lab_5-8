@@ -2,6 +2,8 @@ package db;
 
 import exceptions.NoSuchEntityException;
 import main.Container;
+import main.OrganizationContainer;
+import net.Runner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.util.PSQLException;
@@ -17,11 +19,11 @@ import java.util.Collection;
 import java.util.List;
 
 public class OrganizationDao implements Dao<Organization>{
-    private static final Container<Organization> CONTAINER = new Container<>(new SortById<Organization>());
+    private static final OrganizationContainer CONTAINER = new OrganizationContainer(new SortById<>());
     private static final OrganizationDao INSTANCE = new OrganizationDao();
+    private static Runner runner;
 
-
-        //language=POSTGRES-SQL
+    //language=POSTGRES-SQL
         private static final String SELECT_ORGANIZATIONS_SQL = """
                 select
                     "annual_turnover",
@@ -36,9 +38,12 @@ public class OrganizationDao implements Dao<Organization>{
                     "location_z",
                     o."name",
                     ot.name as type_name,
-                    "zip_code"
+                    "zip_code",
+                    user_id
                 from organization o
-                join organization_type ot on o.type_id = ot.id""";
+                join organization_type ot on o.type_id = ot.id
+                join users u on u.id = user_id
+                """;
 
     //language=POSTGRES-SQL
     private static final String SAVE_ORGANIZATION_SQL = """
@@ -86,21 +91,20 @@ public class OrganizationDao implements Dao<Organization>{
     private static final Logger log = LogManager.getLogger(OrganizationDao.class);
 
     @Override
-    public int save(Organization organization) {
+    public int save(Organization organization, User user) {
         try (Connection connection = ConnectionManager.open();
                 PreparedStatement statement = connection.prepareStatement(SAVE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
 
             //searching for user
-            User user = organization.getUser();
             UserDao userDao = UserDao.getInstance();
             long userId;
             try {
                 userDao.findById(user.getId());
                 userId = user.getId();
-            } catch (NoSuchEntityException e) {
+            } catch (NoSuchEntityException | NullPointerException e) {
                 log.info("Такого пользователя не нашлось, организация не будет добавлена");
-                return 0;
+                return -1;
             }
 
             //adding other attributes
@@ -164,12 +168,19 @@ public class OrganizationDao implements Dao<Organization>{
 
 
     @Override
-    public boolean update(Organization organization, Long ID) throws NoSuchEntityException {
+    public boolean update(Organization organization, Long ID, User user) throws NoSuchEntityException {
+        organization = findById(ID).update(organization);
+
+        log.debug("до проверки на корректного юзера");
+        if (!isCorrectUser(user,false, organization)) return false;
+        log.debug("после проверки на корректного юзера");
+
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(UPDATE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
 
-            organization = findById(ID).update(organization);
+
+
 
             LocalDate localDate = organization.getCreationDate();
             String name = organization.getName();
@@ -177,8 +188,8 @@ public class OrganizationDao implements Dao<Organization>{
             int annualTurnover = organization.getAnnualTurnover();
             int typeID = getType(connection,organization.getType().getName());
 
-            User user = organization.getUser();
-            long userId = getUser(connection,user.getUserName(),user.getPassword());
+            long userId = getUserID(connection,user.getUserName(),user.getPassword());
+            log.debug("после получения user_id={}",userId);
 
             Address address = organization.getPostalAddress();
             String zipCode = address.getZipCode();
@@ -193,7 +204,7 @@ public class OrganizationDao implements Dao<Organization>{
             long coordinateX = coordinates.getX();
             Double coordinateY = coordinates.getY();
 
-            int organizationID = 0;
+            int organizationID;
             statement.setInt(1,annualTurnover);
             statement.setLong(2,coordinateX);
             statement.setDouble(3,coordinateY);
@@ -208,13 +219,15 @@ public class OrganizationDao implements Dao<Organization>{
             statement.setString(12,zipCode);
             statement.setLong(13,userId);
             statement.setLong(14,ID);
-
+            log.debug("statement={}",statement);
 
             statement.executeUpdate();
+            log.debug("после выполнения");
 
             try (ResultSet resultSet = statement.getGeneratedKeys()){
                 if (resultSet.next()){
-                    organizationID = resultSet.getInt(1);
+                    organizationID = resultSet.getInt("id");
+                    log.debug("organizationID={}",organizationID);
                     connection.commit();
                     CONTAINER.update(organization,ID);
                     return organizationID > 0;
@@ -232,8 +245,31 @@ public class OrganizationDao implements Dao<Organization>{
         }
     }
 
-    @Override
-    public boolean delete(Long id) throws NoSuchEntityException {
+    private static boolean isCorrectUser(User user, boolean isClearCommand, Organization organization) {
+        try {
+            User user1 = UserDao.getInstance().findById(organization.getUser().getId());
+            log.debug("user1={}",user1);
+            log.debug("user={}",user);
+
+            if (!user1.equals(user)){
+                //todo добавить Optional для вывода сообщения или что то другое
+                if (!isClearCommand) log.warn("Вы не можете редактировать эту организацию");
+                return false;
+            }
+
+        } catch (NoSuchEntityException e) {
+            log.debug(NoSuchEntityException.getMsg());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean delete(Long id, User user,boolean isClearCommand) throws NoSuchEntityException {
+
+        log.debug("до delete проверки на корректного юзера");
+        if (!isCorrectUser(user,isClearCommand, CONTAINER.getById(id))) return false;
+        log.debug("после delete проверки на корректного юзера");
+
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(DELETE_ORGANIZATION_SQL)) {
             connection.setAutoCommit(false);
@@ -257,16 +293,22 @@ public class OrganizationDao implements Dao<Organization>{
             }
             return false;
         }
+
     }
 
-    public int clear(){
+    @Override
+    public boolean delete(Long id, User user) throws NoSuchEntityException {
+        return delete(id,user,false);
+    }
+
+    public int clear(User user){
         List<Organization> list = findAll();
         int counter = 0;
         for (Organization organization : list){
             long id = organization.getId();
             boolean isDeleted = false;
             try {
-                isDeleted = delete(id);
+                isDeleted = delete(id, user,true);
 
             if (isDeleted){
                counter++;
@@ -291,6 +333,7 @@ public class OrganizationDao implements Dao<Organization>{
     public static Class<?> getContainerCollectionName(){
         return Arrays.stream(CONTAINER
                 .getClass()
+                        .getSuperclass()
                 .getDeclaredFields())
                 .filter(t -> Collection.class.isAssignableFrom(t.getType()))
                 .findFirst().get().getType();
@@ -332,10 +375,10 @@ public class OrganizationDao implements Dao<Organization>{
         }
     }
 
-    private static long getUser(Connection connection, String userName, String password){
+    private static long getUserID(Connection connection, String userName, String password){
         //language=POSTGRES-SQL
         String sql = """
-                select user_id as id from users
+                select id from users
                 where user_name = ? and password = ?
                 """;
         try (PreparedStatement psUser = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -354,8 +397,11 @@ public class OrganizationDao implements Dao<Organization>{
                     throw new SQLException("Не удалось вытащить ID у пользователя");
                 }
             }
-        }catch (SQLException e){
-            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            if (e instanceof PSQLException) {
+                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+            }
+            return -1;
         }
 
     }
@@ -375,6 +421,14 @@ public class OrganizationDao implements Dao<Organization>{
                     organization.setType(OrganizationType.ofName(resultSet.getString("type_name")));
                     organization.setEmployeesCount(resultSet.getLong("employees_count"));
                     organization.setAnnualTurnover(resultSet.getInt("annual_turnover"));
+
+                    UserDao userDao = UserDao.getInstance();
+                    try {
+                        User user = userDao.findById(resultSet.getLong("user_id"));
+                        organization.setUser(user);
+                    } catch (NoSuchEntityException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     Coordinates coordinates = new Coordinates();
                     coordinates.setX(resultSet.getLong("coordinates_x"));
@@ -405,6 +459,15 @@ public class OrganizationDao implements Dao<Organization>{
 
     public static OrganizationDao getInstance() {
         return INSTANCE;
+    }
+
+
+    public static Runner getRunner() {
+        return runner;
+    }
+
+    public static void setRunner(Runner runner) {
+        OrganizationDao.runner = runner;
     }
 
 }

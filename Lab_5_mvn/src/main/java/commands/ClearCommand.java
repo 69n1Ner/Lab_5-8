@@ -8,6 +8,7 @@ import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Serializable;
 
@@ -19,7 +20,7 @@ public class ClearCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r;
         try {
             Validator.isValidArgument(this);
@@ -29,8 +30,8 @@ public class ClearCommand extends Command implements Serializable {
             }
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            int counter = organizationDao.clear();
-            String t = "Коллекция успешно удалена. Удалено "+counter+" организаций";
+            int counter = organizationDao.clear(user);
+            String t = "Удалено "+counter+" организаций";
             logger.info(t);
             r = t;
 

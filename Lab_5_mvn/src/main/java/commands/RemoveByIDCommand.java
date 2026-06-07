@@ -2,7 +2,6 @@ package commands;
 
 import exceptions.InvalidInput;
 import exceptions.NoSuchEntityException;
-import exceptions.NoSuchOrganizationException;
 import io.Validator;
 import db.OrganizationDao;
 import main.Invoker;
@@ -10,6 +9,7 @@ import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Serializable;
 
@@ -22,7 +22,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
 
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r = "непредвиденная";
         try {
             Validator.isValidArgument(this);
@@ -34,7 +34,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
             Long ID = Long.parseLong(getArgument());
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            boolean isDeleted = organizationDao.delete(ID);
+            boolean isDeleted = organizationDao.delete(ID, user);
 
             String text;
             if (isDeleted){

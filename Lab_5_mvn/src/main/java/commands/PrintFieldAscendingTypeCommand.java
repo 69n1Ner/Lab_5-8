@@ -10,6 +10,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 import sorts.SortByType;
 
 import java.io.Serializable;
@@ -25,7 +26,7 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r = "непредвиденная";
         try {
             Validator.isValidArgument(this);

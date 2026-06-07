@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
 import org.apache.logging.log4j.LogManager;
+import security.User;
 
 import java.io.Serializable;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class AddCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String response = "непредвиденная";
 
         try {
@@ -64,8 +65,10 @@ public class AddCommand extends Command implements Serializable {
                     .feedback()
                     .stream()
                     .collect(Collectors.joining("\n","","\n"));
+
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            int id = organizationDao.save(newOrganization);
+
+            int id = organizationDao.save(newOrganization, user);
 
             String text = "ID созданной организации: " + id;
             logger.info(text);

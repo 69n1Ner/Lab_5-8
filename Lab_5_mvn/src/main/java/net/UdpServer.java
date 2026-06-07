@@ -3,23 +3,27 @@ package net;
 import commands.Command;
 import commands.ExitCommand;
 import commands.SaveCommand;
+import db.OrganizationDao;
+import db.UserDao;
 import exceptions.*;
 import io.ByteUtil;
 import io.InputManager;
 import io.XmlUtil;
 import main.Container;
 import main.Invoker;
+import main.OrganizationContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.MD2Hash;
+import security.User;
 import sorts.SortById;
 
 import java.io.*;
 import java.net.*;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
@@ -33,13 +37,19 @@ public class UdpServer extends Runner {
 
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
 
         Invoker invoker = new Invoker();
         UdpServer server = new UdpServer(invoker, 9898,true);
+        OrganizationDao.setRunner(server);
+        try {
+            server.setUser(UserDao.getInstance().findByUserName("server"));
+        } catch (NoSuchEntityException e) {
+            logger.fatal("Сервер не может быть запущен из-за отсутствия пользователя server в базе данных");
+        }
 
         if (!server.isLab7){
-            Container<Organization> container = new Container<>(new SortById<Organization>());
+            OrganizationContainer container = new OrganizationContainer(new SortById<>());
             invoker.setCommand(new SaveCommand("save", invoker));
             String filePath = System.getenv("LAB5_8");
             Path path = InputManager.parseInitCollection(filePath);
@@ -54,7 +64,7 @@ public class UdpServer extends Runner {
                 .getAllCommands()
                 .get("exit"))
                 .setInterrupt(true)
-                .execute()));
+                .execute(null)));
 
         server.run();
     }
@@ -108,13 +118,13 @@ public class UdpServer extends Runner {
             SocketAddress address = socketAddressMap.get(request.runnerId());
             if (request.requestType() != RequestType.PING) {
                 System.out.println();
-                logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
+                logger.info("Сообщение получено от клиента #{}#{}", address,request.user());
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
             return null;
         } catch (IOException | ClassNotFoundException e) {
-            logger.warn("recieveMsg{}", e,e);
+            logger.debug("recieveMsg{}", e,e);
             return null;
         }
     }
@@ -150,7 +160,7 @@ public class UdpServer extends Runner {
             try {
                 Thread.sleep(50);
                 if (!isScript && initialShowUser) {
-                    System.out.print("$user: ");
+                    System.out.print("$"+this.getUser()+": ");
                     initialShowUser = false;
                 }
                 if (br.ready()) {
@@ -171,12 +181,13 @@ public class UdpServer extends Runner {
 //                    logger.debug("---------1----");
 
                     //sending
-                    Request request = invoker.defineCommand(input, isScript).execute();
+                    logger.debug("user={}", user);
+                    Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
                         sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
-                        System.out.print("$user: ");
+                        System.out.print("$"+this.getUser()+": ");
                         System.out.flush();
                     }
                     continue;
@@ -191,12 +202,12 @@ public class UdpServer extends Runner {
                         //todo можно добавить проверку на корректный реквест
 //                        logger.debug("---------2----");
                         logger.debug("{} \n-- req", request);
-                        Request request1 = request.command().setInvokerFather(invoker).execute();
+                        Request request1 = request.command().setInvokerFather(invoker).execute(request.user());
                         if (request1 != null){
                             logger.debug("отправил");
                             sendAndWait(request1.setRunnerId(request.runnerId()));
                             if (!isScript && isRunning) {
-                                System.out.print("$user: ");
+                                System.out.print("$"+this.getUser()+": ");
                                 System.out.flush();
                             }
                         }
@@ -213,7 +224,7 @@ public class UdpServer extends Runner {
             } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
-                    System.out.print("$user: ");
+                    System.out.print("$"+this.getUser()+": ");
                     System.out.flush();
                 }
             }catch (NullPointerException e){
@@ -230,12 +241,11 @@ public class UdpServer extends Runner {
     public Invoker getInvoker() {
         return invoker;
     }
+
     @Override
     public Closeable getTunnel() {
         return SOCKET;
     }
-
-
 
     @Override
     public void setRunning(boolean condition) {

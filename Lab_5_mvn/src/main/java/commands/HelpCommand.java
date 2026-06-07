@@ -6,6 +6,7 @@ import main.Invoker;
 import net.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -24,7 +25,7 @@ public class HelpCommand extends Command  implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         try {
             Validator.isValidArgument(this);
 

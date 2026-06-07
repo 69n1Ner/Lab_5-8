@@ -13,6 +13,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
@@ -27,7 +28,7 @@ public class AddIfMinCommand extends Command implements Serializable {
 
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String response = "непредвиденная";
         try {
             Validator.isValidArgument(this);
@@ -65,7 +66,7 @@ public class AddIfMinCommand extends Command implements Serializable {
                             .feedback()
                             .stream()
                             .collect(Collectors.joining("\n","","\n"));
-                    int id = organizationDao.save(newOrganization1);
+                    int id = organizationDao.save(newOrganization1, user);
 
                     String text = "ID созданной организации: " + id;
                     logger.info(text);

@@ -1,7 +1,8 @@
 package commands;
 
 import net.Request;
+import security.User;
 
 public interface Executable {
-    Request execute();
+    Request execute(User user);
 }

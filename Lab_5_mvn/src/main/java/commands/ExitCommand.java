@@ -8,9 +8,9 @@ import net.Runner;
 import net.UdpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 public class ExitCommand extends Command{
     private static final Logger logger = LogManager.getLogger(ExitCommand.class);
@@ -22,7 +22,7 @@ public class ExitCommand extends Command{
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         try {
             Validator.isValidArgument(this);
             Runner runner = getInvokerFather().getRunner();
@@ -37,7 +37,7 @@ public class ExitCommand extends Command{
                 try {
                     if (runner instanceof UdpServer) {
                         if (!runner.isLab7()) {
-                            runner.getInvokerFather().getAllCommands().get("save").execute();
+                            runner.getInvokerFather().getAllCommands().get("save").execute(null);
                         }
                     }
                     tunnel.close();
