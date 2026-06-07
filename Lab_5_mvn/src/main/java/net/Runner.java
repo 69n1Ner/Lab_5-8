@@ -177,16 +177,20 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         LoggerConfig rootLogger = coreLogger.getContext().getConfiguration().getRootLogger();
         rootLogger.setLevel(l);
 
-        if (!isFile || !isConsole) {
-            Map<String, Appender> appenders = rootLogger.getAppenders();
+        Map<String, Appender> appenders = rootLogger.getAppenders();
 
+        String appName;
+        if (isServer){
+            appName = "Client";
+        } else appName = "Server";
+        appenders.values().stream()
+                .filter(a -> a.getName().startsWith(appName))
+                .forEach(a -> rootLogger.removeAppender(a.getName()));
+
+        if (!isFile || !isConsole) {
             if (!isFile) {
-                String appName;
-                if (isServer){
-                    appName = "Client";
-                } else appName = "Server";
                 appenders.values().stream()
-                        .filter(a -> a.getName().startsWith(appName))
+                        .filter(a -> a.getName().startsWith("File"))
                         .forEach(a -> rootLogger.removeAppender(a.getName()));
             }
 
