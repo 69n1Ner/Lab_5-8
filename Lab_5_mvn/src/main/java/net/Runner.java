@@ -70,7 +70,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     public Request sendAndWait(Request request) {
         long start = System.currentTimeMillis();
         long timeout = 3000;
-//        log.debug("посланный request={}",request);
+        log.debug("посланный request={}",request);
         sendMessage(request);
 
         if (this instanceof UdpServer && !this.runnerId.equals(request.requestId())) {

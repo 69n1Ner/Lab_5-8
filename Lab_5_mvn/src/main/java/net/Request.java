@@ -59,11 +59,11 @@ public record Request (
                 "\n requestType=" + requestType +
                 "\n runnerId=" + runnerId +
                 "\n feedback='" + feedback + '\'' +
-                "\n "+ command;
+                "\n command="+ command;
         if (command() != null){
             ret += "\n "+ command.isRequest();
         }
-        ret += "\n "+user;
+        ret += "\n user="+user;
         ret += "}";
         return ret;
     }

@@ -25,10 +25,11 @@ public class Validator {
 
     //inputMan
     public static boolean isValidInput(String input) {
-        return isValidInput(input,true);
+        return isValidInput(input,false);
     }
 
-    public static boolean isValidInput(String input,boolean isStrict) {
+
+    public static boolean isValidInput(String input, boolean isStrict) {
         if (isStrict) {
             String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
             for (int i = 0; i < input.length(); i++) {
@@ -50,6 +51,13 @@ public class Validator {
             return false;
         }
         return true;
+    }
+
+    public static boolean isUserInfoValid(String input,boolean isStrict,boolean isPassword) {
+        if (!isValidInput(input,isStrict)){
+            return false;
+        }
+        return isPassword || !isStrict || input.length() >= 4;
     }
 
     public static String hasSpecialSymbol(String input){

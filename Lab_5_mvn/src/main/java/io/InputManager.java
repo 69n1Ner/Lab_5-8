@@ -70,7 +70,7 @@ public class InputManager {
             input = separateSecurity(input);
 
 
-            if (input != null && !input.isEmpty() && Validator.isValidInput(input,false)){
+            if (input != null && !input.isEmpty() && Validator.isUserInfoValid(input,false,isPassword)){
                 if (isPassword){
                     return MD2Hash.hashWithMD2(input);
                 }else return input;

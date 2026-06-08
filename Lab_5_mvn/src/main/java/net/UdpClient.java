@@ -38,7 +38,10 @@ public class UdpClient extends Runner {
         client.applyParams(false);
         client.connect();
 
-        User user1 = client.authorize();
+        User user1 = null;
+        while (user1 == null){
+            user1 = client.authorize();
+        }
         client.setUser(user1);
 
         client.run();
@@ -74,18 +77,12 @@ public class UdpClient extends Runner {
                 .setRunnerId(runnerId);
 
         Request response = null;
-        int debugCounter = 0;
         while (response == null){
-//            logger.debug("Цикл авторизации={}",debugCounter++);
            response = sendAndWait(request);
-//           logger.debug("response={}",response);
         }
 
-        if (response.requestType() == RequestType.USER_OK){
-//            logger.debug("USER_OK passed");
-            logger.info(response.feedback());
-            return response.user();
-        }else return null;
+        logger.info(response.feedback());
+        return response.user();
     }
 
     @Override
