@@ -144,7 +144,7 @@ public class InputManager {
                 }
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
-                    log.debug("xmlArgument={}",xmlArgument);
+//                    log.debug("xmlArgument={}",xmlArgument);
                     this.xmlArgument = input.substring(end);
                 }
                 continue;

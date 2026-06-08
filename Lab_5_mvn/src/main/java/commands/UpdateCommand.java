@@ -41,7 +41,7 @@ public class UpdateCommand extends Command  implements Serializable {
             if((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()){
                 parametrizedOrg = InputManager.inputOrganization(true);
             }else {
-                Validator.isXmlOrgValid(this);
+                Validator.isValidForScript(this);
 
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
             }

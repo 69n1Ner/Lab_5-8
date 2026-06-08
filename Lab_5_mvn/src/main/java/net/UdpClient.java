@@ -77,13 +77,13 @@ public class UdpClient extends Runner {
         Request response = null;
         int debugCounter = 0;
         while (response == null){
-            logger.debug("Цикл авторизации={}",debugCounter++);
+//            logger.debug("Цикл авторизации={}",debugCounter++);
            response = sendAndWait(request);
-           logger.debug("response={}",response);
+//           logger.debug("response={}",response);
         }
 
         if (response.requestType() == RequestType.USER_OK){
-            logger.debug("USER_OK passed");
+//            logger.debug("USER_OK passed");
             logger.info(response.feedback());
             return response.user();
         }else return null;
@@ -136,10 +136,10 @@ public class UdpClient extends Runner {
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
             Request request = ByteUtil.fromBytesTo(data, Request.class);
-            logger.debug("получен реквест {}",request.requestType());
+//            logger.debug("получен реквест {}",request.requestType());
             if (request.requestType() != RequestType.PING) {
                 logger.info("Сообщение получено от сервера #{}", address);
-                logger.debug("request={}",request);
+//                logger.debug("request={}",request);
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
@@ -212,19 +212,19 @@ public class UdpClient extends Runner {
 
                 //receiving
                 if (isRunning && CHANNEL != null) {
-                    logger.debug("before receiveMessage");
+//                    logger.debug("before receiveMessage");
                     Request request1 = null;
                     if (!cachedMessages.isEmpty()){
                          request1 = cachedMessages.removeFirst();
                     }
-                    logger.debug("after receiveMessage");
+//                    logger.debug("after receiveMessage");
 
 
-                    logger.debug("request1={}",request1);
-                    logger.debug("request1 != null={}",request1 != null);
-                    if (request1 != null) {
-                        logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);
-                    }
+//                    logger.debug("request1={}",request1);
+//                    logger.debug("request1 != null={}",request1 != null);
+//                    if (request1 != null) {
+//                        logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);
+//                    }
 
                     if (request1 != null && request1.requestType() != RequestType.PING) {
                         logger.info(request1.feedback());

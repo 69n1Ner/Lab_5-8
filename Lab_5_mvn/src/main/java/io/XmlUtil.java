@@ -58,7 +58,7 @@ public class XmlUtil {
             xmlString = xmlString.replaceAll("<\\?xml[^>]*>","")
                     .replaceAll("\\s","")
                     .replaceAll("</?collection>","");
-            logger.debug("txt- {}",xmlString);
+//            logger.debug("txt- {}",xmlString);
             return xmlString;
         } catch (JAXBException e) {
             throw new XmlUtilException(Arrays.toString(e.getStackTrace()).replace(",","\n"));

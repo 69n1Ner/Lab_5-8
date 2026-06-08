@@ -38,7 +38,7 @@ public class AddIfMinCommand extends Command implements Serializable {
             if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
                 newOrganization = InputManager.inputOrganization();
             } else {
-                Validator.isXmlOrgValid(this);
+                Validator.isValidForScript(this);
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 

@@ -169,30 +169,27 @@ public class Validator {
         }
     }
 
-    public static void isXmlAddressValid(Command command) throws InvalidInput{
+    private static void isXmlAddressValid(Command command) throws InvalidInput{
         //todo мб добавить нужную проверку на что либо
 //        String xmlArg = command.getXmlArgument();
     }
 
-    public static void isXmlOrgValid(Command command) throws InvalidInput{
+    private static void isXmlOrgValid(Command command) throws InvalidInput{
             String xmlArgument = command.getXmlArgument();
-            logger.debug("xml-строка={}",xmlArgument);
 
             if (command.isScript()) {
                 if (xmlArgument != null) {
                     boolean ERR = xmlArgument.equals("ERR");
-                    boolean isId = !xmlArgument.matches(".*<id>[^<]+</id>.*");
-                    boolean isDate = !xmlArgument.matches(".*<creation_date>[^<]+</creation_date>.*");
-                    if (ERR) {
+                    logger.debug("xml-строка={}",xmlArgument);
+                    boolean isId = xmlArgument.matches(".*<id>[^<]+</id>.*");
+                    boolean isDate = xmlArgument.matches(".*<creation_date>[^<]+</creation_date>.*");
+                    if (!ERR) {
                         if (isDate) {
                             if (isId) {
                                 return;
-                            }
-                            throw new InvalidInput("XML не имеет ID");
-                        }
-                        throw new InvalidInput("XML не имеет даты создания");
-                    }
-                    throw new InvalidInput("Неверная XML строка");
+                            }throw new InvalidInput("XML не имеет ID");
+                        }throw new InvalidInput("XML не имеет даты создания");
+                    } throw new InvalidInput("Неверная XML строка");
                 }else {
                     throw new InvalidInput("Команда должна иметь XML строку");
                 }

@@ -37,7 +37,6 @@ public class AddCommand extends Command implements Serializable {
         try {
             Validator.isValidArgument(this);
 
-            Invoker invokerFather = getInvokerFather();
             Organization newOrganization;
 
 //            logger.debug("before xmls");
@@ -46,7 +45,7 @@ public class AddCommand extends Command implements Serializable {
 //                logger.debug("it's input");
             } else {
 //                logger.debug("it's request");
-                Validator.isXmlOrgValid(this);
+                Validator.isValidForScript(this);
 //                logger.debug("it's server");
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }

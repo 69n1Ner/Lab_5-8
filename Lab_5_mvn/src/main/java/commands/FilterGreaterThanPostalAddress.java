@@ -80,7 +80,7 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
         if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
             address = InputManager.inputAddress();
         }else {
-            Validator.isXmlAddressValid(this);
+            Validator.isValidForScript(this);
 
             address = XmlUtil.readAddressFromString(getXmlArgument());
         }
