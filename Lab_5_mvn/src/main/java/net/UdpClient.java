@@ -30,7 +30,7 @@ public class UdpClient extends Runner {
         super.invoker.setRunner(this);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Invoker invoker = new Invoker();
         UdpClient client = new UdpClient(invoker, 9898,true);
         OrganizationDao.setRunner(client);
@@ -96,7 +96,9 @@ public class UdpClient extends Runner {
 
             logger.info("Клиент запущен и готов отправлять данные");
         } catch (IOException e) {
-            logger.error("Клиент не смог подключиться к сети по порту {}", port, e);
+            String t = "Клиент не смог подключиться к сети по порту "+ port;
+            logger.error(t,e);
+            throw new RuntimeException(t);
         } catch (InterruptedException e) {
             logger.warn("interrupt");
         }

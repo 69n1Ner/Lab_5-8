@@ -36,7 +36,7 @@ public class UdpServer extends Runner {
 
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
+    public static void main(String[] args) {
 
         Invoker invoker = new Invoker();
         UdpServer server = new UdpServer(invoker, 9898,true);
@@ -58,6 +58,7 @@ public class UdpServer extends Runner {
 
 
         server.applyParams(true);
+        server.connect();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
                 .getInvokerFather()
@@ -70,6 +71,7 @@ public class UdpServer extends Runner {
         server.run();
     }
 
+    @Override
     public void connect() {
         try {
             SOCKET = new DatagramSocket(port);
@@ -77,7 +79,9 @@ public class UdpServer extends Runner {
             logger.info("Сервер подключился к сети");
             //todo добавть селектор
         } catch (SocketException e) {
-            logger.error("Сервер не смог подключиться к сети по порту {}", port, e);
+            String t = "Сервер не смог подключиться к сети по порту "+ port;
+            logger.error(t,e);
+            throw new RuntimeException(t);
         }
     }
 
@@ -148,7 +152,6 @@ public class UdpServer extends Runner {
                 return;
             }
         } else {
-            connect();
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
@@ -159,6 +162,8 @@ public class UdpServer extends Runner {
 
         while (isRunning) {
             try {
+
+
                 Thread.sleep(50);
                 if (!isScript && initialShowUser) {
                     System.out.print("$"+this.getUser()+": ");
