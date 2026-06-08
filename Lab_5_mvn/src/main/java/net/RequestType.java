@@ -3,5 +3,8 @@ package net;
 public enum RequestType {
     COMMAND,
     FEEDBACK,
-    PING
+    PING,
+    USER,
+    USER_OK,
+    USER_WRONG
 }

@@ -25,13 +25,20 @@ public class Validator {
 
     //inputMan
     public static boolean isValidInput(String input) {
-        String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
-        for (int i = 0; i < input.length(); i++) {
-            if (specialSymbols.indexOf(input.charAt(i)) != -1) {
-                logger.warn("Строка содержит недопустимый символ: {}", input.charAt(i));
-                return false;
+        return isValidInput(input,true);
+    }
+
+    public static boolean isValidInput(String input,boolean isStrict) {
+        if (isStrict) {
+            String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
+            for (int i = 0; i < input.length(); i++) {
+                if (specialSymbols.indexOf(input.charAt(i)) != -1) {
+                    logger.warn("Строка содержит недопустимый символ: {}", input.charAt(i));
+                    return false;
+                }
             }
         }
+
         if (input.length() > 255) {
             logger.warn("Слишком длинная строка! Максимальная длина 255");
             return false;
@@ -62,7 +69,7 @@ public class Validator {
                         /﹋\\
                         """);
 
-                //Ctrl+C (doesn't catch)
+                //Ctrl+C (doesn'object catch)
             } else if (input.contains(String.valueOf(asciiChar))) {
                 String asciiPrint = Integer.toHexString(charNum);
                 if (asciiPrint.length() == 1) {
@@ -169,13 +176,14 @@ public class Validator {
 
     public static void isXmlOrgValid(Command command) throws InvalidInput{
             String xmlArgument = command.getXmlArgument();
+            logger.debug("xml-строка={}",xmlArgument);
 
             if (command.isScript()) {
                 if (xmlArgument != null) {
-                    boolean ERR = !xmlArgument.equals("ERR");
+                    boolean ERR = xmlArgument.equals("ERR");
                     boolean isId = !xmlArgument.matches(".*<id>[^<]+</id>.*");
                     boolean isDate = !xmlArgument.matches(".*<creation_date>[^<]+</creation_date>.*");
-                    if (!ERR) {
+                    if (ERR) {
                         if (isDate) {
                             if (isId) {
                                 return;

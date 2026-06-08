@@ -155,6 +155,8 @@ public class OrganizationDao implements Dao<Organization>{
             }
             connection.commit();
             organization.setId((long) organizationID);
+            organization.setUser(UserDao.getInstance().findById(userId));
+            log.debug("организация после добавления, org={}",organization);
             CONTAINER.add(organization);
             return organizationID;
 
@@ -163,6 +165,8 @@ public class OrganizationDao implements Dao<Organization>{
                 log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
             return 0;
+        } catch (NoSuchEntityException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -266,7 +270,7 @@ public class OrganizationDao implements Dao<Organization>{
 
     private boolean delete(Long id, User user,boolean isClearCommand) throws NoSuchEntityException {
 
-        log.debug("до delete проверки на корректного юзера");
+        log.debug("до delete проверки на корректного юзера (org id = {})", id);
         if (!isCorrectUser(user,isClearCommand, CONTAINER.getById(id))) return false;
         log.debug("после delete проверки на корректного юзера");
 
@@ -306,7 +310,7 @@ public class OrganizationDao implements Dao<Organization>{
         int counter = 0;
         for (Organization organization : list){
             long id = organization.getId();
-            boolean isDeleted = false;
+            boolean isDeleted;
             try {
                 isDeleted = delete(id, user,true);
 

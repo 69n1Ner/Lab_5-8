@@ -25,11 +25,11 @@
         </Console>
 
         <File name="ServerAll" fileName="logs/server/app.log" append="true">
-            <PatternLayout pattern="%d{HH:mm:ss} [%level] %logger{36} - %msg%n%ex"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%level] %logger{36} %L - %msg%n%ex"/>
         </File>
 
         <File name="ClientAll" fileName="logs/client/app.log" append="true">
-            <PatternLayout pattern="%d{HH:mm:ss} [%level] %logger{36} - %msg%n%ex"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%level] %logger{36} %L - %msg%n%ex"/>
         </File>
 
         <File name="FileAll" fileName="logs/app.log" append="true">

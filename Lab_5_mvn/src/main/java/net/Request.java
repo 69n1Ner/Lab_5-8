@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public record Request (
         //todo можно добавить runnerId request'а и время, чтобы выполнять команды последовательно, а не в хаосе + отсекать по времени повторки
+
+        /// it's used twice: to define is it script AND to define is it a registration for a new user
         boolean isScript,
         RequestType requestType,
         UUID runnerId,
@@ -44,6 +46,10 @@ public record Request (
     }
 
     public Request setUser(User user){
+        return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
+    }
+
+    public Request setRegistration(boolean isScript){
         return new Request(isScript,requestType, runnerId,feedback,command,requestId,user);
     }
 
