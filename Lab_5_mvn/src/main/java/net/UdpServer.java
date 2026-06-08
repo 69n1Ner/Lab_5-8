@@ -9,13 +9,10 @@ import exceptions.*;
 import io.ByteUtil;
 import io.InputManager;
 import io.XmlUtil;
-import main.Container;
 import main.Invoker;
 import main.OrganizationContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import organization.Organization;
-import security.MD2Hash;
 import security.User;
 import sorts.SortById;
 
@@ -24,16 +21,18 @@ import java.net.*;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
     private DatagramSocket SOCKET;
     private final HashMap<UUID,SocketAddress> socketAddressMap = new HashMap<>();
+    private static final Logger logger = LogManager.getLogger(UdpServer.class);
+
 
     public UdpServer(Invoker invoker, int port,boolean isLab7) {
         super(port, invoker,isLab7);
         invoker.setRunner(this);
-        logger = LogManager.getLogger(UdpServer.class);
 
     }
 
@@ -46,6 +45,7 @@ public class UdpServer extends Runner {
             server.setUser(UserDao.getInstance().findByUserName("server"));
         } catch (NoSuchEntityException e) {
             logger.fatal("Сервер не может быть запущен из-за отсутствия пользователя server в базе данных");
+            return;
         }
 
         if (!server.isLab7){
@@ -57,7 +57,7 @@ public class UdpServer extends Runner {
         }
 
 
-        server.applyParams();
+        server.applyParams(true);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
                 .getInvokerFather()
@@ -65,6 +65,7 @@ public class UdpServer extends Runner {
                 .get("exit"))
                 .setInterrupt(true)
                 .execute(null)));
+
 
         server.run();
     }
@@ -113,12 +114,12 @@ public class UdpServer extends Runner {
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
             socketAddressMap.put(request.runnerId(),fromClient.getSocketAddress());
 //            logger.debug("map={}",socketAddressMap);
-            ping(request);
 
             SocketAddress address = socketAddressMap.get(request.runnerId());
             if (request.requestType() != RequestType.PING) {
                 System.out.println();
                 logger.info("Сообщение получено от клиента #{}#{}", address,request.user());
+                logger.debug("request={}",request);
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
@@ -197,15 +198,60 @@ public class UdpServer extends Runner {
                 if (isRunning && SOCKET != null && !SOCKET.isClosed()) {
                     Request request = receiveMessage();
                     if (request != null && request.requestType() != RequestType.PING) {
-                        Command command = request.command();
-                        logger.info(command);
-                        //todo можно добавить проверку на корректный реквест
+                        Request request1;
+
+                        /// authorization/registration user response
+                        if (request.requestType() == RequestType.USER){
+                            boolean isRegistration = request.isScript();
+                            UserDao userDao = UserDao.getInstance();
+                            User user1 = request.user();
+                            String feedback = "";
+                            request1 = Request.build().setRequestType(RequestType.USER_WRONG);
+
+                            if (!isRegistration) {
+                                Optional<User> optionalUser = userDao
+                                        .findAll()
+                                        .stream()
+                                        .filter(u -> u.getUserName().equals(user1.getUserName()))
+                                        .findFirst();
+                                if (optionalUser.isEmpty()) {
+                                    feedback = "Такого пользователя не существует";
+                                } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
+                                    feedback = "Вы успешно авторизовались";
+                                    request1 = request1.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
+                                    logger.debug("request1={}",request1);
+                                } else {
+                                    feedback = "Неверный пароль";
+                                }
+
+                            } else {
+                                long id = userDao.save(user1, null);
+                                if (id > 0){
+                                    feedback = "Вы успешно зарегистрировались";
+                                    request1 = request1.setRequestType(RequestType.USER_OK).setUser(userDao.findById(id));
+                                }
+                            }
+                            request1 = request1.setFeedback(feedback);
+//                            logger.debug("после фидбека request1={}",request1);
+
+                        /// command response
+                        } else if (request.requestType() == RequestType.COMMAND) {
+                            Command command = request.command();
+                            logger.info(command);
+                            //todo можно добавить проверку на корректный реквест
 //                        logger.debug("---------2----");
-                        logger.debug("{} \n-- req", request);
-                        Request request1 = request.command().setInvokerFather(invoker).execute(request.user());
+//                            logger.debug("{} \n-- req", request);
+                            request1 = request.command().setInvokerFather(invoker).execute(request.user());
+
+                        /// undefined request type response
+                        }else {
+                            request1 = Request.build().setFeedback("Неизвестный тип реквеста").setRequestType(RequestType.FEEDBACK);
+                        }
+
+                        /// sending
                         if (request1 != null){
-                            logger.debug("отправил");
-                            sendAndWait(request1.setRunnerId(request.runnerId()));
+                            request1 = request1.setRunnerId(request.runnerId());
+                            sendAndWait(request1);
                             if (!isScript && isRunning) {
                                 System.out.print("$"+this.getUser()+": ");
                                 System.out.flush();

@@ -4,6 +4,8 @@ import commands.GetLoggerable;
 import io.InputManager;
 import main.Invoker;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import security.User;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected static final String IP_ADDRESS = "localhost";
     protected static final int ARRAY_SIZE = 65000;
+    private static final Logger log = LogManager.getLogger(Runner.class);
     protected final int port;
     protected Invoker invoker;
     protected BufferedReader br;
@@ -28,6 +31,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected boolean initialShowUser = true;
     protected final boolean isLab7;
     protected User user;
+
 
     public abstract void connect();
     public abstract void run();
@@ -60,21 +64,21 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
                 .setRunnerId(request.runnerId())
                 .setRequestId(request.requestId());
 
-        if (this instanceof UdpClient) {
-            sendAndWait(request1);
-        } else {
-            sendMessage(request1);
-        }
+        sendAndWait(request1);
     }
 
-    public void sendAndWait(Request request) {
+    public Request sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 500;
+        long timeout = 3000;
+        log.debug("посланный request={}",request);
         sendMessage(request);
+
         if (this instanceof UdpServer && !this.runnerId.equals(request.requestId())) {
             runnerSentMsg(request);
-            return;
+            return null;
         }
+
+        runnerSentMsg(request);
         while (System.currentTimeMillis() - start < timeout) {
 //            logger.debug("msg sent");
 //            logger.debug("not unreachable");
@@ -87,25 +91,25 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 
                     //online
                     if (runnerId.equals(response.runnerId())) {
+                        log.debug("condition passed");
                         if (!silentConnection) {
                             serverOnline();
                             silentConnection = true;
                         }
-                        runnerSentMsg(request);
                         silentConnectionError = false;
-                        return;
+                        return response;
                     }
                 }
 //                logger.debug("after if");
             try {
                 ///Может возникать ошибка, если время сна здесь будет ниже, чем время сна у сервера
                 ///Важно ставить время сна больше (или столько же) чем у сервера
-                Thread.sleep(100);
-                sendMessage(request);
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+        log.debug("таймаут");
 
         //connection error cause
         silentConnection = false;
@@ -116,6 +120,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             runnerNotConnected();
             silentConnectionError = true;
         }
+        return null;
     }
 
     private void runnerSentMsg(Request request){
@@ -124,8 +129,11 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             runner = "клиенту #" + request.user();
         } else runner = "серверу";
 
+        if (request.requestType() == RequestType.PING) log.debug("Отправлен пинг");
+
         if (request.requestType() != RequestType.PING) {
-            getLogger().info("Сообщение отправлено {}", runner);
+            log.info("Сообщение отправлено {}", runner);
+            log.debug("command={}",request.command());
         }
     }
 
@@ -140,7 +148,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }else {
             System.out.println();
         }
-        getLogger().info("сервер в сети");
+        log.info("сервер в сети");
         if (isRunning) {
             System.out.print(this.getUser()+": ");
             System.out.flush();
@@ -158,7 +166,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         if (this instanceof UdpServer) {
             runner = "клиент";
         } else runner = "сервер";
-        getLogger().info("{} не подключен к сети", runner);
+        log.info("{} не подключен к сети", runner);
         if (isRunning) {
             System.out.print("$"+this.getUser()+": ");
             System.out.flush();
@@ -173,7 +181,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         String file = System.getProperty("log.file");
         boolean isFile = InputManager.parseFile(file);
 
-        org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) this.getLogger();
+        org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) log;
         LoggerConfig rootLogger = coreLogger.getContext().getConfiguration().getRootLogger();
         rootLogger.setLevel(l);
 

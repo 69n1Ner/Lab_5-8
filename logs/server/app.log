@@ -1,0 +1,2 @@
+23:11:40.446 [INFO] net.UdpServer 81 - Сервер подключился к сети
+23:11:43.516 [INFO] commands.ExitCommand 47 - UdpServer завершил работу

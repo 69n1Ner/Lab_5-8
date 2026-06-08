@@ -59,8 +59,8 @@ public class AddIfMinCommand extends Command implements Serializable {
 
 
                 if (container.isEmpty()){
-                    ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
-                    Organization newOrganization1 = organizationWithFeedback.organization();
+                    ObjWithFeedback<Organization> organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+                    Organization newOrganization1 = organizationWithFeedback.object();
 
                     String feedback = organizationWithFeedback
                             .feedback()

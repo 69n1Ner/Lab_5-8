@@ -29,60 +29,14 @@ public class InputManager {
     private String mainArgument;
     private String xmlArgument;
 
-    public static User authorize(){
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            log.info("У вас уже есть аккаунт? (введите \"y\" or \"n\")");
-        String input;
-        try {
-            input = br.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        input = separateSecurity(input);
-            User user;
 
-            if (input == null || input.isEmpty() || input.equals("y") || input.equals("Y")){
-                log.info("===== Авторизация =====");
-                user = inputUser(br,false);
-            } else {
-                log.info("===== Регистрация =====");
-                user = inputUser(br,true);
-            }
-            return user;
+    //todo ВАЖНО сделать связь с проверкой на клиента через запросы к серверу, а не просто к бд
 
-    }
 
-    private static User inputUser(BufferedReader br,boolean isRegistration){
+    public static User inputUser(BufferedReader br, boolean isRegistration){
         String name = getUserString(br,false,isRegistration);
         String password = getUserString(br,true,isRegistration);
-        User user = new User().setUserName(name).setPassword(password);
-
-        UserDao userDao = UserDao.getInstance();
-        if (!isRegistration) {
-            Optional<User> optionalUser = userDao
-                    .findAll()
-                    .stream()
-                    .filter(u -> u.getUserName().equals(user.getUserName()))
-                    .findFirst();
-            if (optionalUser.isEmpty()) {
-                log.warn("Такого пользователя не существует");
-                return null;
-            } else if (optionalUser.get().getPassword().equals(user.getPassword())) {
-                log.info("Вы успешно авторизовались");
-                return optionalUser.get();
-            } else {
-                log.warn("Неверный пароль");
-                return null;
-            }
-
-        } else {
-            int counter = userDao.save(user, null);
-            if (counter > 0){
-                log.info("Вы успешно зарегистрировались");
-                return user;
-            }return null;
-
-        }
+        return new User().setUserName(name).setPassword(password);
     }
 
     /* isOMT отвечает за повторный ввод 1 раз после неудачной попытки
@@ -116,7 +70,7 @@ public class InputManager {
             input = separateSecurity(input);
 
 
-            if (input != null && !input.isEmpty() && Validator.isValidInput(input)){
+            if (input != null && !input.isEmpty() && Validator.isValidInput(input,false)){
                 if (isPassword){
                     return MD2Hash.hashWithMD2(input);
                 }else return input;
@@ -190,6 +144,7 @@ public class InputManager {
                 }
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
+                    log.debug("xmlArgument={}",xmlArgument);
                     this.xmlArgument = input.substring(end);
                 }
                 continue;
@@ -426,8 +381,8 @@ public class InputManager {
     }
 
 
-    public static ObjWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
-        ObjWithFeedback organizationWithFeedback = new ObjWithFeedback(organization,null,new  ArrayList<>());
+    public static ObjWithFeedback<Organization> generateOrganizationFields(Organization organization, boolean isReadFile) {
+        ObjWithFeedback<Organization> organizationWithFeedback = new ObjWithFeedback<>(organization,new  ArrayList<>());
 
         if (!isReadFile) {
             organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
@@ -464,18 +419,18 @@ public class InputManager {
             organization.setType(OrganizationType.PUBLIC);
             organizationWithFeedback.feedback().add("Значение типа организации было установлено на: "+OrganizationType.PUBLIC.getName());
         }
-        ObjWithFeedback objWithFeedback = generateAddressFields(organization.getPostalAddress());
-        Address address = objWithFeedback.address();
+        ObjWithFeedback<Address> objWithFeedback = generateAddressFields(organization.getPostalAddress());
+        Address address = objWithFeedback.object();
         List<String> feedback = objWithFeedback.feedback();
 
         organizationWithFeedback.feedback().addAll(feedback);
-        organizationWithFeedback.organization().setPostalAddress(address);
+        organizationWithFeedback.object().setPostalAddress(address);
 
         return organizationWithFeedback;
     }
 
-    public static ObjWithFeedback generateAddressFields(Address address){
-        ObjWithFeedback addressWithFeedback = new ObjWithFeedback(null,address,new ArrayList<>());
+    public static ObjWithFeedback<Address> generateAddressFields(Address address){
+        ObjWithFeedback<Address> addressWithFeedback = new ObjWithFeedback<>(address,new ArrayList<>());
         String zip = address.getZipCode();
         Float xL = address.getTown().getX();
         Integer yL = address.getTown().getY();

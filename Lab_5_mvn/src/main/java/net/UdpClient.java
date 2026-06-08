@@ -22,11 +22,12 @@ import java.util.*;
 public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
     private final Deque<Request> cachedMessages = new ArrayDeque<>();
+    private static final Logger logger = LogManager.getLogger(UdpClient.class);
+
 
     public UdpClient(Invoker invoker, int port,boolean isLab7) {
         super(port, invoker,isLab7);
         super.invoker.setRunner(this);
-        logger = LogManager.getLogger(UdpClient.class);
     }
 
     public static void main(String[] args) throws IOException {
@@ -34,16 +35,60 @@ public class UdpClient extends Runner {
         UdpClient client = new UdpClient(invoker, 9898,true);
         OrganizationDao.setRunner(client);
 
-        client.applyParams();
+        client.applyParams(false);
+        client.connect();
 
-        User user1 = null;
-        while (user1 == null){
-            user1 = InputManager.authorize();
-        }
+        User user1 = client.authorize();
+        if (user1 == null )throw new RuntimeException("user1 is null");
         client.setUser(user1);
 
         client.run();
     }
+
+    public User authorize(){
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        logger.info("У вас уже есть аккаунт? (введите \"y\" or \"n\")");
+        String input;
+        try {
+            input = br.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        input = InputManager.separateSecurity(input);
+        User user;
+
+        boolean isRegistration;
+        if (input == null || input.isEmpty() || input.equals("y") || input.equals("Y")){
+            logger.info("===== Авторизация =====");
+            isRegistration = false;
+            user = InputManager.inputUser(br, false);
+        } else {
+            logger.info("===== Регистрация =====");
+            isRegistration = true;
+            user = InputManager.inputUser(br,true);
+        }
+
+        Request request = Request.build()
+                .setRequestType(RequestType.USER)
+                .setUser(user)
+                .setRegistration(isRegistration)
+                .setRunnerId(runnerId);
+
+        Request response = null;
+        int debugCounter = 0;
+        while (response == null){
+            logger.debug("Цикл авторизации={}",debugCounter++);
+           response = sendAndWait(request);
+           logger.debug("response={}",response);
+        }
+
+        if (response.requestType() == RequestType.USER_OK){
+            logger.debug("USER_OK passed");
+            logger.info(response.feedback());
+            return response.user();
+        }else return null;
+    }
+
     @Override
     public void connect() {
         try {
@@ -93,9 +138,8 @@ public class UdpClient extends Runner {
             Request request = ByteUtil.fromBytesTo(data, Request.class);
             logger.debug("получен реквест {}",request.requestType());
             if (request.requestType() != RequestType.PING) {
-                cachedMessages.addFirst(request);
                 logger.info("Сообщение получено от сервера #{}", address);
-                logger.debug(request);
+                logger.debug("request={}",request);
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
@@ -123,15 +167,13 @@ public class UdpClient extends Runner {
                 return;
             }
         } else {
-            connect();
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
-                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
-                Thread.sleep(100);
+//                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
 
                 if (br.ready()) {
                     String input = br.readLine();
@@ -143,16 +185,24 @@ public class UdpClient extends Runner {
                         }
 
                         if (input.trim().isEmpty()) {
+                            logger.debug("пустой инпут");
                             continue;
                         }
                         //showing what command was
                         logger.info(input);
                     }
 
+                    Thread.sleep(100);
+
                     //sending
                     Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && CHANNEL != null && request != null) {
-                        sendAndWait(request.setRunnerId(runnerId));
+                        Request response = null;
+                        while (response == null){
+                            response = sendAndWait(request.setRunnerId(runnerId));
+                        }
+                        cachedMessages.addFirst(response);
+
                     }
                     if (!isScript && isRunning) {
                         System.out.print("$"+this.getUser()+": ");

@@ -59,8 +59,8 @@ public class AddCommand extends Command implements Serializable {
             }
 
 
-            ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
-            newOrganization = organizationWithFeedback.organization();
+            ObjWithFeedback<Organization> organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+            newOrganization = organizationWithFeedback.object();
             String feedback = organizationWithFeedback
                     .feedback()
                     .stream()
