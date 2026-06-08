@@ -65,6 +65,8 @@ public class UserDao implements Dao<User>{
                 if (resultSet.next()){
                     userID = resultSet.getInt(1);
                     connection.commit();
+                    CONTAINER.add(user.setId((long) userID));
+                    log.debug("юзер после добавления={}",user);
                     return userID;
                 }else {
                     connection.rollback();

@@ -39,7 +39,6 @@ public class UdpClient extends Runner {
         client.connect();
 
         User user1 = client.authorize();
-        if (user1 == null )throw new RuntimeException("user1 is null");
         client.setUser(user1);
 
         client.run();

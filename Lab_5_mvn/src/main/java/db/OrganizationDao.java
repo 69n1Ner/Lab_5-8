@@ -148,17 +148,18 @@ public class OrganizationDao implements Dao<Organization>{
             try (ResultSet resultSet = statement.getGeneratedKeys()){
                 if (resultSet.next()){
                     organizationID = resultSet.getInt(1);
+                    connection.commit();
+                    organization.setId((long) organizationID);
+                    organization.setUser(UserDao.getInstance().findById(userId));
+                    log.debug("организация после добавления, org={}",organization);
+                    CONTAINER.add(organization);
+                    return organizationID;
+
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
                 }
             }
-            connection.commit();
-            organization.setId((long) organizationID);
-            organization.setUser(UserDao.getInstance().findById(userId));
-            log.debug("организация после добавления, org={}",organization);
-            CONTAINER.add(organization);
-            return organizationID;
 
         }catch (SQLException e){
             if (e instanceof PSQLException) {

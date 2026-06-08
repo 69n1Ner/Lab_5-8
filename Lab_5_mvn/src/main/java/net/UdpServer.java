@@ -229,6 +229,9 @@ public class UdpServer extends Runner {
                                 if (id > 0){
                                     feedback = "Вы успешно зарегистрировались";
                                     request1 = request1.setRequestType(RequestType.USER_OK).setUser(userDao.findById(id));
+                                } else {
+                                    throw new RuntimeException();
+//                                    feedback = "Произошла ошибка при добавлении пользователя";
                                 }
                             }
                             request1 = request1.setFeedback(feedback);
