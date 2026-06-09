@@ -171,6 +171,10 @@ public class UdpClient extends Runner {
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
+                if (!isScript && initialRunShowUser) {
+                    showUser();
+                    initialRunShowUser = false;
+                }
                 ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
 
                 if (br.ready()) {
@@ -227,8 +231,7 @@ public class UdpClient extends Runner {
                     if (request1 != null && request1.requestType() != RequestType.PING) {
                         logger.info(request1.feedback());
                         if (!isScript && isRunning) {
-                            System.out.print("$"+this.getUser()+": ");
-                            System.out.flush();
+                            showUser();
                         }
                     }
 
@@ -240,8 +243,7 @@ public class UdpClient extends Runner {
                      IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
-                    System.out.print("$"+this.getUser()+": ");
-                    System.out.flush();
+                    showUser();
                 }
 
             }

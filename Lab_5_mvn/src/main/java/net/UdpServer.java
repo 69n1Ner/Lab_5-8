@@ -20,7 +20,6 @@ import sorts.SortById;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -167,9 +166,9 @@ public class UdpServer extends Runner {
 
 
                 Thread.sleep(50);
-                if (!isScript && initialShowUser) {
-                    System.out.print("$"+this.getUser()+": ");
-                    initialShowUser = false;
+                if (!isScript && initialOnlineShowUser) {
+                    showUser();
+                    initialOnlineShowUser = false;
                 }
                 if (br.ready()) {
                     String input = br.readLine();
@@ -189,13 +188,13 @@ public class UdpServer extends Runner {
 //                    logger.debug("---------1----");
 
                     //sending
-                    logger.debug("user={}", user);
+//                    logger.debug("user={}", user);
                     Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
                         sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
-                        System.out.print("$"+this.getUser()+": ");
+                        showUser();
                         System.out.flush();
                     }
                     continue;
@@ -251,12 +250,12 @@ public class UdpServer extends Runner {
 //                                    throw new RuntimeException();
                                         feedback.append("Произошла ошибка при добавлении пользователя");
                                         for (String s : l) {
-                                            feedback.append("\n").append(s).append("\n");
+                                            feedback.append("\n").append(s);
                                         }
                                     }
                                 }
                                 request1 = request1.setFeedback(feedback.toString());
-//                            logger.debug("после фидбека request1={}",request1);
+                            logger.debug("после фидбека request1={}",request1);
 
                                 /// command response
                             } else if (request.requestType() == RequestType.COMMAND) {
@@ -276,8 +275,7 @@ public class UdpServer extends Runner {
                                 request1 = request1.setRunnerId(request.runnerId());
                                 sendAndWait(request1);
                                 if (!isScript && isRunning) {
-                                    System.out.print("$" + this.getUser() + ": ");
-                                    System.out.flush();
+                                    showUser();
                                 }
                             }
                         } else {
@@ -297,8 +295,7 @@ public class UdpServer extends Runner {
             } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
-                    System.out.print("$" + this.getUser() + ": ");
-                    System.out.flush();
+                    showUser();
                 }
             }
         }

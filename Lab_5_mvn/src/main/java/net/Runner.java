@@ -28,7 +28,8 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected boolean isUnreachable = false;
     private boolean silentConnectionError = false;
     private boolean silentConnection = false;
-    protected boolean initialShowUser = true;
+    protected boolean initialOnlineShowUser = true;
+    protected boolean initialRunShowUser = true;
     protected final boolean isLab7;
     protected User user;
 
@@ -69,7 +70,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 
     public Request sendAndWait(Request request) {
         long start = System.currentTimeMillis();
-        long timeout = 3000;
+        long timeout = 1000;
         log.debug("посланный request={}",request);
         sendMessage(request);
 
@@ -104,7 +105,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             try {
                 ///Может возникать ошибка, если время сна здесь будет ниже, чем время сна у сервера
                 ///Важно ставить время сна больше (или столько же) чем у сервера
-                Thread.sleep(20);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -129,37 +130,39 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             runner = "клиенту #" + request.user();
         } else runner = "серверу";
 
-        if (request.requestType() == RequestType.PING) log.debug("Отправлен пинг");
+//        if (request.requestType() == RequestType.PING) log.debug("Отправлен пинг");
 
         if (request.requestType() != RequestType.PING) {
             log.info("Сообщение отправлено {}", runner);
-            log.debug("command={}",request.command());
         }
     }
 
     private void serverOnline(){
-        if (initialShowUser) {
+        if (initialOnlineShowUser) {
             if (isRunning) {
-                System.out.print("$"+this.getUser()+": ");
-                System.out.flush();
+                showUser();
             }
-            initialShowUser = false;
+            initialOnlineShowUser = false;
             return;
         }else {
+            log.debug("пробел2");
             System.out.println();
         }
         log.info("сервер в сети");
         if (isRunning) {
-            System.out.print(this.getUser()+": ");
-            System.out.flush();
+            showUser();
         }
+    }
 
+    protected void showUser(){
+        System.out.print("$"+this.getUser()+": ");
     }
 
     private void runnerNotConnected(){
-        if (initialShowUser) {
-            initialShowUser = false;
+        if (initialOnlineShowUser) {
+            initialOnlineShowUser = false;
         }else {
+            log.debug("пробел");
             System.out.println();
         }
         String runner;
@@ -168,8 +171,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         } else runner = "сервер";
         log.info("{} не подключен к сети", runner);
         if (isRunning) {
-            System.out.print("$"+this.getUser()+": ");
-            System.out.flush();
+            showUser();
         }
     }
 
