@@ -4,6 +4,7 @@ import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import exceptions.NoSuchEntityException;
 import io.InputManager;
+import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
 import db.OrganizationDao;
@@ -57,10 +58,19 @@ public class RemoveLowerCommand extends Command implements Serializable {
                 container.forEach(organization -> {
                     if (organization.compareTo(newOrganization) < 0){
                         try {
-                            organizationDao.delete(organization.getId(), user);
-                            logger.info("Организация с ID {} удалена",organization.getId());
-                            sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
-                            isOneDeleted.set(true);
+                            ObjWithFeedback<Boolean> b = organizationDao.delete(organization.getId(), user,true);
+                            boolean isDeleted = b.object();
+                            List<String> lb = b.feedback();
+                            if (!lb.isEmpty()){
+                                for (String s:lb){
+                                    sb.append(s);
+                                }
+                            }
+                            if (isDeleted) {
+                                logger.info("Организация с ID {} удалена", organization.getId());
+                                sb.append("Организация с ID ").append(organization.getId()).append(" удалена\n");
+                                isOneDeleted.set(true);
+                            }
                         } catch (NoSuchEntityException ignored) {
                         }
                     }

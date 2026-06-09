@@ -404,7 +404,7 @@ public class InputManager {
             organizationWithFeedback.feedback().add("Значение количества сотрудников было установлено на: 0");
         }
 
-        if (organization.getName().isEmpty()) {
+        if (organization.getName() == null || organization.getName().isEmpty()) {
             String name = "Organization#"+String.valueOf(abs(organization.hashCode())).substring(6);
             organization.setName(name);
             organizationWithFeedback.feedback().add("Значение названия организации было установлено на: "+ name);

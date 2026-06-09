@@ -19,6 +19,7 @@ public abstract class Command implements Executable,Describable,GetLoggerable, S
     private final ArgumentType argumentType;
     private boolean isScript;
     private boolean isRequest = false;
+    protected static final String delimiter = "------------------------------------------------";
 
     protected Command(String commandName,Invoker invoker, ArgumentType argumentType){
         this.commandName = commandName;

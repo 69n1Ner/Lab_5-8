@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 public class ShowCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(ShowCommand.class);
-    private static final String delimiter = "------------------------------------------------";
 
     public ShowCommand(String name, Invoker invoker){
         super(name,invoker,ArgumentType.NO_ARGUMENTS);

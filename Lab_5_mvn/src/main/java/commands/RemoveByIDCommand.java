@@ -2,6 +2,7 @@ package commands;
 
 import exceptions.InvalidInput;
 import exceptions.NoSuchEntityException;
+import io.ObjWithFeedback;
 import io.Validator;
 import db.OrganizationDao;
 import main.Invoker;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import security.User;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class RemoveByIDCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(RemoveByIDCommand.class);
@@ -34,7 +36,17 @@ public class RemoveByIDCommand extends Command implements Serializable {
             Long ID = Long.parseLong(getArgument());
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            boolean isDeleted = organizationDao.delete(ID, user);
+
+            ObjWithFeedback<Boolean> b = organizationDao.delete(ID, user);
+            StringBuilder feedback = new StringBuilder();
+            boolean isDeleted = b.object();
+            List<String> lb = b.feedback();
+            if (!lb.isEmpty()){
+                for (String s:lb){
+                    feedback.append(s);
+                }
+                return createRequest(feedback.toString());
+            }
 
             String text;
             if (isDeleted){

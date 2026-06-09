@@ -17,6 +17,7 @@ import security.User;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FilterGreaterThanPostalAddress extends Command implements Serializable {
@@ -49,16 +50,22 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
 
                 //todo mb add if errors
                 InputManager.generateAddressFields(address);
-                String s = container.stream()
+                        List<String> container1 = container.stream()
                         .filter(o -> o.getPostalAddress().compareTo(address) >= 1)
-                        .map(Organization::toString).collect(Collectors.joining("\n"));
-                if (s.isEmpty()) {
+                        .map(Organization::toString).toList();
+                        Optional<String> optional = container1.stream().findFirst();
+                String s = null;
+                if (optional.isPresent()){
+                    s = container1.stream().collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
+                }
+                if (s == null || s.isEmpty()) {
                     String t = "Нет организаций, с большим адресом";
                     r= t;
                     logger.warn(t);
+                }else {
+                    logger.info(s);
+                    r = s;
                 }
-                logger.info(s);
-                r= s;
             }else {
                 EmptyContainerException ec = new EmptyContainerException();
                 logger.warn(ec);

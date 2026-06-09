@@ -189,14 +189,8 @@ public class Validator {
                 if (xmlArgument != null) {
                     boolean ERR = xmlArgument.equals("ERR");
                     logger.debug("xml-строка={}",xmlArgument);
-                    boolean isId = xmlArgument.matches(".*<id>[^<]+</id>.*");
-                    boolean isDate = xmlArgument.matches(".*<creation_date>[^<]+</creation_date>.*");
                     if (!ERR) {
-                        if (isDate) {
-                            if (isId) {
                                 return;
-                            }throw new InvalidInput("XML не имеет ID");
-                        }throw new InvalidInput("XML не имеет даты создания");
                     } throw new InvalidInput("Неверная XML строка");
                 }else {
                     throw new InvalidInput("Команда должна иметь XML строку");

@@ -1,7 +1,7 @@
 package db;
 
 import exceptions.NoSuchEntityException;
-import main.Container;
+import io.ObjWithFeedback;
 import main.UserContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,10 +47,12 @@ public class UserDao implements Dao<User>{
     private static final Logger log = LogManager.getLogger(UserDao.class);
 
     @Override
-    public int save(User user, User user1) {
+    public ObjWithFeedback<Integer> save(User user, User user1) {
+        ObjWithFeedback<Integer> ans = new ObjWithFeedback<>(-1,new ArrayList<>());
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(SAVE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
+
 
             String userName = user.getUserName();
             String password = user.getPassword();
@@ -66,7 +68,7 @@ public class UserDao implements Dao<User>{
                     userID = resultSet.getInt(1);
                     connection.commit();
                     CONTAINER.add(user.setId((long) userID));
-                    return userID;
+                    return ans.setObject(userID);
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у пользователя");
@@ -76,19 +78,31 @@ public class UserDao implements Dao<User>{
 
         } catch (SQLException e) {
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                ans = ans.addFeedback(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return 0;
+            return ans;
         }
     }
 
     @Override
-    public boolean update(User user, Long id, User user1) throws NoSuchEntityException {
+    public ObjWithFeedback<Boolean> update(User user, Long id, User user1) throws NoSuchEntityException {
+        ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(UPDATE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
 
-            user = findById(id).update(user);
+            ObjWithFeedback<User> u = findById(id);
+            User user2 = u.object();
+            List<String> f = u.feedback();
+            if (!f.isEmpty()){
+                for (String s:f){
+                    feedback.append(s);
+                }
+                return ans.addFeedback(feedback.toString());
+            }else user = user2.update(user);
+
+
 
             long userId = user.getId();
             String userName = user.getUserName();
@@ -105,7 +119,7 @@ public class UserDao implements Dao<User>{
                     userId = resultSet.getInt(1);
                     connection.commit();
                     CONTAINER.update(user,id);
-                    return userId > 0;
+                    return ans.setObject(userId > 0);
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
@@ -115,9 +129,9 @@ public class UserDao implements Dao<User>{
 
         } catch (SQLException e) {
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return false;
+            return ans.addFeedback(feedback.toString());
         }
     }
 
@@ -127,8 +141,14 @@ public class UserDao implements Dao<User>{
     }
 
     @Override
-    public User findById(Long id) throws NoSuchEntityException {
-        return CONTAINER.getById(id);
+    public ObjWithFeedback<User> findById(Long id) throws NoSuchEntityException {
+        ObjWithFeedback<User> ans = new ObjWithFeedback<>(null,new ArrayList<>());
+        try {
+            User user = CONTAINER.getById(id);
+            return ans.setObject(user);
+        } catch (NoSuchEntityException e) {
+            return ans.addFeedback(e.getMessage());
+        }
     }
 
     public User findByUserName(String userName) throws NoSuchEntityException {
@@ -136,7 +156,9 @@ public class UserDao implements Dao<User>{
     }
 
     @Override
-    public boolean delete(Long id, User user) throws NoSuchEntityException {
+    public ObjWithFeedback<Boolean> delete(Long id, User user) throws NoSuchEntityException {
+        ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(DELETE_USER_SQL)) {
             connection.setAutoCommit(false);
@@ -148,17 +170,17 @@ public class UserDao implements Dao<User>{
             if (deletedRows > 0) {
                 connection.commit();
                 CONTAINER.removeById(id);
-                return true;
+                return ans.setObject(true);
             } else {
                 connection.rollback();
-                return false;
+                return ans;
             }
 
         } catch (SQLException e) {
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return false;
+            return ans.addFeedback(feedback.toString());
         }
     }
 

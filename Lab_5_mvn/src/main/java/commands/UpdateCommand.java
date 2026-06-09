@@ -2,6 +2,7 @@ package commands;
 
 import exceptions.*;
 import io.InputManager;
+import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
 import db.OrganizationDao;
@@ -59,7 +60,17 @@ public class UpdateCommand extends Command  implements Serializable {
             if (!container.isEmpty()) {
                 Long ID = Long.parseLong(getArgument());
 
-                boolean isOk = organizationDao.update(parametrizedOrg, ID, user);
+                ObjWithFeedback<Boolean> b = organizationDao.update(parametrizedOrg, ID, user);
+                StringBuilder feedback = new StringBuilder();
+                boolean isOk = b.object();
+                List<String> lb = b.feedback();
+                if (!lb.isEmpty()){
+                    for (String s:lb){
+                        feedback.append(s);
+                    }
+                    return createRequest(feedback.toString());
+                }
+
                 String t;
 
                 if (isOk) {

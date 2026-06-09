@@ -16,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import security.User;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class AddCommand extends Command implements Serializable {
@@ -57,17 +58,28 @@ public class AddCommand extends Command implements Serializable {
                 return createRequest(command);
             }
 
-
+            StringBuilder feedback = new StringBuilder();
             ObjWithFeedback<Organization> organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
             newOrganization = organizationWithFeedback.object();
-            String feedback = organizationWithFeedback
+            feedback.append(organizationWithFeedback
                     .feedback()
                     .stream()
-                    .collect(Collectors.joining("\n","","\n"));
+                    .collect(Collectors.joining("\n","","\n")));
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
 
-            int id = organizationDao.save(newOrganization, user);
+            ObjWithFeedback<Integer> oId = organizationDao.save(newOrganization, user);
+            int id = oId.object();
+            logger.debug("id={}",id);
+            List<String> loId = oId.feedback();
+            if (!loId.isEmpty()){
+                logger.debug("loId={}",loId);
+                for (String s:loId){
+                    feedback.append(s);
+                }
+                logger.warn(feedback);
+                return createRequest(feedback.toString());
+            }
 
             String text = "ID созданной организации: " + id;
             logger.info(text);

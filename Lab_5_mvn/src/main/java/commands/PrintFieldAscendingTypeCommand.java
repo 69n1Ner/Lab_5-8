@@ -43,7 +43,7 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
                 String s = sortedOrgs.stream()
                                 .sorted(new SortByType())
                                 .map(Organization::toString)
-                                .collect(Collectors.joining("\n"));
+                                .collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
                 logger.info(s);
                 r= s;
 

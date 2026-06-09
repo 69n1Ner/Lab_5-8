@@ -8,6 +8,7 @@ import db.UserDao;
 import exceptions.*;
 import io.ByteUtil;
 import io.InputManager;
+import io.ObjWithFeedback;
 import io.XmlUtil;
 import main.Invoker;
 import main.OrganizationContainer;
@@ -21,6 +22,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -210,7 +212,7 @@ public class UdpServer extends Runner {
                             boolean isRegistration = request.isScript();
                             UserDao userDao = UserDao.getInstance();
                             User user1 = request.user();
-                            String feedback = "";
+                            StringBuilder feedback = new StringBuilder();
                             request1 = Request.build().setRequestType(RequestType.USER_WRONG);
 
                             if (!isRegistration) {
@@ -220,26 +222,39 @@ public class UdpServer extends Runner {
                                         .filter(u -> u.getUserName().equals(user1.getUserName()))
                                         .findFirst();
                                 if (optionalUser.isEmpty()) {
-                                    feedback = "Такого пользователя не существует";
+                                    feedback.append("Такого пользователя не существует");
                                 } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
-                                    feedback = "Вы успешно авторизовались";
+                                    feedback.append("Вы успешно авторизовались");
                                     request1 = request1.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
                                     logger.debug("request1={}",request1);
                                 } else {
-                                    feedback = "Неверный пароль";
+                                    feedback.append("Неверный пароль");
                                 }
 
                             } else {
-                                long id = userDao.save(user1, null);
-                                if (id > 0){
-                                    feedback = "Вы успешно зарегистрировались";
-                                    request1 = request1.setRequestType(RequestType.USER_OK).setUser(userDao.findById(id));
+                                ObjWithFeedback<Integer> o = userDao.save(user1, null);
+                                long id = o.object();
+                                List<String> l = o.feedback();
+
+                                if (id > 0 && l.isEmpty()){
+                                    feedback.append("Вы успешно зарегистрировались");
+                                    ObjWithFeedback<User> u = userDao.findById(id);
+                                    User user2 = u.object();
+                                    List<String> lu = u.feedback();
+                                    if (!lu.isEmpty()){
+                                        for (String s1:lu){
+                                            feedback.append(s1);
+                                        }
+                                    }else request1 = request1.setRequestType(RequestType.USER_OK).setUser(user2);
                                 } else {
 //                                    throw new RuntimeException();
-                                    feedback = "Произошла ошибка при добавлении пользователя";
+                                    feedback.append("Произошла ошибка при добавлении пользователя");
+                                    for (String s:l){
+                                        feedback.append("\n").append(s).append("\n");
+                                    }
                                 }
                             }
-                            request1 = request1.setFeedback(feedback);
+                            request1 = request1.setFeedback(feedback.toString());
 //                            logger.debug("после фидбека request1={}",request1);
 
                         /// command response

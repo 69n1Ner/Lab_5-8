@@ -1,7 +1,7 @@
 package db;
 
 import exceptions.NoSuchEntityException;
-import main.Container;
+import io.ObjWithFeedback;
 import main.OrganizationContainer;
 import net.Runner;
 import org.apache.logging.log4j.LogManager;
@@ -12,11 +12,9 @@ import security.User;
 import sorts.SortById;
 
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class OrganizationDao implements Dao<Organization>{
     private static final OrganizationContainer CONTAINER = new OrganizationContainer(new SortById<>());
@@ -91,7 +89,9 @@ public class OrganizationDao implements Dao<Organization>{
     private static final Logger log = LogManager.getLogger(OrganizationDao.class);
 
     @Override
-    public int save(Organization organization, User user) {
+    public ObjWithFeedback<Integer> save(Organization organization, User user) {
+        ObjWithFeedback<Integer> ans = new ObjWithFeedback<>(-1,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         try (Connection connection = ConnectionManager.open();
                 PreparedStatement statement = connection.prepareStatement(SAVE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
@@ -103,8 +103,9 @@ public class OrganizationDao implements Dao<Organization>{
                 userDao.findById(user.getId());
                 userId = user.getId();
             } catch (NoSuchEntityException | NullPointerException e) {
-                log.info("Такого пользователя не нашлось, организация не будет добавлена");
-                return -1;
+                log.debug("не нашел юзера");
+                feedback.append("Такого пользователя не нашлось, организация не будет добавлена");
+                return ans.addFeedback(feedback.toString());
             }
 
             //adding other attributes
@@ -150,42 +151,76 @@ public class OrganizationDao implements Dao<Organization>{
                     organizationID = resultSet.getInt(1);
                     connection.commit();
                     organization.setId((long) organizationID);
-                    organization.setUser(UserDao.getInstance().findById(userId));
-                    log.debug("организация после добавления, org={}",organization);
+
+                    ObjWithFeedback<User> u = UserDao.getInstance().findById(userId);
+                    User user1 = u.object();
+                    List<String> lu = u.feedback();
+                    if (!lu.isEmpty()){
+                        log.debug("lu={}",lu);
+                        for (String s:lu){
+                            feedback.append(s);
+                        }
+                        return ans.addFeedback(feedback.toString());
+                    }
+                    organization.setUser(user1);
+
+//                    log.debug("организация после добавления, org={}",organization);
                     CONTAINER.add(organization);
-                    return organizationID;
+                    log.debug("organizationID={}",organizationID);
+                    return ans.setObject(organizationID);
 
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
                 }
+            } catch (NoSuchEntityException e) {
+                throw new RuntimeException(e);
             }
 
         }catch (SQLException e){
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return 0;
-        } catch (NoSuchEntityException e) {
-            throw new RuntimeException(e);
+            return ans.addFeedback(feedback.toString());
+//        } catch (NoSuchEntityException e) {
+//            throw new RuntimeException(e);
         }
     }
 
 
     @Override
-    public boolean update(Organization organization, Long ID, User user) throws NoSuchEntityException {
-        organization = findById(ID).update(organization);
+    public ObjWithFeedback<Boolean> update(Organization organization, Long ID, User user) throws NoSuchEntityException {
+        ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
 
-        log.debug("до проверки на корректного юзера");
-        if (!isCorrectUser(user,false, organization)) return false;
-        log.debug("после проверки на корректного юзера");
+        ObjWithFeedback<Organization> o = findById(ID);
+        Organization organization1 = o.object();
+        List<String> lo = o.feedback();
+        if (!lo.isEmpty()){
+            for (String s: lo){
+                feedback.append(s);
+            }
+            return ans.addFeedback(feedback.toString());
+        }
+        organization = organization1;
+
+//        log.debug("до проверки на корректного юзера");
+        ObjWithFeedback<Boolean> b = isCorrectUser(user,false,organization);
+        boolean isCorrectUser = b.object();
+        List<String> lb = b.feedback();
+        if (!lb.isEmpty()){
+            for (String s:lb){
+                feedback.append(s);
+            }
+            return ans.addFeedback(feedback.toString());
+        }
+
+        if (!isCorrectUser) return ans;
+//        log.debug("после проверки на корректного юзера");
 
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(UPDATE_ORGANIZATION_SQL,Statement.RETURN_GENERATED_KEYS)){
             connection.setAutoCommit(false);
-
-
-
 
             LocalDate localDate = organization.getCreationDate();
             String name = organization.getName();
@@ -193,8 +228,17 @@ public class OrganizationDao implements Dao<Organization>{
             int annualTurnover = organization.getAnnualTurnover();
             int typeID = getType(connection,organization.getType().getName());
 
-            long userId = getUserID(connection,user.getUserName(),user.getPassword());
-            log.debug("после получения user_id={}",userId);
+            ObjWithFeedback<Long> uId = getUserID(connection,user.getUserName(),user.getPassword());
+            long userId = uId.object();
+            List<String> luId = uId.feedback();
+            if (!luId.isEmpty()){
+                for (String s:luId){
+                    feedback.append(s);
+                }
+                return ans.addFeedback(feedback.toString());
+            }
+
+//            log.debug("после получения user_id={}",userId);
 
             Address address = organization.getPostalAddress();
             String zipCode = address.getZipCode();
@@ -224,18 +268,18 @@ public class OrganizationDao implements Dao<Organization>{
             statement.setString(12,zipCode);
             statement.setLong(13,userId);
             statement.setLong(14,ID);
-            log.debug("statement={}",statement);
+//            log.debug("statement={}",statement);
 
             statement.executeUpdate();
-            log.debug("после выполнения");
+//            log.debug("после выполнения");
 
             try (ResultSet resultSet = statement.getGeneratedKeys()){
                 if (resultSet.next()){
                     organizationID = resultSet.getInt("id");
-                    log.debug("organizationID={}",organizationID);
+//                    log.debug("organizationID={}",organizationID);
                     connection.commit();
                     CONTAINER.update(organization,ID);
-                    return organizationID > 0;
+                    return ans.setObject(organizationID > 0);
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
@@ -244,36 +288,59 @@ public class OrganizationDao implements Dao<Organization>{
 
         }catch (SQLException e){
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return false;
+            return ans.addFeedback(feedback.toString());
         }
     }
 
-    private static boolean isCorrectUser(User user, boolean isClearCommand, Organization organization) {
+    private static ObjWithFeedback<Boolean> isCorrectUser(User user, boolean isClearCommand, Organization organization) {
+        ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         try {
-            User user1 = UserDao.getInstance().findById(organization.getUser().getId());
-            log.debug("user1={}",user1);
-            log.debug("user={}",user);
+            ObjWithFeedback<User> u = UserDao.getInstance().findById(organization.getUser().getId());
+            User user1 = u.object();
+            List<String> lu = u.feedback();
+            if(!lu.isEmpty()){
+                for (String s:lu){
+                    feedback.append(s);
+                }
+                return ans.addFeedback(feedback.toString());
+            }
+
+//            log.debug("user1={}",user1);
+//            log.debug("user={}",user);
 
             if (!user1.equals(user)){
                 //todo добавить Optional для вывода сообщения или что то другое
-                if (!isClearCommand) log.warn("Вы не можете редактировать эту организацию");
-                return false;
+                if (!isClearCommand) feedback.append("Вы не можете редактировать эту организацию");
+                return ans.addFeedback(feedback.toString());
             }
 
         } catch (NoSuchEntityException e) {
-            log.debug(NoSuchEntityException.getMsg());
-            return false;
+//            log.debug(NoSuchEntityException.getMsg());
+            return ans.addFeedback(e.getMessage());
         }
-        return true;
+        return ans.setObject(true);
     }
 
-    private boolean delete(Long id, User user,boolean isClearCommand) throws NoSuchEntityException {
+    public ObjWithFeedback<Boolean> delete(Long id, User user, boolean isClearCommand) throws NoSuchEntityException {
+        ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
+//        log.debug("до delete проверки на корректного юзера (org id = {})", id);
+        ObjWithFeedback<Boolean> b = isCorrectUser(user,isClearCommand, CONTAINER.getById(id));
 
-        log.debug("до delete проверки на корректного юзера (org id = {})", id);
-        if (!isCorrectUser(user,isClearCommand, CONTAINER.getById(id))) return false;
-        log.debug("после delete проверки на корректного юзера");
+        boolean isCorrectUser = b.object();
+        List<String> lb = b.feedback();
+        if(!lb.isEmpty()){
+            for (String s:lb){
+                feedback.append(s);
+            }
+            return ans.addFeedback(feedback.toString());
+        }
+
+        if (!isCorrectUser) return ans;
+//        log.debug("после delete проверки на корректного юзера");
 
         try (Connection connection = ConnectionManager.open();
              PreparedStatement statement = connection.prepareStatement(DELETE_ORGANIZATION_SQL)) {
@@ -286,34 +353,45 @@ public class OrganizationDao implements Dao<Organization>{
             if (deletedRows > 0) {
                 connection.commit();
                 CONTAINER.removeById(id);
-                return true;
+                return ans.setObject(true);
             } else {
                 connection.rollback();
-                return false;
+                return ans;
             }
 
         } catch (SQLException e) {
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return false;
+            return ans.addFeedback(feedback.toString());
         }
 
     }
 
     @Override
-    public boolean delete(Long id, User user) throws NoSuchEntityException {
+    public ObjWithFeedback<Boolean> delete(Long id, User user) throws NoSuchEntityException {
         return delete(id,user,false);
     }
 
-    public int clear(User user){
+    public ObjWithFeedback<Integer> clear(User user){
+        ObjWithFeedback<Integer> ans = new ObjWithFeedback<>(-1,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         List<Organization> list = findAll();
         int counter = 0;
         for (Organization organization : list){
             long id = organization.getId();
             boolean isDeleted;
             try {
-                isDeleted = delete(id, user,true);
+                ObjWithFeedback<Boolean> b = delete(id, user,true);
+                isDeleted = b.object();
+                List<String> lb = b.feedback();
+                if (!lb.isEmpty()){
+                    log.debug("lb={}",lb);
+                    for (String s:lb){
+                        feedback.append(s);
+                    }
+                    return ans.addFeedback(feedback.toString());
+                }
 
             if (isDeleted){
                counter++;
@@ -322,7 +400,7 @@ public class OrganizationDao implements Dao<Organization>{
             } catch (NoSuchEntityException e) {
             }
         }
-        return counter;
+        return ans.setObject(counter);
     }
 
     @Override
@@ -331,8 +409,13 @@ public class OrganizationDao implements Dao<Organization>{
     }
 
     @Override
-    public Organization findById(Long id) throws NoSuchEntityException {
-        return CONTAINER.getById(id);
+    public ObjWithFeedback<Organization> findById(Long id) throws NoSuchEntityException {
+        ObjWithFeedback<Organization> ans = new ObjWithFeedback<>(null,new ArrayList<>());
+        try {
+            return ans.setObject(CONTAINER.getById(id));
+        } catch (NoSuchEntityException e) {
+            return ans.addFeedback(e.getMessage());
+        }
     }
 
     public static Class<?> getContainerCollectionName(){
@@ -380,7 +463,9 @@ public class OrganizationDao implements Dao<Organization>{
         }
     }
 
-    private static long getUserID(Connection connection, String userName, String password){
+    private static ObjWithFeedback<Long> getUserID(Connection connection, String userName, String password){
+        ObjWithFeedback<Long> ans = new ObjWithFeedback<>(-1L,new ArrayList<>());
+        StringBuilder feedback = new StringBuilder();
         //language=POSTGRES-SQL
         String sql = """
                 select id from users
@@ -397,16 +482,16 @@ public class OrganizationDao implements Dao<Organization>{
             try (ResultSet resultSet = psUser.getResultSet()) {
                 if (resultSet.next()) {
                     id = resultSet.getInt("id");
-                    return id;
+                    return ans.setObject(id);
                 } else {
                     throw new SQLException("Не удалось вытащить ID у пользователя");
                 }
             }
         } catch (SQLException e) {
             if (e instanceof PSQLException) {
-                log.warn(DbErrorTranslator.translateSqlException((PSQLException) e));
+                feedback.append(DbErrorTranslator.translateSqlException((PSQLException) e));
             }
-            return -1;
+            return ans.addFeedback(feedback.toString());
         }
 
     }
@@ -429,7 +514,9 @@ public class OrganizationDao implements Dao<Organization>{
 
                     UserDao userDao = UserDao.getInstance();
                     try {
-                        User user = userDao.findById(resultSet.getLong("user_id"));
+                        ObjWithFeedback<User> u = userDao.findById(resultSet.getLong("user_id"));
+                        User user = u.object();
+
                         organization.setUser(user);
                     } catch (NoSuchEntityException e) {
                         throw new RuntimeException(e);

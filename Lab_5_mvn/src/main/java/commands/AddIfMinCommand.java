@@ -57,16 +57,26 @@ public class AddIfMinCommand extends Command implements Serializable {
                         .filter(o -> o.compareTo(newOrganization) <= 0)
                         .toList();
 
-
                 if (container.isEmpty()){
                     ObjWithFeedback<Organization> organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
                     Organization newOrganization1 = organizationWithFeedback.object();
 
-                    String feedback = organizationWithFeedback
+                    StringBuilder feedback = new StringBuilder();
+                    feedback.append(organizationWithFeedback
                             .feedback()
                             .stream()
-                            .collect(Collectors.joining("\n","","\n"));
-                    int id = organizationDao.save(newOrganization1, user);
+                            .collect(Collectors.joining("\n","","\n")));
+
+                    ObjWithFeedback<Integer> oId = organizationDao.save(newOrganization1, user);
+                    int id = oId.object();
+                    List<String> loId = oId.feedback();
+                    if (!loId.isEmpty()){
+                        for (String s:loId){
+                            feedback.append(s);
+                        }
+                        logger.warn(feedback);
+                        return createRequest(feedback.toString());
+                    }
 
                     String text = "ID созданной организации: " + id;
                     logger.info(text);
