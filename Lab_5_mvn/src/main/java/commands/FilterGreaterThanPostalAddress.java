@@ -54,8 +54,8 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
                         .map(Organization::toString).collect(Collectors.joining("\n"));
                 if (s.isEmpty()) {
                     String t = "Нет организаций, с большим адресом";
-                    logger.warn(t);
                     r= t;
+                    logger.warn(t);
                 }
                 logger.info(s);
                 r= s;

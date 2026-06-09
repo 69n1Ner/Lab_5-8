@@ -33,7 +33,6 @@ public class ExecuteScriptCommand extends Command{
         }
     }
 
-    //TODO при посылке реквеста не должна посылаться команда, а сразу выполняться и посылать другие команды. Т.е. добавить флаг isScript и в этот execute
     @Override
     public Request execute(User user) {
         try {

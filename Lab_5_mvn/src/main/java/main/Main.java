@@ -79,7 +79,6 @@
 //
 //                // server mode
 //                } else if (client == null) {
-//                    //todo добавить проверку на requesttype
 //                    Request request = server.receiveMessage();
 //                    Command command = invoker.defineCommand(request.commandName() + " "+ request.argument() + " " + request.xmlArgument(), request.isScript());
 //                    System.out.println("Запрос от клиента: $>"+ command);

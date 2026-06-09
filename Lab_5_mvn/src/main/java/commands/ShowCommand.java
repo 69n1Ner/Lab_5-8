@@ -33,7 +33,6 @@ public class ShowCommand extends Command implements Serializable {
 
     @Override
     public Request execute(User user) {
-        //todo пофиксить вывод первой строки
         String r ="непредвиденная";
         try {
             Validator.isValidArgument(this);

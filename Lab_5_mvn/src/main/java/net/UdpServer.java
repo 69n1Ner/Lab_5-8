@@ -77,7 +77,7 @@ public class UdpServer extends Runner {
             SOCKET = new DatagramSocket(port);
             SOCKET.setSoTimeout(35);
             logger.info("Сервер подключился к сети");
-            //todo добавть селектор
+            //todo добавить селектор
         } catch (SocketException e) {
             String t = "Сервер не смог подключиться к сети по порту "+ port;
             logger.error(t,e);
@@ -129,7 +129,7 @@ public class UdpServer extends Runner {
         } catch (SocketTimeoutException | PortUnreachableException e) {
             return null;
         } catch (IOException | ClassNotFoundException e) {
-            logger.debug("recieveMsg{}", e,e);
+            logger.debug("receiveMsg{}", e,e);
             return null;
         }
     }
@@ -246,7 +246,6 @@ public class UdpServer extends Runner {
                         } else if (request.requestType() == RequestType.COMMAND) {
                             Command command = request.command();
                             logger.info(command);
-                            //todo можно добавить проверку на корректный реквест
 //                        logger.debug("---------2----");
 //                            logger.debug("{} \n-- req", request);
                             request1 = request.command().setInvokerFather(invoker).execute(request.user());

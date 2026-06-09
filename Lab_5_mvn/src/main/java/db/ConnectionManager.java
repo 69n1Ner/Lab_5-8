@@ -13,7 +13,6 @@ public class ConnectionManager {
         try {
             return DriverManager.getConnection(URL_KEY,USER_KEY,PASSWORD_KEY);
         } catch (SQLException e) {
-            //todo дописать свой exception
             throw new RuntimeException(e);
         }
     }
