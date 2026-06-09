@@ -202,10 +202,10 @@ public class UdpClient extends Runner {
                         cachedMessages.addFirst(response);
 
                     }
-                    if (!isScript && isRunning) {
-                        System.out.print("$"+this.getUser()+": ");
-                        System.out.flush();
-                    }
+//                    if (!isScript && isRunning) {
+//                        System.out.print("$"+this.getUser()+": ");
+//                        System.out.flush();
+//                    }
                 }
 
                 //receiving

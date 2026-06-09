@@ -1,6 +1,8 @@
 package main;
 
 import exceptions.NoSuchEntityException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
@@ -8,9 +10,11 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log;
 
 
 public abstract class Container<T extends IdGettable<T>> {
+    private static final Logger log = LogManager.getLogger(Container.class);
     protected final TreeSet<T> container;
     protected final LocalDate creationDate;
 
@@ -24,6 +28,8 @@ public abstract class Container<T extends IdGettable<T>> {
 
     public void update(T t,Long id) throws NoSuchEntityException {
         T t1 = getById(id);
+        log.debug("t1={}",t1);
+        log.debug("t={}",t);
         t1.update(t);
     }
 

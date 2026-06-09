@@ -292,11 +292,9 @@ public class UdpServer extends Runner {
             } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
-                    System.out.print("$"+this.getUser()+": ");
+                    System.out.print("$" + this.getUser() + ": ");
                     System.out.flush();
                 }
-            }catch (NullPointerException e){
-                logger.debug("{}", e,e);
             }
         }
     }

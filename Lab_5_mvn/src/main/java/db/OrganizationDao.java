@@ -166,7 +166,7 @@ public class OrganizationDao implements Dao<Organization>{
 
 //                    log.debug("организация после добавления, org={}",organization);
                     CONTAINER.add(organization);
-                    log.debug("organizationID={}",organizationID);
+//                    log.debug("organizationID={}",organizationID);
                     return ans.setObject(organizationID);
 
                 }else {
@@ -202,7 +202,7 @@ public class OrganizationDao implements Dao<Organization>{
             }
             return ans.addFeedback(feedback.toString());
         }
-        organization = organization1;
+        organization = organization1.update(organization);
 
 //        log.debug("до проверки на корректного юзера");
         ObjWithFeedback<Boolean> b = isCorrectUser(user,false,organization);
@@ -253,7 +253,7 @@ public class OrganizationDao implements Dao<Organization>{
             long coordinateX = coordinates.getX();
             Double coordinateY = coordinates.getY();
 
-            int organizationID;
+            int isUpdated;
             statement.setInt(1,annualTurnover);
             statement.setLong(2,coordinateX);
             statement.setDouble(3,coordinateY);
@@ -275,11 +275,11 @@ public class OrganizationDao implements Dao<Organization>{
 
             try (ResultSet resultSet = statement.getGeneratedKeys()){
                 if (resultSet.next()){
-                    organizationID = resultSet.getInt("id");
-//                    log.debug("organizationID={}",organizationID);
+                    isUpdated = resultSet.getInt("id");
+//                    log.debug("isUpdated={}",isUpdated);
                     connection.commit();
                     CONTAINER.update(organization,ID);
-                    return ans.setObject(organizationID > 0);
+                    return ans.setObject(isUpdated > 0);
                 }else {
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
