@@ -204,80 +204,85 @@ public class UdpServer extends Runner {
                 //receiving
                 if (isRunning && SOCKET != null && !SOCKET.isClosed()) {
                     Request request = receiveMessage();
-                    if (request != null && request.requestType() != RequestType.PING) {
-                        Request request1;
+                    if (request != null) {
+                        if (request.requestType() != RequestType.PING) {
+                            Request request1;
 
-                        /// authorization/registration user response
-                        if (request.requestType() == RequestType.USER){
-                            boolean isRegistration = request.isScript();
-                            UserDao userDao = UserDao.getInstance();
-                            User user1 = request.user();
-                            StringBuilder feedback = new StringBuilder();
-                            request1 = Request.build().setRequestType(RequestType.USER_WRONG);
+                            /// authorization/registration user response
+                            if (request.requestType() == RequestType.USER) {
+                                boolean isRegistration = request.isScript();
+                                UserDao userDao = UserDao.getInstance();
+                                User user1 = request.user();
+                                StringBuilder feedback = new StringBuilder();
+                                request1 = Request.build().setRequestType(RequestType.USER_WRONG);
 
-                            if (!isRegistration) {
-                                Optional<User> optionalUser = userDao
-                                        .findAll()
-                                        .stream()
-                                        .filter(u -> u.getUserName().equals(user1.getUserName()))
-                                        .findFirst();
-                                if (optionalUser.isEmpty()) {
-                                    feedback.append("Такого пользователя не существует");
-                                } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
-                                    feedback.append("Вы успешно авторизовались");
-                                    request1 = request1.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
-                                    logger.debug("request1={}",request1);
+                                if (!isRegistration) {
+                                    Optional<User> optionalUser = userDao
+                                            .findAll()
+                                            .stream()
+                                            .filter(u -> u.getUserName().equals(user1.getUserName()))
+                                            .findFirst();
+                                    if (optionalUser.isEmpty()) {
+                                        feedback.append("Такого пользователя не существует");
+                                    } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
+                                        feedback.append("Вы успешно авторизовались");
+                                        request1 = request1.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
+                                        logger.debug("request1={}", request1);
+                                    } else {
+                                        feedback.append("Неверный пароль");
+                                    }
+
                                 } else {
-                                    feedback.append("Неверный пароль");
-                                }
+                                    ObjWithFeedback<Integer> o = userDao.save(user1, null);
+                                    long id = o.object();
+                                    List<String> l = o.feedback();
 
-                            } else {
-                                ObjWithFeedback<Integer> o = userDao.save(user1, null);
-                                long id = o.object();
-                                List<String> l = o.feedback();
-
-                                if (id > 0 && l.isEmpty()){
-                                    feedback.append("Вы успешно зарегистрировались");
-                                    ObjWithFeedback<User> u = userDao.findById(id);
-                                    User user2 = u.object();
-                                    List<String> lu = u.feedback();
-                                    if (!lu.isEmpty()){
-                                        for (String s1:lu){
-                                            feedback.append(s1);
-                                        }
-                                    }else request1 = request1.setRequestType(RequestType.USER_OK).setUser(user2);
-                                } else {
+                                    if (id > 0 && l.isEmpty()) {
+                                        feedback.append("Вы успешно зарегистрировались");
+                                        ObjWithFeedback<User> u = userDao.findById(id);
+                                        User user2 = u.object();
+                                        List<String> lu = u.feedback();
+                                        if (!lu.isEmpty()) {
+                                            for (String s1 : lu) {
+                                                feedback.append(s1);
+                                            }
+                                        } else request1 = request1.setRequestType(RequestType.USER_OK).setUser(user2);
+                                    } else {
 //                                    throw new RuntimeException();
-                                    feedback.append("Произошла ошибка при добавлении пользователя");
-                                    for (String s:l){
-                                        feedback.append("\n").append(s).append("\n");
+                                        feedback.append("Произошла ошибка при добавлении пользователя");
+                                        for (String s : l) {
+                                            feedback.append("\n").append(s).append("\n");
+                                        }
                                     }
                                 }
-                            }
-                            request1 = request1.setFeedback(feedback.toString());
+                                request1 = request1.setFeedback(feedback.toString());
 //                            logger.debug("после фидбека request1={}",request1);
 
-                        /// command response
-                        } else if (request.requestType() == RequestType.COMMAND) {
-                            Command command = request.command();
-                            logger.info(command);
+                                /// command response
+                            } else if (request.requestType() == RequestType.COMMAND) {
+                                Command command = request.command();
+                                logger.info(command);
 //                        logger.debug("---------2----");
 //                            logger.debug("{} \n-- req", request);
-                            request1 = request.command().setInvokerFather(invoker).execute(request.user());
+                                request1 = request.command().setInvokerFather(invoker).execute(request.user());
 
-                        /// undefined request type response
-                        }else {
-                            request1 = Request.build().setFeedback("Неизвестный тип реквеста").setRequestType(RequestType.FEEDBACK);
-                        }
-
-                        /// sending
-                        if (request1 != null){
-                            request1 = request1.setRunnerId(request.runnerId());
-                            sendAndWait(request1);
-                            if (!isScript && isRunning) {
-                                System.out.print("$"+this.getUser()+": ");
-                                System.out.flush();
+                                /// undefined request type response
+                            } else {
+                                request1 = Request.build().setFeedback("Неизвестный тип реквеста").setRequestType(RequestType.FEEDBACK);
                             }
+
+                            /// sending
+                            if (request1 != null) {
+                                request1 = request1.setRunnerId(request.runnerId());
+                                sendAndWait(request1);
+                                if (!isScript && isRunning) {
+                                    System.out.print("$" + this.getUser() + ": ");
+                                    System.out.flush();
+                                }
+                            }
+                        } else {
+                            Request response = Request.build().setRunnerId(request.runnerId()).setRequestType(RequestType.PING);
+                            sendAndWait(response);
                         }
                     }
                 }

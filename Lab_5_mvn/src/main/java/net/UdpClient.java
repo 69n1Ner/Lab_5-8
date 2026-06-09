@@ -171,7 +171,7 @@ public class UdpClient extends Runner {
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
-//                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
+                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
 
                 if (br.ready()) {
                     String input = br.readLine();
