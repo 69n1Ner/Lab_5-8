@@ -48,6 +48,7 @@ public class ShowCommand extends Command implements Serializable {
                         .map(Organization::toString)
                         .collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
                 logger.info(s);
+                getInvokerFather().getRunner().showUser();
                 r = s;
             } else {
                 EmptyContainerException ec = new EmptyContainerException();

@@ -175,6 +175,7 @@ public class UdpClient extends Runner {
                     showUser();
                     initialRunShowUser = false;
                 }
+
                 ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
 
                 if (br.ready()) {
@@ -196,7 +197,7 @@ public class UdpClient extends Runner {
 
                     Thread.sleep(100);
 
-                    //sending
+                    ///sending
                     Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && CHANNEL != null && request != null) {
                         Request response = null;
@@ -212,7 +213,7 @@ public class UdpClient extends Runner {
 //                    }
                 }
 
-                //receiving
+                ///receiving
                 if (isRunning && CHANNEL != null) {
 //                    logger.debug("before receiveMessage");
                     Request request1 = null;

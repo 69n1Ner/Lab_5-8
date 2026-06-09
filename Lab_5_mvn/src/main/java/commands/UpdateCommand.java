@@ -66,6 +66,8 @@ public class UpdateCommand extends Command  implements Serializable {
                 List<String> lb = b.feedback();
                 if (!lb.isEmpty()){
                     for (String s:lb){
+                        if (s.isEmpty()) break;
+
                         feedback.append(s);
                     }
                     return createRequest(feedback.toString());

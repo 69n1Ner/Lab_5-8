@@ -158,6 +158,8 @@ public class OrganizationDao implements Dao<Organization>{
                     if (!lu.isEmpty()){
                         log.debug("lu={}",lu);
                         for (String s:lu){
+                            if (s.isEmpty()) break;
+
                             feedback.append(s);
                         }
                         return ans.addFeedback(feedback.toString());
@@ -198,6 +200,8 @@ public class OrganizationDao implements Dao<Organization>{
         List<String> lo = o.feedback();
         if (!lo.isEmpty()){
             for (String s: lo){
+                if (s.isEmpty()) break;
+
                 feedback.append(s);
             }
             return ans.addFeedback(feedback.toString());
@@ -210,6 +214,8 @@ public class OrganizationDao implements Dao<Organization>{
         List<String> lb = b.feedback();
         if (!lb.isEmpty()){
             for (String s:lb){
+                if (s.isEmpty()) break;
+
                 feedback.append(s);
             }
             return ans.addFeedback(feedback.toString());
@@ -233,6 +239,8 @@ public class OrganizationDao implements Dao<Organization>{
             List<String> luId = uId.feedback();
             if (!luId.isEmpty()){
                 for (String s:luId){
+                    if (s.isEmpty()) break;
+
                     feedback.append(s);
                 }
                 return ans.addFeedback(feedback.toString());
@@ -302,20 +310,26 @@ public class OrganizationDao implements Dao<Organization>{
             User user1 = u.object();
             List<String> lu = u.feedback();
             if(!lu.isEmpty()){
+                log.debug("lu={}",lu);
                 for (String s:lu){
+                    if (s.isEmpty()) break;
+
                     feedback.append(s);
                 }
                 return ans.addFeedback(feedback.toString());
             }
+            log.debug("user correct");
 
 //            log.debug("user1={}",user1);
 //            log.debug("user={}",user);
 
             if (!user1.equals(user)){
-                //todo добавить Optional для вывода сообщения или что то другое
                 if (!isClearCommand) feedback.append("Вы не можете редактировать эту организацию");
+                log.debug("feedback='{}'",feedback);
                 return ans.addFeedback(feedback.toString());
             }
+            log.debug("user correct1");
+
 
         } catch (NoSuchEntityException e) {
 //            log.debug(NoSuchEntityException.getMsg());
@@ -328,16 +342,20 @@ public class OrganizationDao implements Dao<Organization>{
         ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
         StringBuilder feedback = new StringBuilder();
 //        log.debug("до delete проверки на корректного юзера (org id = {})", id);
-        ObjWithFeedback<Boolean> b = isCorrectUser(user,isClearCommand, CONTAINER.getById(id));
 
+        ObjWithFeedback<Boolean> b = isCorrectUser(user,isClearCommand, CONTAINER.getById(id));
         boolean isCorrectUser = b.object();
         List<String> lb = b.feedback();
         if(!lb.isEmpty()){
             for (String s:lb){
+                if (s.equals("")) break;
+                log.debug("s='{}'",s);
+                log.debug("lb={}",lb);
                 feedback.append(s);
             }
             return ans.addFeedback(feedback.toString());
         }
+
 
         if (!isCorrectUser) return ans;
 //        log.debug("после delete проверки на корректного юзера");
@@ -386,11 +404,13 @@ public class OrganizationDao implements Dao<Organization>{
                 isDeleted = b.object();
                 List<String> lb = b.feedback();
                 if (!lb.isEmpty()){
-                    log.debug("lb={}",lb);
                     for (String s:lb){
+                        if (s.equals("")) break;
+                        log.debug("lb={}",lb);
+
                         feedback.append(s);
                     }
-                    return ans.addFeedback(feedback.toString());
+                    return ans.setObject(counter).addFeedback(feedback.toString());
                 }
 
             if (isDeleted){
@@ -400,6 +420,7 @@ public class OrganizationDao implements Dao<Organization>{
             } catch (NoSuchEntityException e) {
             }
         }
+        log.debug("counter={}",counter);
         return ans.setObject(counter);
     }
 

@@ -72,6 +72,8 @@ public class AddIfMinCommand extends Command implements Serializable {
                     List<String> loId = oId.feedback();
                     if (!loId.isEmpty()){
                         for (String s:loId){
+                            if (s.isEmpty()) break;
+
                             feedback.append(s);
                         }
                         logger.warn(feedback);

@@ -64,6 +64,8 @@ public class RemoveGreaterCommand extends Command  implements Serializable {
                             List<String> lb = b.feedback();
                             if (!lb.isEmpty()){
                                 for (String s:lb){
+                                    if (s.isEmpty()) break;
+
                                     sb.append(s);
                                 }
                             }

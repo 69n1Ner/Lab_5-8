@@ -154,7 +154,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
-    protected void showUser(){
+    public void showUser(){
         System.out.print("$"+this.getUser()+": ");
     }
 
