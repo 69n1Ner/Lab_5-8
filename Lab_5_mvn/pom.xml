@@ -41,6 +41,7 @@
                 <version>3.6.0</version>
                 <executions>
 
+                    <!-- === СБОРКА ТЕСТА === -->
                     <execution>
                         <id>make-test1-jar</id>
                         <phase>package</phase>
@@ -50,7 +51,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>theory6.KlazzClient</mainClass>
+                                    <mainClass>test.SecurityTest</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

@@ -3,42 +3,54 @@ package net;
 import commands.Command;
 import commands.ExitCommand;
 import commands.SaveCommand;
+import db.OrganizationDao;
+import db.UserDao;
 import exceptions.*;
 import io.ByteUtil;
 import io.InputManager;
+import io.ObjWithFeedback;
 import io.XmlUtil;
-import main.Container;
 import main.Invoker;
+import main.OrganizationContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import organization.Organization;
+import security.User;
+import sorts.SortById;
 
 import java.io.*;
 import java.net.*;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Properties;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class UdpServer extends Runner {
     private DatagramSocket SOCKET;
     private final HashMap<UUID,SocketAddress> socketAddressMap = new HashMap<>();
+    private static final Logger logger = LogManager.getLogger(UdpServer.class);
+
 
     public UdpServer(Invoker invoker, int port,boolean isLab7) {
         super(port, invoker,isLab7);
         invoker.setRunner(this);
-        logger = LogManager.getLogger(UdpServer.class);
 
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) {
 
-        Container<Organization> container = Container.getInstance();
-        Invoker invoker = new Invoker(container);
+        Invoker invoker = new Invoker();
         UdpServer server = new UdpServer(invoker, 9898,true);
+        OrganizationDao.setRunner(server);
+        try {
+            server.setUser(UserDao.getInstance().findByUserName("server"));
+        } catch (NoSuchEntityException e) {
+            logger.fatal("Сервер не может быть запущен из-за отсутствия пользователя server в базе данных");
+            return;
+        }
 
         if (!server.isLab7){
+            OrganizationContainer container = new OrganizationContainer(new SortById<>());
             invoker.setCommand(new SaveCommand("save", invoker));
             String filePath = System.getenv("LAB5_8");
             Path path = InputManager.parseInitCollection(filePath);
@@ -46,26 +58,31 @@ public class UdpServer extends Runner {
         }
 
 
-        server.applyParams();
+        server.applyParams(true);
+        server.connect();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
                 .getInvokerFather()
                 .getAllCommands()
                 .get("exit"))
                 .setInterrupt(true)
-                .execute()));
+                .execute(null)));
+
 
         server.run();
     }
 
+    @Override
     public void connect() {
         try {
             SOCKET = new DatagramSocket(port);
             SOCKET.setSoTimeout(35);
             logger.info("Сервер подключился к сети");
-            //todo добавть селектор
+            //todo добавить селектор
         } catch (SocketException e) {
-            logger.error("Сервер не смог подключиться к сети по порту {}", port, e);
+            String t = "Сервер не смог подключиться к сети по порту "+ port;
+            logger.error(t,e);
+            throw new RuntimeException(t);
         }
     }
 
@@ -102,18 +119,18 @@ public class UdpServer extends Runner {
             request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
             socketAddressMap.put(request.runnerId(),fromClient.getSocketAddress());
 //            logger.debug("map={}",socketAddressMap);
-            ping(request);
 
             SocketAddress address = socketAddressMap.get(request.runnerId());
             if (request.requestType() != RequestType.PING) {
                 System.out.println();
-                logger.info("Сообщение получено от клиента #{}#{}", address,request.runnerId());
+                logger.info("Сообщение получено от клиента #{}#{}", address,request.user());
+                logger.debug("request={}",request);
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
             return null;
         } catch (IOException | ClassNotFoundException e) {
-            logger.warn("recieveMsg{}", e,e);
+            logger.debug("receiveMsg{}", e,e);
             return null;
         }
     }
@@ -136,7 +153,6 @@ public class UdpServer extends Runner {
                 return;
             }
         } else {
-            connect();
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
@@ -147,10 +163,12 @@ public class UdpServer extends Runner {
 
         while (isRunning) {
             try {
+
+
                 Thread.sleep(50);
-                if (!isScript && initialShowUser) {
-                    System.out.print("$user: ");
-                    initialShowUser = false;
+                if (!isScript && initialOnlineShowUser) {
+                    showUser();
+                    initialOnlineShowUser = false;
                 }
                 if (br.ready()) {
                     String input = br.readLine();
@@ -170,12 +188,13 @@ public class UdpServer extends Runner {
 //                    logger.debug("---------1----");
 
                     //sending
-                    Request request = invoker.defineCommand(input, isScript).execute();
+//                    logger.debug("user={}", user);
+                    Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
                         sendAndWait(request.setRunnerId(runnerId));
                     }
                     if (!isScript && isRunning) {
-                        System.out.print("$user: ");
+                        showUser();
                         System.out.flush();
                     }
                     continue;
@@ -184,20 +203,84 @@ public class UdpServer extends Runner {
                 //receiving
                 if (isRunning && SOCKET != null && !SOCKET.isClosed()) {
                     Request request = receiveMessage();
-                    if (request != null && request.requestType() != RequestType.PING) {
-                        Command command = request.command();
-                        logger.info(command);
-                        //todo можно добавить проверку на корректный реквест
+                    if (request != null) {
+                        if (request.requestType() != RequestType.PING) {
+                            Request request1;
+
+                            /// authorization/registration user response
+                            if (request.requestType() == RequestType.USER) {
+                                boolean isRegistration = request.isScript();
+                                UserDao userDao = UserDao.getInstance();
+                                User user1 = request.user();
+                                StringBuilder feedback = new StringBuilder();
+                                request1 = Request.build().setRequestType(RequestType.USER_WRONG);
+
+                                if (!isRegistration) {
+                                    Optional<User> optionalUser = userDao
+                                            .findAll()
+                                            .stream()
+                                            .filter(u -> u.getUserName().equals(user1.getUserName()))
+                                            .findFirst();
+                                    if (optionalUser.isEmpty()) {
+                                        feedback.append("Такого пользователя не существует");
+                                    } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
+                                        feedback.append("Вы успешно авторизовались");
+                                        request1 = request1.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
+                                        logger.debug("request1={}", request1);
+                                    } else {
+                                        feedback.append("Неверный пароль");
+                                    }
+
+                                } else {
+                                    ObjWithFeedback<Integer> o = userDao.save(user1, null);
+                                    long id = o.object();
+                                    List<String> l = o.feedback();
+
+                                    if (id > 0 && l.isEmpty()) {
+                                        feedback.append("Вы успешно зарегистрировались");
+                                        ObjWithFeedback<User> u = userDao.findById(id);
+                                        User user2 = u.object();
+                                        List<String> lu = u.feedback();
+                                        if (!lu.isEmpty()) {
+                                            for (String s1 : lu) {
+                                                feedback.append(s1);
+                                            }
+                                        } else request1 = request1.setRequestType(RequestType.USER_OK).setUser(user2);
+                                    } else {
+//                                    throw new RuntimeException();
+                                        feedback.append("Произошла ошибка при добавлении пользователя");
+                                        for (String s : l) {
+                                            feedback.append("\n").append(s);
+                                        }
+                                    }
+                                }
+                                request1 = request1.setFeedback(feedback.toString());
+                            logger.debug("после фидбека request1={}",request1);
+
+                                /// command response
+                            } else if (request.requestType() == RequestType.COMMAND) {
+                                Command command = request.command();
+                                logger.info(command);
 //                        logger.debug("---------2----");
-                        logger.debug("{} \n-- req", request);
-                        Request request1 = request.command().setInvokerFather(invoker).execute();
-                        if (request1 != null){
-                            logger.debug("отправил");
-                            sendAndWait(request1.setRunnerId(request.runnerId()));
-                            if (!isScript && isRunning) {
-                                System.out.print("$user: ");
-                                System.out.flush();
+//                            logger.debug("{} \n-- req", request);
+                                request1 = request.command().setInvokerFather(invoker).execute(request.user());
+
+                                /// undefined request type response
+                            } else {
+                                request1 = Request.build().setFeedback("Неизвестный тип реквеста").setRequestType(RequestType.FEEDBACK);
                             }
+
+                            /// sending
+                            if (request1 != null) {
+                                request1 = request1.setRunnerId(request.runnerId());
+                                sendAndWait(request1);
+                                if (!isScript && isRunning) {
+                                    showUser();
+                                }
+                            }
+                        } else {
+                            Request response = Request.build().setRunnerId(request.runnerId()).setRequestType(RequestType.PING);
+                            sendAndWait(response);
                         }
                     }
                 }
@@ -209,14 +292,11 @@ public class UdpServer extends Runner {
                 if (!isRunning) break;
                 logger.warn("Ошибка сокета: {}", e.getMessage());
 
-            } catch (NoSuchCommandException | RecursionLimitReached | XmlUtilException | IOException e) {
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
                 logger.warn("{}", e.getMessage());
                 if (!isScript && isRunning) {
-                    System.out.print("$user: ");
-                    System.out.flush();
+                    showUser();
                 }
-            }catch (NullPointerException e){
-                logger.debug("{}", e,e);
             }
         }
     }
@@ -229,12 +309,11 @@ public class UdpServer extends Runner {
     public Invoker getInvoker() {
         return invoker;
     }
+
     @Override
     public Closeable getTunnel() {
         return SOCKET;
     }
-
-
 
     @Override
     public void setRunning(boolean condition) {

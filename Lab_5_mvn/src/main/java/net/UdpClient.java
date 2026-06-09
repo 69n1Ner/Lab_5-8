@@ -1,10 +1,13 @@
 package net;
 
+import db.OrganizationDao;
 import exceptions.*;
 import io.ByteUtil;
+import io.InputManager;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -19,21 +22,69 @@ import java.util.*;
 public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
     private final Deque<Request> cachedMessages = new ArrayDeque<>();
+    private static final Logger logger = LogManager.getLogger(UdpClient.class);
+
 
     public UdpClient(Invoker invoker, int port,boolean isLab7) {
         super(port, invoker,isLab7);
         super.invoker.setRunner(this);
-        logger = LogManager.getLogger(UdpClient.class);
     }
 
-    public static void main(String[] args) throws IOException {
-        Invoker invoker = new Invoker(null);
+    public static void main(String[] args) {
+        Invoker invoker = new Invoker();
         UdpClient client = new UdpClient(invoker, 9898,true);
+        OrganizationDao.setRunner(client);
 
-        client.applyParams();
+        client.applyParams(false);
+        client.connect();
+
+        User user1 = null;
+        while (user1 == null){
+            user1 = client.authorize();
+        }
+        client.setUser(user1);
 
         client.run();
     }
+
+    public User authorize(){
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        logger.info("У вас уже есть аккаунт? (введите \"y\" or \"n\")");
+        String input;
+        try {
+            input = br.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        input = InputManager.separateSecurity(input);
+        User user;
+
+        boolean isRegistration;
+        if (input == null || input.isEmpty() || input.equals("y") || input.equals("Y")){
+            logger.info("===== Авторизация =====");
+            isRegistration = false;
+            user = InputManager.inputUser(br, false);
+        } else {
+            logger.info("===== Регистрация =====");
+            isRegistration = true;
+            user = InputManager.inputUser(br,true);
+        }
+
+        Request request = Request.build()
+                .setRequestType(RequestType.USER)
+                .setUser(user)
+                .setRegistration(isRegistration)
+                .setRunnerId(runnerId);
+
+        Request response = null;
+        while (response == null){
+           response = sendAndWait(request);
+        }
+
+        logger.info(response.feedback());
+        return response.user();
+    }
+
     @Override
     public void connect() {
         try {
@@ -45,7 +96,9 @@ public class UdpClient extends Runner {
 
             logger.info("Клиент запущен и готов отправлять данные");
         } catch (IOException e) {
-            logger.error("Клиент не смог подключиться к сети по порту {}", port, e);
+            String t = "Клиент не смог подключиться к сети по порту "+ port;
+            logger.error(t,e);
+            throw new RuntimeException(t);
         } catch (InterruptedException e) {
             logger.warn("interrupt");
         }
@@ -81,11 +134,10 @@ public class UdpClient extends Runner {
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
             Request request = ByteUtil.fromBytesTo(data, Request.class);
-            logger.debug("получен реквест {}",request.requestType());
+//            logger.debug("получен реквест {}",request.requestType());
             if (request.requestType() != RequestType.PING) {
-                cachedMessages.addFirst(request);
                 logger.info("Сообщение получено от сервера #{}", address);
-                logger.debug(request);
+//                logger.debug("request={}",request);
             }
             return request;
         } catch (SocketTimeoutException | PortUnreachableException e) {
@@ -113,15 +165,17 @@ public class UdpClient extends Runner {
                 return;
             }
         } else {
-            connect();
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
         while (isRunning) {
 //            logger.debug("cycle started");
             try {
+                if (!isScript && initialRunShowUser) {
+                    showUser();
+                    initialRunShowUser = false;
+                }
                 ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
-                Thread.sleep(100);
 
                 if (br.ready()) {
                     String input = br.readLine();
@@ -133,44 +187,51 @@ public class UdpClient extends Runner {
                         }
 
                         if (input.trim().isEmpty()) {
+                            logger.debug("пустой инпут");
                             continue;
                         }
                         //showing what command was
                         logger.info(input);
                     }
 
+                    Thread.sleep(100);
+
                     //sending
-                    Request request = invoker.defineCommand(input, isScript).execute();
+                    Request request = invoker.defineCommand(input, isScript).execute(user);
                     if (isRunning && CHANNEL != null && request != null) {
-                        sendAndWait(request.setRunnerId(runnerId));
+                        Request response = null;
+                        while (response == null){
+                            response = sendAndWait(request.setRunnerId(runnerId));
+                        }
+                        cachedMessages.addFirst(response);
+
                     }
-                    if (!isScript && isRunning) {
-                        System.out.print("$user: ");
-                        System.out.flush();
-                    }
+//                    if (!isScript && isRunning) {
+//                        System.out.print("$"+this.getUser()+": ");
+//                        System.out.flush();
+//                    }
                 }
 
                 //receiving
                 if (isRunning && CHANNEL != null) {
-                    logger.debug("before receiveMessage");
+//                    logger.debug("before receiveMessage");
                     Request request1 = null;
                     if (!cachedMessages.isEmpty()){
                          request1 = cachedMessages.removeFirst();
                     }
-                    logger.debug("after receiveMessage");
+//                    logger.debug("after receiveMessage");
 
 
-                    logger.debug("request1={}",request1);
-                    logger.debug("request1 != null={}",request1 != null);
-                    if (request1 != null) {
-                        logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);
-                    }
+//                    logger.debug("request1={}",request1);
+//                    logger.debug("request1 != null={}",request1 != null);
+//                    if (request1 != null) {
+//                        logger.debug("request1.requestType() != RequestType.PING={}", request1.requestType() != RequestType.PING);
+//                    }
 
                     if (request1 != null && request1.requestType() != RequestType.PING) {
                         logger.info(request1.feedback());
                         if (!isScript && isRunning) {
-                            System.out.print("$user: ");
-                            System.out.flush();
+                            showUser();
                         }
                     }
 
@@ -178,10 +239,12 @@ public class UdpClient extends Runner {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.warn(e.getMessage());
-            } catch (NoSuchCommandException | RecursionLimitReached | EmptyContainerException | XmlUtilException |
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException |
                      IOException e) {
                 logger.warn("{}", e.getMessage());
-
+                if (!isScript && isRunning) {
+                    showUser();
+                }
 
             }
 //            logger.debug("cycle ended");

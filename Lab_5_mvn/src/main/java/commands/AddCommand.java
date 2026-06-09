@@ -5,7 +5,7 @@ import io.InputManager;
 import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -13,8 +13,10 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 
 import org.apache.logging.log4j.LogManager;
+import security.User;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class AddCommand extends Command implements Serializable {
@@ -30,13 +32,12 @@ public class AddCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String response = "непредвиденная";
 
         try {
             Validator.isValidArgument(this);
 
-            Invoker invokerFather = getInvokerFather();
             Organization newOrganization;
 
 //            logger.debug("before xmls");
@@ -45,7 +46,7 @@ public class AddCommand extends Command implements Serializable {
 //                logger.debug("it's input");
             } else {
 //                logger.debug("it's request");
-                Validator.isXmlOrgValid(this);
+                Validator.isValidForScript(this);
 //                logger.debug("it's server");
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
@@ -57,15 +58,28 @@ public class AddCommand extends Command implements Serializable {
                 return createRequest(command);
             }
 
-
-            ObjWithFeedback organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
-            newOrganization = organizationWithFeedback.organization();
-            String feedback = organizationWithFeedback
+            StringBuilder feedback = new StringBuilder();
+            ObjWithFeedback<Organization> organizationWithFeedback = InputManager.generateOrganizationFields(newOrganization, isScript());
+            newOrganization = organizationWithFeedback.object();
+            feedback.append(organizationWithFeedback
                     .feedback()
                     .stream()
-                    .collect(Collectors.joining("\n","","\n"));
+                    .collect(Collectors.joining("\n","","\n")));
+
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            int id = organizationDao.save(newOrganization);
+
+            ObjWithFeedback<Integer> oId = organizationDao.save(newOrganization, user);
+            int id = oId.object();
+            logger.debug("id={}",id);
+            List<String> loId = oId.feedback();
+            if (!loId.isEmpty()){
+                logger.debug("loId={}",loId);
+                for (String s:loId){
+                    feedback.append(s);
+                }
+                logger.warn(feedback);
+                return createRequest(feedback.toString());
+            }
 
             String text = "ID созданной организации: " + id;
             logger.info(text);

@@ -3,13 +3,14 @@ package commands;
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
 import io.Validator;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -30,8 +31,7 @@ public class ShowCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
-        //todo пофиксить вывод первой строки
+    public Request execute(User user) {
         String r ="непредвиденная";
         try {
             Validator.isValidArgument(this);
@@ -46,7 +46,7 @@ public class ShowCommand extends Command implements Serializable {
             if (!container.isEmpty()) {
                 String s = container.stream()
                         .map(Organization::toString)
-                        .collect(Collectors.joining("\n"));
+                        .collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
                 logger.info(s);
                 r = s;
             } else {

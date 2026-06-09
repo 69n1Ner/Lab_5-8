@@ -1,6 +1,6 @@
 package exceptions;
 
-public class NoSuchOrganizationException extends Exception{
+public class NoSuchOrganizationException extends NoSuchEntityException{
     public NoSuchOrganizationException(){
         super("Такой организации не существует");
     }

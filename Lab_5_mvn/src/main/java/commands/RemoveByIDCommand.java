@@ -1,16 +1,19 @@
 package commands;
 
 import exceptions.InvalidInput;
-import exceptions.NoSuchOrganizationException;
+import exceptions.NoSuchEntityException;
+import io.ObjWithFeedback;
 import io.Validator;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class RemoveByIDCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(RemoveByIDCommand.class);
@@ -21,7 +24,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
 
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r = "непредвиденная";
         try {
             Validator.isValidArgument(this);
@@ -33,7 +36,17 @@ public class RemoveByIDCommand extends Command implements Serializable {
             Long ID = Long.parseLong(getArgument());
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            boolean isDeleted = organizationDao.delete(ID);
+
+            ObjWithFeedback<Boolean> b = organizationDao.delete(ID, user);
+            StringBuilder feedback = new StringBuilder();
+            boolean isDeleted = b.object();
+            List<String> lb = b.feedback();
+            if (!lb.isEmpty()){
+                for (String s:lb){
+                    feedback.append(s);
+                }
+                return createRequest(feedback.toString());
+            }
 
             String text;
             if (isDeleted){
@@ -45,7 +58,7 @@ public class RemoveByIDCommand extends Command implements Serializable {
             r= text;
 
 
-        } catch (InvalidInput | NoSuchOrganizationException i){
+        } catch (InvalidInput | NoSuchEntityException i){
             logger.warn(i);
             r= i.getMessage();
         }

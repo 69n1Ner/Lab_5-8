@@ -6,11 +6,9 @@ import io.Validator;
 import main.Invoker;
 import net.Request;
 import net.Runner;
-import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Arrays;
+import security.User;
 
 public class ExecuteScriptCommand extends Command{
     private int currentRecursion = 0;
@@ -35,9 +33,8 @@ public class ExecuteScriptCommand extends Command{
         }
     }
 
-    //TODO при посылке реквеста не должна посылаться команда, а сразу выполняться и посылать другие команды. Т.е. добавить флаг isScript и в этот execute
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         try {
             String file = getArgument();
 //            logger.debug("file0={}",file);
@@ -53,7 +50,7 @@ public class ExecuteScriptCommand extends Command{
 
             Runner runner = getInvokerFather().getRunner();
             runner.run(true,file,runner.isLab7());
-            String t = "Скрипт " +getArgument()+  " выполнен";
+            String t = "Скрипт " +file+  " выполнен";
             logger.info(t);
 
         }catch (InvalidInput | RecursionLimitReached i){

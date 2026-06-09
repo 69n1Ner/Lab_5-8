@@ -3,32 +3,94 @@ package io;
 import commands.Command;
 import commands.FilterGreaterThanPostalAddress;
 import exceptions.InvalidInput;
+import exceptions.NoSuchCommandException;
 import main.Invoker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Validator {
     private static final Logger logger = LogManager.getLogger(Validator.class);
+    private static final List<Character> asciiChars = new ArrayList<>();
+
+    static {
+        for (int code = 0; code <= 31; code++) {
+            asciiChars.add((char) code);
+        }
+    }
 
     //inputMan
     public static boolean isValidInput(String input) {
-        String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
-        for (int i = 0; i < input.length(); i++) {
-            if (specialSymbols.indexOf(input.charAt(i)) != -1) {
-                logger.warn("Строка содержит недопустимый символ: {}", input.charAt(i));
-                System.err.println("Строка содержит недопустимый символ: " + input.charAt(i));
-                return false;
+        return isValidInput(input,false);
+    }
+
+
+    public static boolean isValidInput(String input, boolean isStrict) {
+        if (isStrict) {
+            String specialSymbols = "!@#$%^&*()+\"';:/?`~№\\=<>[]{}";
+            for (int i = 0; i < input.length(); i++) {
+                if (specialSymbols.indexOf(input.charAt(i)) != -1) {
+                    logger.warn("Строка содержит недопустимый символ: {}", input.charAt(i));
+                    return false;
+                }
             }
         }
+
         if (input.length() > 255) {
             logger.warn("Слишком длинная строка! Максимальная длина 255");
-            System.err.println("Слишком длинная строка! Максимальная длина 255");
+            return false;
+        }
+
+        String text = hasSpecialSymbol(input);
+        if (text != null){
+            logger.warn(text);
             return false;
         }
         return true;
+    }
+
+    public static boolean isUserInfoValid(String input,boolean isStrict,boolean isPassword) {
+        if (!isValidInput(input,isStrict)){
+            return false;
+        }
+        return isPassword || !isStrict || input.length() >= 4;
+    }
+
+    public static String hasSpecialSymbol(String input){
+        if (input == null || input.isEmpty()) {
+            return ("Введена пустая строка");
+        }
+        int charNum = 0;
+        for (Character asciiChar : asciiChars) {
+
+            //Ctrl+Z
+            if (input.contains("\u001A")) {
+                return ("""
+                        
+                        /﹋\\
+                        (҂`_´)
+                        ︻╦╤─ ҉ -- - - -- - --
+                        /﹋\\
+                        """);
+
+                //Ctrl+C (doesn'object catch)
+            } else if (input.contains(String.valueOf(asciiChar))) {
+                String asciiPrint = Integer.toHexString(charNum);
+                if (asciiPrint.length() == 1) {
+                    asciiPrint = "\\u000" + asciiPrint.toUpperCase();
+                } else {
+                    asciiPrint = "\\u00" + asciiPrint.toUpperCase();
+                }
+                return ("Найден спец символ: "+ asciiPrint);
+            }
+
+            ++charNum;
+        }
+        return null;
     }
 
     //invoker
@@ -115,29 +177,21 @@ public class Validator {
         }
     }
 
-    public static void isXmlAddressValid(Command command) throws InvalidInput{
+    private static void isXmlAddressValid(Command command) throws InvalidInput{
         //todo мб добавить нужную проверку на что либо
 //        String xmlArg = command.getXmlArgument();
     }
 
-    public static void isXmlOrgValid(Command command) throws InvalidInput{
+    private static void isXmlOrgValid(Command command) throws InvalidInput{
             String xmlArgument = command.getXmlArgument();
 
             if (command.isScript()) {
                 if (xmlArgument != null) {
-                    boolean ERR = !xmlArgument.equals("ERR");
-                    boolean isId = !xmlArgument.matches(".*<id>[^<]+</id>.*");
-                    boolean isDate = !xmlArgument.matches(".*<creation_date>[^<]+</creation_date>.*");
+                    boolean ERR = xmlArgument.equals("ERR");
+                    logger.debug("xml-строка={}",xmlArgument);
                     if (!ERR) {
-                        if (isDate) {
-                            if (isId) {
                                 return;
-                            }
-                            throw new InvalidInput("XML не имеет ID");
-                        }
-                        throw new InvalidInput("XML не имеет даты создания");
-                    }
-                    throw new InvalidInput("Неверная XML строка");
+                    } throw new InvalidInput("Неверная XML строка");
                 }else {
                     throw new InvalidInput("Команда должна иметь XML строку");
                 }

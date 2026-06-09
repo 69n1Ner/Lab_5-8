@@ -2,11 +2,10 @@ package commands;
 
 import exceptions.EmptyContainerException;
 import exceptions.InvalidInput;
-import exceptions.XmlUtilException;
 import io.InputManager;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
@@ -14,9 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Address;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FilterGreaterThanPostalAddress extends Command implements Serializable {
@@ -27,21 +28,12 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r;
         try {
             Validator.isValidArgument(this);
 
-            Invoker invokerFather = getInvokerFather();
-            Address address;
-
-            if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
-                address = InputManager.inputAddress();
-            }else {
-                Validator.isXmlAddressValid(this);
-
-                address = XmlUtil.readAddressFromString(getXmlArgument());
-            }
+            Address address = getAddress();
 
             if (getInvokerFather().getRunner() instanceof UdpClient){
                 String xmlOrg = XmlUtil.adrToXml(address);
@@ -58,16 +50,22 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
 
                 //todo mb add if errors
                 InputManager.generateAddressFields(address);
-                String s = container.stream()
+                        List<String> container1 = container.stream()
                         .filter(o -> o.getPostalAddress().compareTo(address) >= 1)
-                        .map(Organization::toString).collect(Collectors.joining("\n"));
-                if (s.isEmpty()) {
-                    String t = "Нет организаций, с большим адресом";
-                    logger.warn(t);
-                    r= t;
+                        .map(Organization::toString).toList();
+                        Optional<String> optional = container1.stream().findFirst();
+                String s = null;
+                if (optional.isPresent()){
+                    s = container1.stream().collect(Collectors.joining("\n"+delimiter+"\n",delimiter+"\n","\n"+delimiter));
                 }
-                logger.info(s);
-                r= s;
+                if (s == null || s.isEmpty()) {
+                    String t = "Нет организаций, с большим адресом";
+                    r= t;
+                    logger.warn(t);
+                }else {
+                    logger.info(s);
+                    r = s;
+                }
             }else {
                 EmptyContainerException ec = new EmptyContainerException();
                 logger.warn(ec);
@@ -82,6 +80,18 @@ public class FilterGreaterThanPostalAddress extends Command implements Serializa
             return createRequest(r);
         }
         return null;
+    }
+
+    private Address getAddress() throws InvalidInput {
+        Address address;
+        if ((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()) {
+            address = InputManager.inputAddress();
+        }else {
+            Validator.isValidForScript(this);
+
+            address = XmlUtil.readAddressFromString(getXmlArgument());
+        }
+        return address;
     }
 
     @Override

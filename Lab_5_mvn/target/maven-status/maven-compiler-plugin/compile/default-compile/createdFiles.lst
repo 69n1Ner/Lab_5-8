@@ -5,7 +5,6 @@ commands\ExecuteScriptCommand.class
 io\Validator$1.class
 commands\Command.class
 commands\HelpCommand.class
-exceptions\NoArgumentException.class
 commands\SaveCommand.class
 io\LocalDateAdapter.class
 commands\ArgumentType.class
@@ -14,13 +13,13 @@ io\Validator.class
 commands\GetLoggerable.class
 exceptions\SameOrganizationExistsException.class
 commands\InfoCommand.class
-io\TestInput.class
 net\Unique.class
 net\RequestType.class
 sorts\SortByType.class
 commands\SumOfEmployeesCountCommand.class
 organization\OrganizationType.class
 exceptions\NoSuchOrganizationException.class
+test\SecurityTest.class
 organization\Location.class
 organization\Organization.class
 io\XmlUtil.class
@@ -30,6 +29,7 @@ commands\ClearCommand.class
 net\Runner.class
 net\UdpServer.class
 organization\Address.class
+test\TestInput.class
 commands\ExitCommand.class
 commands\RemoveGreaterCommand.class
 commands\UpdateCommand.class
@@ -41,6 +41,7 @@ commands\FilterGreaterThanPostalAddress.class
 exceptions\EmptyContainerException.class
 io\InputManager.class
 commands\AddCommand.class
+test\JdbcRunner.class
 commands\Describable.class
 main\Invoker.class
 net\UdpClient.class
@@ -50,4 +51,5 @@ io\ByteUtil.class
 commands\AddIfMinCommand.class
 exceptions\NoSuchCommandException.class
 commands\Executable.class
+main\OrganizationContainer.class
 exceptions\InvalidInput.class

@@ -1,8 +1,13 @@
 package io;
 
+import db.UserDao;
 import exceptions.NoSuchCommandException;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import organization.*;
+import security.MD2Hash;
+import security.User;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,74 +15,110 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 
 import static java.lang.Math.abs;
-import static java.util.Objects.hash;
 
 
 public class InputManager {
+    private static final Logger log = LogManager.getLogger(InputManager.class);
     private String commandName;
     private String mainArgument;
     private String xmlArgument;
-    private final List<Character> asciiChars = new ArrayList<>();
 
-    public InputManager() {
 
-        for (int code = 0; code <= 31; code++) {
-            asciiChars.add((char) code);
+
+
+    public static User inputUser(BufferedReader br, boolean isRegistration){
+        String name = getUserString(br,false,isRegistration);
+        String password = getUserString(br,true,isRegistration);
+        return new User().setUserName(name).setPassword(password);
+    }
+
+    /* isOMT отвечает за повторный ввод 1 раз после неудачной попытки
+        isAgain отвечает за полный ввод заново и пароля и имени
+     */
+    private static String getUserString(BufferedReader br,boolean isPassword, boolean isRegistration){
+        return getUserString(br,isPassword,false,isRegistration);
+    }
+
+    private static String  getUserString(BufferedReader br,boolean isPassword,boolean isOMT, boolean isRegistration){
+
+        try {
+            String input;
+            if (isOMT){
+                if (isPassword){
+                    log.info("Введите пароль еще раз");
+
+                } else {
+                    log.info("Введите имя еще раз");
+
+                }
+            } else {
+                if (isPassword) {
+                    log.info("Введите пароль");
+                } else {
+                    log.info("Введите имя");
+                }
+            }
+
+            input = br.readLine();
+            input = separateSecurity(input);
+
+
+            if (input != null && !input.isEmpty() && Validator.isUserInfoValid(input,false,isPassword)){
+                if (isPassword){
+                    return MD2Hash.hashWithMD2(input);
+                }else return input;
+
+            }else {
+                return isOMT
+                        ? isRegistration
+                                ? getUserString(br,isPassword, true,true)
+                                : null
+                        : getUserString(br,isPassword,true,isRegistration);
+            }
+
+        } catch (IOException | NoSuchAlgorithmException e) {
+            log.warn(e);
         }
+        return null;
     }
 
 
-    public void separate(String input) {
-        if (input == null || input.isEmpty()) {
-            throw new NoSuchCommandException("Пустая строка, введите help для справки");
+    public static String separateSecurity(String input){
+        String text = Validator.hasSpecialSymbol(input);
+        if (text !=null){
+            log.warn(text);
+            return null;
+        }
+        input = input.trim().strip();
+        if (input.contains(" ")){
+            log.warn("В строке не должно быть пробелов");
+            return null;
         }
 
-        int charNum = 0;
-        for (Character asciiChar : asciiChars) {
+        return input;
+    }
 
-            //Ctrl+Z
-            if (input.contains("\u001A")) {
-                throw new NoSuchCommandException("""
-                        
-                        /﹋\\
-                        (҂`_´)
-                        ︻╦╤─ ҉ -- - - -- - --
-                        /﹋\\
-                        """);
-
-                //Ctrl+C (doesn't catch)
-            } else if (input.contains(String.valueOf(asciiChar))) {
-                String asciiPrint = Integer.toHexString(charNum);
-                if (asciiPrint.length() == 1) {
-                    asciiPrint = "\\u000" + asciiPrint.toUpperCase();
-                } else {
-                    asciiPrint = "\\u00" + asciiPrint.toUpperCase();
-                }
-                throw new NoSuchCommandException("Найден спец символ: " + asciiPrint);
-            }
-
-            ++charNum;
+    public void separateCommand(String input) throws NoSuchCommandException {
+        String text = Validator.hasSpecialSymbol(input);
+        if (text !=null){
+            throw new NoSuchCommandException(text);
         }
 
+        ///1. если введена строка только с нужным количеством параметров),
+        ///то пропускать на дальнейшее считывание параметров (интерактивный режим)
+        ///2. если введено больше параметров, то считать этот больший параметр как
+        ///xml текст и обрабатывать по другому:
+        ///     ф-я считывает только те слова, которые идут до символа "<",
+        ///     далее просто посчитать количество открывающих и закрывающих тегов:
+        ///     1. если все ок, то после последнего закрывающего тега смотреть, остались ли элементы
+        ///     2. в других случаях ловить ошибки
 
-        /* todo <ОТВЕРГНУТО> сделать обработку строки с выбором:
-            1. если введена строка только с нужным количеством параметров),
-             то пропускать на дальнейшее считывание параметров (интерактивный режим)
-            2. если введено больше параметров, то считать этот больший параметр как
-             xml текст и обрабатывать по другому
-         */
-
-        /* todo переделать так, чтобы ф-я считывала только те слова, которые идут до символа "<",
-            далее просто посчитать количество открывающих и закрывающих тегов:
-            1. если все ок, то после последнего закрывающего тега смотреть, остались ли элементы
-            2. в других случаях ловить ошибки
-        */
         int start = 0;
         int end = 0;
         int lt = 0;
@@ -99,6 +140,7 @@ public class InputManager {
                 }
 
                 if (input.charAt(input.length() - 1) == '>' && lt == rt) {
+//                    log.debug("xmlArgument={}",xmlArgument);
                     this.xmlArgument = input.substring(end);
                 }
                 continue;
@@ -155,7 +197,6 @@ public class InputManager {
         OrganizationType type = (OrganizationType) getOrganizationType(isUpdate, false,br);
 
         System.out.println("Введите координаты организации");
-        //todo недоработка
         System.out.print("Координата x (максимум 623)");
         Long xC = (Long) getValueOf(Long.class, isUpdate,br);
 
@@ -335,8 +376,8 @@ public class InputManager {
     }
 
 
-    public static ObjWithFeedback generateOrganizationFields(Organization organization, boolean isReadFile) {
-        ObjWithFeedback organizationWithFeedback = new ObjWithFeedback(organization,null,new  ArrayList<>());
+    public static ObjWithFeedback<Organization> generateOrganizationFields(Organization organization, boolean isReadFile) {
+        ObjWithFeedback<Organization> organizationWithFeedback = new ObjWithFeedback<>(organization,new  ArrayList<>());
 
         if (!isReadFile) {
             organization.setCreationDate(organization.getCreationDate() == null ? LocalDate.now() : organization.getCreationDate());
@@ -363,7 +404,7 @@ public class InputManager {
             organizationWithFeedback.feedback().add("Значение количества сотрудников было установлено на: 0");
         }
 
-        if (organization.getName().isEmpty()) {
+        if (organization.getName() == null || organization.getName().isEmpty()) {
             String name = "Organization#"+String.valueOf(abs(organization.hashCode())).substring(6);
             organization.setName(name);
             organizationWithFeedback.feedback().add("Значение названия организации было установлено на: "+ name);
@@ -373,18 +414,18 @@ public class InputManager {
             organization.setType(OrganizationType.PUBLIC);
             organizationWithFeedback.feedback().add("Значение типа организации было установлено на: "+OrganizationType.PUBLIC.getName());
         }
-        ObjWithFeedback objWithFeedback = generateAddressFields(organization.getPostalAddress());
-        Address address = objWithFeedback.address();
+        ObjWithFeedback<Address> objWithFeedback = generateAddressFields(organization.getPostalAddress());
+        Address address = objWithFeedback.object();
         List<String> feedback = objWithFeedback.feedback();
 
         organizationWithFeedback.feedback().addAll(feedback);
-        organizationWithFeedback.organization().setPostalAddress(address);
+        organizationWithFeedback.object().setPostalAddress(address);
 
         return organizationWithFeedback;
     }
 
-    public static ObjWithFeedback generateAddressFields(Address address){
-        ObjWithFeedback addressWithFeedback = new ObjWithFeedback(null,address,new ArrayList<>());
+    public static ObjWithFeedback<Address> generateAddressFields(Address address){
+        ObjWithFeedback<Address> addressWithFeedback = new ObjWithFeedback<>(address,new ArrayList<>());
         String zip = address.getZipCode();
         Float xL = address.getTown().getX();
         Integer yL = address.getTown().getY();
@@ -449,7 +490,7 @@ public class InputManager {
         }
     }
 
-    public static boolean parseConsole(String s) {
+    public static boolean parseConsoleLogger(String s) {
         if (s == null || s.isEmpty()) {
             System.out.println("Логирование будет выведено на консоль");
             return true;

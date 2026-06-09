@@ -1,15 +1,18 @@
 package commands;
 
 import exceptions.InvalidInput;
+import io.ObjWithFeedback;
 import io.Validator;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.Invoker;
 import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import security.User;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class ClearCommand extends Command implements Serializable {
     private static final Logger logger = LogManager.getLogger(ClearCommand.class);
@@ -19,7 +22,7 @@ public class ClearCommand extends Command implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r;
         try {
             Validator.isValidArgument(this);
@@ -29,8 +32,19 @@ public class ClearCommand extends Command implements Serializable {
             }
 
             OrganizationDao organizationDao = OrganizationDao.getInstance();
-            int counter = organizationDao.clear();
-            String t = "Коллекция успешно удалена. Удалено "+counter+" организаций";
+            ObjWithFeedback<Integer> co = organizationDao.clear(user);
+            StringBuilder feedback = new StringBuilder();
+            int counter = co.object();
+            List<String> lco = co.feedback();
+            if (!lco.isEmpty()){
+                logger.debug("lco={}",lco);
+                for (String s:lco){
+                    feedback.append(s);
+                }
+                return createRequest(feedback.toString());
+            }
+
+            String t = "Удалено "+counter+" организаций";
             logger.info(t);
             r = t;
 

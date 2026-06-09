@@ -2,15 +2,17 @@ package commands;
 
 import exceptions.*;
 import io.InputManager;
+import io.ObjWithFeedback;
 import io.Validator;
 import io.XmlUtil;
-import io.db.OrganizationDao;
+import db.OrganizationDao;
 import main.*;
 import net.Request;
 import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
+import security.User;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +31,7 @@ public class UpdateCommand extends Command  implements Serializable {
     }
 
     @Override
-    public Request execute() {
+    public Request execute(User user) {
         String r = "непредвиденная";
 
         try{
@@ -40,7 +42,7 @@ public class UpdateCommand extends Command  implements Serializable {
             if((getXmlArgument() == null || getXmlArgument().isEmpty()) && !isScript()){
                 parametrizedOrg = InputManager.inputOrganization(true);
             }else {
-                Validator.isXmlOrgValid(this);
+                Validator.isValidForScript(this);
 
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
@@ -58,18 +60,26 @@ public class UpdateCommand extends Command  implements Serializable {
             if (!container.isEmpty()) {
                 Long ID = Long.parseLong(getArgument());
 
-                boolean isOk = organizationDao.update(parametrizedOrg, ID);
+                ObjWithFeedback<Boolean> b = organizationDao.update(parametrizedOrg, ID, user);
+                StringBuilder feedback = new StringBuilder();
+                boolean isOk = b.object();
+                List<String> lb = b.feedback();
+                if (!lb.isEmpty()){
+                    for (String s:lb){
+                        feedback.append(s);
+                    }
+                    return createRequest(feedback.toString());
+                }
+
                 String t;
 
                 if (isOk) {
                     t = "Организация с ID " + ID + " успешно изменена";
-                    logger.info(t);
-                    r = t;
                 } else {
                     t = "Организация с ID " + ID + " не изменена";
-                    logger.info(t);
-                    r = t;
                 }
+                logger.info(t);
+                r = t;
 
             } else{
                 EmptyContainerException ec = new EmptyContainerException();
@@ -78,7 +88,7 @@ public class UpdateCommand extends Command  implements Serializable {
             }
 
 
-        }catch (InvalidInput | NoSuchOrganizationException i){
+        }catch (InvalidInput | NoSuchEntityException i){
             logger.warn(i);
             r=i.getMessage();
         }

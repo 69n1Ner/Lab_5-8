@@ -58,7 +58,7 @@ public class XmlUtil {
             xmlString = xmlString.replaceAll("<\\?xml[^>]*>","")
                     .replaceAll("\\s","")
                     .replaceAll("</?collection>","");
-            logger.debug("txt- {}",xmlString);
+//            logger.debug("txt- {}",xmlString);
             return xmlString;
         } catch (JAXBException e) {
             throw new XmlUtilException(Arrays.toString(e.getStackTrace()).replace(",","\n"));
@@ -99,7 +99,7 @@ public class XmlUtil {
                 System.out.println("Загружено из " + path + ": " + wrapper.getOrganizations().size() + " организаций");
                 return new ArrayList<>(wrapper.getOrganizations());
             } catch (JAXBException e) {
-                throw new XmlUtilException("Ошибка парсинга XML: " + e.getMessage());
+                throw new XmlUtilException("Ошибка парсинга XML: " + e);
             }
         } catch (IOException e) {
             throw new XmlUtilException(Arrays.toString(e.getStackTrace()).replace(",","\n"));
@@ -112,12 +112,11 @@ public class XmlUtil {
         }
 
         try {
-
             Unmarshaller unmarshaller = CONTEXT_ORGANIZATION.createUnmarshaller();
             return (Organization) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            throw new XmlUtilException("Ошибка чтения XML"+ e.getMessage());
+            throw new XmlUtilException("Ошибка чтения XML"+ e);
         }
     }
 
@@ -131,7 +130,7 @@ public class XmlUtil {
             return (Address) unmarshaller.unmarshal(new StringReader(xmlString));
 
         } catch (JAXBException e) {
-            throw new XmlUtilException("Ошибка чтения XML "+ e.getMessage());
+            throw new XmlUtilException("Ошибка чтения XML "+ e);
         }
     }
 }
