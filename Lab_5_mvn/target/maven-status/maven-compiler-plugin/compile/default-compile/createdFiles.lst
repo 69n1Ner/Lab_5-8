@@ -6,11 +6,14 @@ io\Validator$1.class
 commands\Command.class
 commands\HelpCommand.class
 commands\SaveCommand.class
+thread\ThreadServer$CustomThreadFactory.class
+thread\NamedThreadFactory.class
 io\LocalDateAdapter.class
 commands\ArgumentType.class
 main\Container.class
 io\Validator.class
 commands\GetLoggerable.class
+thread\ThreadClient.class
 exceptions\SameOrganizationExistsException.class
 commands\InfoCommand.class
 net\Unique.class
@@ -19,6 +22,7 @@ sorts\SortByType.class
 commands\SumOfEmployeesCountCommand.class
 organization\OrganizationType.class
 exceptions\NoSuchOrganizationException.class
+thread\ThreadClient$CommandInput.class
 test\SecurityTest.class
 organization\Location.class
 organization\Organization.class
@@ -28,6 +32,7 @@ exceptions\RecursionLimitReached.class
 commands\ClearCommand.class
 net\Runner.class
 net\UdpServer.class
+thread\ThreadClient$CustomThreadFactory.class
 organization\Address.class
 test\TestInput.class
 commands\ExitCommand.class

@@ -18,6 +18,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class UdpClient extends Runner {
     private DatagramChannel CHANNEL;
@@ -28,6 +30,7 @@ public class UdpClient extends Runner {
     public UdpClient(Invoker invoker, int port,boolean isLab7) {
         super(port, invoker,isLab7);
         super.invoker.setRunner(this);
+
     }
 
     public static void main(String[] args) {
@@ -37,6 +40,7 @@ public class UdpClient extends Runner {
 
         client.applyParams(false);
         client.connect();
+
 
         User user1 = null;
         while (user1 == null){
@@ -78,7 +82,7 @@ public class UdpClient extends Runner {
 
         Request response = null;
         while (response == null){
-           response = sendAndWait(request);
+            response = sendAndWait(request);
         }
 
         logger.info(response.feedback());
@@ -92,15 +96,12 @@ public class UdpClient extends Runner {
             CHANNEL.configureBlocking(false);
             SocketAddress socketAddress = new InetSocketAddress(IP_ADDRESS, port);
             CHANNEL.connect(socketAddress);
-            Thread.sleep(100);
 
             logger.info("Клиент запущен и готов отправлять данные");
         } catch (IOException e) {
-            String t = "Клиент не смог подключиться к сети по порту "+ port;
-            logger.error(t,e);
+            String t = "Клиент не смог подключиться к сети по порту " + port;
+            logger.error(t, e);
             throw new RuntimeException(t);
-        } catch (InterruptedException e) {
-            logger.warn("interrupt");
         }
     }
 
@@ -195,7 +196,7 @@ public class UdpClient extends Runner {
                         logger.info(input);
                     }
 
-                    Thread.sleep(100);
+                    Thread.sleep(10);
 
                     ///sending
                     Request request = invoker.defineCommand(input, isScript).execute(user);

@@ -9,6 +9,7 @@ import net.UdpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.ThreadServer;
 
 import java.io.Closeable;
 
@@ -27,6 +28,9 @@ public class ExitCommand extends Command{
             Validator.isValidArgument(this);
             Runner runner = getInvokerFather().getRunner();
             runner.setRunning(false);
+            runner.getReadPool().shutdown();
+            runner.getProcessPool().shutdown();
+            runner.getSendPool().shutdown();
 
             if (!isInterrupt){
                 return null;
@@ -35,7 +39,7 @@ public class ExitCommand extends Command{
             Closeable tunnel = runner.getTunnel();
             if (tunnel != null) {
                 try {
-                    if (runner instanceof UdpServer) {
+                    if (runner instanceof  UdpServer || runner instanceof ThreadServer) {
                         if (!runner.isLab7()) {
                             runner.getInvokerFather().getAllCommands().get("save").execute(null);
                         }

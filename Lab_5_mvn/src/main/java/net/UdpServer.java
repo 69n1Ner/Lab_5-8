@@ -163,9 +163,7 @@ public class UdpServer extends Runner {
 
         while (isRunning) {
             try {
-
-
-                Thread.sleep(50);
+                Thread.sleep(5);
                 if (!isScript && initialOnlineShowUser) {
                     showUser();
                     initialOnlineShowUser = false;
@@ -216,6 +214,7 @@ public class UdpServer extends Runner {
                                 request1 = Request.build().setRequestType(RequestType.USER_WRONG);
 
                                 if (!isRegistration) {
+                                    /// authorization
                                     Optional<User> optionalUser = userDao
                                             .findAll()
                                             .stream()
@@ -230,7 +229,7 @@ public class UdpServer extends Runner {
                                     } else {
                                         feedback.append("Неверный пароль");
                                     }
-
+                                /// registration
                                 } else {
                                     ObjWithFeedback<Integer> o = userDao.save(user1, null);
                                     long id = o.object();
@@ -323,10 +322,6 @@ public class UdpServer extends Runner {
     @Override
     public Invoker getInvokerFather() {
         return invoker;
-    }
-
-    public void setInvokerFather(Invoker invoker){
-        super.invoker = invoker;
     }
 
     public BufferedReader getBr() {

@@ -9,19 +9,25 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import security.User;
+import thread.NamedThreadFactory;
+import thread.ThreadServer;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.net.PortUnreachableException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected static final String IP_ADDRESS = "localhost";
     protected static final int ARRAY_SIZE = 65000;
     private static final Logger log = LogManager.getLogger(Runner.class);
     protected final int port;
-    protected Invoker invoker;
+    protected final Invoker invoker;
     protected BufferedReader br;
     protected boolean isRunning;
     protected final UUID runnerId = UUID.randomUUID();
@@ -32,19 +38,29 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected boolean initialRunShowUser = true;
     protected final boolean isLab7;
     protected User user;
-
+    protected final ExecutorService readPool;
+    protected final ExecutorService processPool;
+    protected final ForkJoinPool sendPool;
 
     public abstract void connect();
+
     public abstract void run();
+
     public abstract void run(boolean isScript, String path, boolean isLab7);
+
     public abstract Closeable getTunnel();
+
     public abstract void setRunning(boolean condition);
+
     public abstract Invoker getInvokerFather();
 
-    protected Runner(int port, Invoker invoker,boolean isLab7) {
+    protected Runner(int port, Invoker invoker, boolean isLab7) {
         this.port = port;
         this.invoker = invoker;
         this.isLab7 = isLab7;
+        this.readPool = Executors.newFixedThreadPool(2, new NamedThreadFactory("READER"));
+        this.processPool = Executors.newFixedThreadPool(5, new NamedThreadFactory("PROCESSOR"));
+        this.sendPool = new ForkJoinPool(4);
     }
 
     public boolean isLab7() {
@@ -71,10 +87,10 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     public Request sendAndWait(Request request) {
         long start = System.currentTimeMillis();
         long timeout = 1000;
-        log.debug("посланный request={}",request);
+        log.debug("посланный request={}", request);
         sendMessage(request);
 
-        if (this instanceof UdpServer && !this.runnerId.equals(request.requestId())) {
+        if ((this instanceof UdpServer || this instanceof ThreadServer) && !this.runnerId.equals(request.requestId())) {
             runnerSentMsg(request);
             return null;
         }
@@ -87,25 +103,25 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
             //receiving ping msg
             var response = receiveMessage();
 //                logger.debug("before if");
-                if (response != null) {
+            if (response != null) {
 //                    logger.debug("{} {}", runnerId, response.runnerId());
 
-                    //online
-                    if (runnerId.equals(response.runnerId())) {
+                //online
+                if (runnerId.equals(response.runnerId())) {
 //                        log.debug("condition passed");
-                        if (!silentConnection) {
-                            serverOnline();
-                            silentConnection = true;
-                        }
-                        silentConnectionError = false;
-                        return response;
+                    if (!silentConnection) {
+                        serverOnline();
+                        silentConnection = true;
                     }
+                    silentConnectionError = false;
+                    return response;
                 }
+            }
 //                logger.debug("after if");
             try {
                 ///Может возникать ошибка, если время сна здесь будет ниже, чем время сна у сервера
                 ///Важно ставить время сна больше (или столько же) чем у сервера
-                Thread.sleep(200);
+                Thread.sleep(15);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -124,9 +140,9 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         return null;
     }
 
-    private void runnerSentMsg(Request request){
+    private void runnerSentMsg(Request request) {
         String runner;
-        if (this instanceof UdpServer) {
+        if (this instanceof ThreadServer || this instanceof UdpServer) {
             runner = "клиенту #" + request.user();
         } else runner = "серверу";
 
@@ -137,14 +153,14 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
-    private void serverOnline(){
+    private void serverOnline() {
         if (initialOnlineShowUser) {
             if (isRunning) {
                 showUser();
             }
             initialOnlineShowUser = false;
             return;
-        }else {
+        } else {
             log.debug("пробел2");
             System.out.println();
         }
@@ -154,19 +170,19 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
-    public void showUser(){
-        System.out.print("$"+this.getUser()+": ");
+    public void showUser() {
+        System.out.print("$" + this.getUser() + ": ");
     }
 
-    private void runnerNotConnected(){
+    private void runnerNotConnected() {
         if (initialOnlineShowUser) {
             initialOnlineShowUser = false;
-        }else {
+        } else {
             log.debug("пробел");
             System.out.println();
         }
         String runner;
-        if (this instanceof UdpServer) {
+        if (this instanceof ThreadServer || this instanceof  UdpServer) {
             runner = "клиент";
         } else runner = "сервер";
         log.info("{} не подключен к сети", runner);
@@ -175,7 +191,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         }
     }
 
-    public void applyParams(boolean isServer){
+    public void applyParams(boolean isServer) {
         String level = System.getProperty("log.level");
         Level l = InputManager.parseLevel(level);
         String console = System.getProperty("log.console");
@@ -190,7 +206,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         Map<String, Appender> appenders = rootLogger.getAppenders();
 
         String appName;
-        if (isServer){
+        if (isServer) {
             appName = "Client";
         } else appName = "Server";
         appenders.values().stream()
@@ -213,4 +229,27 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 
         coreLogger.getContext().updateLoggers();
     }
+
+
+    public Invoker getInvoker() {
+        return invoker;
+    }
+
+    @Override
+    public UUID getRunnerId() {
+        return runnerId;
+    }
+
+    public ForkJoinPool getSendPool() {
+        return sendPool;
+    }
+
+    public ExecutorService getReadPool() {
+        return readPool;
+    }
+
+    public ExecutorService getProcessPool() {
+        return processPool;
+    }
+
 }
