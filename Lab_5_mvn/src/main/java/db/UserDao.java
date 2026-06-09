@@ -97,6 +97,8 @@ public class UserDao implements Dao<User>{
             List<String> f = u.feedback();
             if (!f.isEmpty()){
                 for (String s:f){
+                    if (s.isEmpty()) break;
+
                     feedback.append(s);
                 }
                 return ans.addFeedback(feedback.toString());

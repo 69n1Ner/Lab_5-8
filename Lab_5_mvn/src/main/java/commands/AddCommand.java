@@ -75,6 +75,8 @@ public class AddCommand extends Command implements Serializable {
             if (!loId.isEmpty()){
                 logger.debug("loId={}",loId);
                 for (String s:loId){
+                    if (s.isEmpty()) break;
+
                     feedback.append(s);
                 }
                 logger.warn(feedback);

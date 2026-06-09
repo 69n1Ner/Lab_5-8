@@ -35,13 +35,20 @@ public class ClearCommand extends Command implements Serializable {
             ObjWithFeedback<Integer> co = organizationDao.clear(user);
             StringBuilder feedback = new StringBuilder();
             int counter = co.object();
+            logger.debug("counter={}",counter);
             List<String> lco = co.feedback();
+            boolean isBroke = false;
             if (!lco.isEmpty()){
-                logger.debug("lco={}",lco);
                 for (String s:lco){
+                    if (s.equals("")) {
+                        isBroke =true;
+                        break;
+                    };
+                    logger.debug("lco={}",lco);
+
                     feedback.append(s);
                 }
-                return createRequest(feedback.toString());
+                if (!isBroke) return createRequest(feedback.toString());
             }
 
             String t = "Удалено "+counter+" организаций";
