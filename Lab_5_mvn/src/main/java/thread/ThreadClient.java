@@ -1,16 +1,17 @@
 package thread;
 
 import db.OrganizationDao;
+import exceptions.*;
 import io.ByteUtil;
 import io.InputManager;
 import main.Invoker;
 import net.Request;
 import net.RequestType;
 import net.Runner;
-import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.NamedThreadFactory;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -22,42 +23,23 @@ import java.nio.channels.DatagramChannel;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ThreadClient extends Runner {
     private DatagramChannel CHANNEL;
     private final Deque<Request> cachedMessages = new ArrayDeque<>();
+    private final BlockingQueue<Request> incomingQueue = new LinkedBlockingQueue<>();
+    private volatile boolean waitingForResponse = false;
+    private ScheduledExecutorService pingScheduler;
     private static final Logger logger = LogManager.getLogger(ThreadClient.class);
-
-    // ПУЛЫ ПОТОКОВ
-    private final ExecutorService readPool;          // Чтение ответов от сервера
-    private final ExecutorService processPool;       // Обработка полученных ответов
-    private final ForkJoinPool sendPool;             // Отправка запросов на сервер
-    private final ExecutorService consoleReaderPool; // Чтение команд с консоли
-    private final ExecutorService fileReaderPool;    // Чтение команд из файла
-
-    // Очередь команд от читателей (консоль/файл)
-    private final BlockingQueue<CommandInput> commandQueue = new LinkedBlockingQueue<>(100);
-
-    // Объект для синхронизации доступа к общим ресурсам
-    private final Object channelLock = new Object();
-    private final Object cacheLock = new Object();
 
     public ThreadClient(Invoker invoker, int port, boolean isLab7) {
         super(port, invoker, isLab7);
         super.invoker.setRunner(this);
-
-        // Инициализируем пулы с кастомными именами потоков
-        this.readPool = Executors.newFixedThreadPool(2, new CustomThreadFactory("READER"));
-        this.processPool = Executors.newFixedThreadPool(5, new CustomThreadFactory("PROCESSOR"));
-        this.sendPool = new ForkJoinPool(4);
-        this.consoleReaderPool = Executors.newFixedThreadPool(1, new CustomThreadFactory("CONSOLE-READER"));
-        this.fileReaderPool = Executors.newFixedThreadPool(1, new CustomThreadFactory("FILE-READER"));
     }
 
     public static void main(String[] args) {
         Invoker invoker = new Invoker();
-        UdpClient client = new UdpClient(invoker, 9898, true);
+        ThreadClient client = new ThreadClient(invoker, 9898, true);
         OrganizationDao.setRunner(client);
 
         client.applyParams(false);
@@ -68,8 +50,66 @@ public class ThreadClient extends Runner {
             user1 = client.authorize();
         }
         client.setUser(user1);
-
         client.run();
+    }
+
+    @Override
+    public Request sendAndWait(Request request) {
+        long start = System.currentTimeMillis();
+        long timeout = 1000;
+
+        waitingForResponse = true;
+        sendMessage(request);
+
+        if (request.requestType() != RequestType.PING) {
+            logger.info("Сообщение отправлено серверу");
+        } else {
+            logger.debug("Отправлен пинг");
+        }
+
+        try {
+            while (System.currentTimeMillis() - start < timeout) {
+                try {
+                    Request response = incomingQueue.poll(15, TimeUnit.MILLISECONDS);
+                    if (response == null) continue;
+
+                    if (!runnerId.equals(response.runnerId())) {
+                        incomingQueue.put(response);
+                        continue;
+                    }
+
+                    if (response.requestType() == RequestType.PING
+                            && request.requestType() != RequestType.PING) {
+                        incomingQueue.put(response);
+                        continue;
+                    }
+
+                    if (!silentConnection) {
+                        serverOnline();
+                        silentConnection = true;
+                    }
+                    silentConnectionError = false;
+                    return response;
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return null;
+                }
+            }
+
+            silentConnection = false;
+            if (request.requestType() != RequestType.PING) {
+                runnerNotConnected();
+            }
+            if (!silentConnectionError) {
+                runnerNotConnected();
+                silentConnectionError = true;
+            }
+            return null;
+
+        } finally {
+            waitingForResponse = false;
+        }
     }
 
     public User authorize() {
@@ -82,9 +122,9 @@ public class ThreadClient extends Runner {
             throw new RuntimeException(e);
         }
         input = InputManager.separateSecurity(input);
-        User user;
 
         boolean isRegistration;
+        User user;
         if (input == null || input.isEmpty() || input.equals("y") || input.equals("Y")) {
             logger.info("===== Авторизация =====");
             isRegistration = false;
@@ -115,10 +155,21 @@ public class ThreadClient extends Runner {
         try {
             CHANNEL = DatagramChannel.open();
             CHANNEL.configureBlocking(false);
-            SocketAddress socketAddress = new InetSocketAddress(IP_ADDRESS, port);
-            CHANNEL.connect(socketAddress);
-
+            CHANNEL.connect(new InetSocketAddress(IP_ADDRESS, port));
             logger.info("Клиент запущен и готов отправлять данные");
+
+            for (int i = 0; i < 2; i++) {
+                readPool.submit(this::receiveLoop);
+            }
+
+            pingScheduler = Executors.newSingleThreadScheduledExecutor(
+                    new NamedThreadFactory("PING"));
+            pingScheduler.scheduleAtFixedRate(
+                    () -> ping(Request.build()
+                            .setRequestId(UUID.randomUUID())
+                            .setRunnerId(runnerId)),
+                    0, 500, TimeUnit.MILLISECONDS);
+
         } catch (IOException e) {
             String t = "Клиент не смог подключиться к сети по порту " + port;
             logger.error(t, e);
@@ -130,11 +181,8 @@ public class ThreadClient extends Runner {
     public void sendMessage(Request request) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap(ByteUtil.toByteArray(request, ARRAY_SIZE));
-            SocketAddress address = new InetSocketAddress(IP_ADDRESS, port);
-
-            // Синхронизация отправки через канал
-            synchronized (channelLock) {
-                CHANNEL.send(buffer, address);
+            synchronized (CHANNEL) {
+                CHANNEL.send(buffer, new InetSocketAddress(IP_ADDRESS, port));
             }
             isUnreachable = false;
         } catch (PortUnreachableException e) {
@@ -149,21 +197,15 @@ public class ThreadClient extends Runner {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(ARRAY_SIZE);
             SocketAddress address;
-
-            // Синхронизация чтения из канала
-            synchronized (channelLock) {
+            synchronized (CHANNEL) {
                 address = CHANNEL.receive(buffer);
             }
-
-            if (address == null) {
-                return null;
-            }
+            if (address == null) return null;
 
             buffer.flip();
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);
             Request request = ByteUtil.fromBytesTo(data, Request.class);
-
             if (request.requestType() != RequestType.PING) {
                 logger.info("Сообщение получено от сервера #{}", address);
             }
@@ -183,343 +225,194 @@ public class ThreadClient extends Runner {
 
     @Override
     public void run(boolean isScript, String path, boolean isLab7) {
-        isRunning = true;
-        Path path1 = Path.of(path);
-
-        // ЗАПУСКАЕМ ПОТОК-ЧИТАТЕЛЬ ОТВЕТОВ ОТ СЕРВЕРА (Reader)
-        readPool.submit(this::readLoop);
-
-        // ЗАПУСКАЕМ ЧТЕНИЕ КОМАНД ИЗ КОНСОЛИ (всегда)
-        consoleReaderPool.submit(this::consoleLoop);
-
-        // ЗАПУСКАЕМ ЧТЕНИЕ КОМАНД ИЗ ФАЙЛА (если скрипт)
         if (isScript) {
-            try {
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(path1.toFile())));
-                fileReaderPool.submit(() -> fileLoop(path));
-            } catch (FileNotFoundException e) {
-                logger.warn(e.getMessage());
-                isRunning = false;
-                return;
-            }
+            runScript(path);
+            return;
         }
 
-        // ГЛАВНЫЙ ЦИКЛ КЛИЕНТА
-        // Обрабатывает отправку команд и обработку полученных ответов
-        while (isRunning) {
-            try {
-                Thread.sleep(5);
+        isRunning = true;
+        br = new BufferedReader(new InputStreamReader(System.in));
 
-                if (!isScript && initialRunShowUser) {
-                    showUser();
-                    initialRunShowUser = false;
-                }
-
-                // Пинг для проверки связи
-                ping(Request.build().setRequestId(UUID.randomUUID()).setRunnerId(runnerId));
-
-                // Читаем команды из очереди (от консоли или файла)
-                CommandInput commandInput = commandQueue.poll();
-                if (commandInput != null) {
-                    processCommandInput(commandInput);
-                }
-
-                // Обработка полученных ответов (из кеша)
-                processCachedMessages(isScript);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn(e.getMessage());
-            } catch (Exception e) {
-                logger.warn("{}", e.getMessage());
-                if (!isScript && isRunning) {
-                    showUser();
-                }
-            }
+        for (int i = 0; i < 2; i++) {
+            processPool.submit(() -> processLoop(isScript));
         }
+
+        consoleLoop(isScript, path);
+        shutdownPools();
     }
 
-    /**
-     * ПОТОК-ЧИТАТЕЛЬ ОТВЕТОВ ОТ СЕРВЕРА (Reader)
-     * Работает в readPool, постоянно читает ответы от сервера
-     */
-    private void readLoop() {
-        logger.info("Поток-читатель ответов запущен");
+    private void runScript(String path) {
+        try (BufferedReader scriptReader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(Path.of(path).toFile())))) {
 
-        while (isRunning) {
-            try {
-                Request response = receiveMessage();
-
-                if (response != null) {
-                    if (response.requestType() == RequestType.PING) {
-                        // PING обрабатываем сразу (быстрый ответ)
-                        sendPool.submit(() -> {
-                            Request pingResponse = Request.build()
-                                    .setRunnerId(response.runnerId())
-                                    .setRequestType(RequestType.PING);
-                            sendMessage(pingResponse);
-                        });
-                    } else {
-                        // Все остальные ответы передаем в processPool
-                        processPool.submit(() -> processServerResponse(response));
-                    }
-                }
-
-                Thread.sleep(10); // Небольшая пауза для неблокирующего канала
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (Exception e) {
-                if (isRunning) {
-                    logger.error("Ошибка в потоке-читателе ответов", e);
-                }
-            }
-        }
-
-        logger.info("Поток-читатель ответов остановлен");
-    }
-
-    /**
-     * ПОТОК-ЧИТАТЕЛЬ КОНСОЛИ
-     * Работает в consoleReaderPool, читает команды с консоли
-     */
-    private void consoleLoop() {
-        logger.info("Поток-читатель консоли запущен");
-        BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
-
-        while (isRunning) {
-            try {
-                if (consoleReader.ready()) {
-                    String input = consoleReader.readLine();
-                    if (input != null) {
-                        // Передаем команду в очередь
-                        commandQueue.put(new CommandInput(input, false, ""));
-                    }
-                }
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (IOException e) {
-                logger.error("Ошибка чтения консоли", e);
-            }
-        }
-
-        logger.info("Поток-читатель консоли остановлен");
-    }
-
-    /**
-     * ПОТОК-ЧИТАТЕЛЬ ФАЙЛА
-     * Работает в fileReaderPool, читает команды из файла
-     */
-    private void fileLoop(String path) {
-        logger.info("Поток-читатель файла запущен: {}", path);
-
-        try {
             String input;
-            while (isRunning && (input = br.readLine()) != null) {
-                if (input.trim().isEmpty()) {
+            while ((input = scriptReader.readLine()) != null) {
+                if (input.trim().isEmpty()) continue;
+                logger.info(input);
+
+                try {
+                    Request request = invoker.defineCommand(input, true).execute(user);
+                    if (request == null) continue;
+
+                    Request response = null;
+                    while (response == null) {
+                        response = sendAndWait(request.setRunnerId(runnerId));
+                    }
+
+                    if (response.requestType() != RequestType.PING) {
+                        logger.info(response.feedback());
+                    }
+
+                } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException e) {
+                    logger.warn("{}", e.getMessage());
+                }
+            }
+
+            logger.info("Скрипт {} выполнен", path);
+
+        } catch (FileNotFoundException e) {
+            logger.warn("Файл скрипта не найден: {}", path);
+        } catch (IOException e) {
+            logger.warn("Ошибка чтения скрипта: {}", e.getMessage());
+        }
+    }
+
+    private void receiveLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                Request request = receiveMessage();
+                if (request != null) {
+                    incomingQueue.put(request);
+                } else {
+                    Thread.sleep(5);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+
+    private void processLoop(boolean isScript) {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                if (waitingForResponse) {
+                    Thread.sleep(5);
                     continue;
                 }
-                logger.info("[СКРИПТ] {}", input);
-                // Передаем команду в очередь
-                commandQueue.put(new CommandInput(input, true, path));
-                Thread.sleep(10); // Небольшая пауза между командами скрипта
-            }
 
-            if (isRunning) {
-                logger.info("Файл {} обработан полностью", path);
-            }
+                synchronized (incomingQueue) {
+                    Request head = incomingQueue.peek();
+                    if (head == null || head.requestType() == RequestType.PING) {
+                        Thread.sleep(10);
+                        continue;
+                    }
+                    incomingQueue.poll();
+                    synchronized (cachedMessages) {
+                        cachedMessages.addFirst(head);
+                    }
+                }
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (IOException e) {
-            logger.error("Ошибка чтения файла", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
-
-        logger.info("Поток-читатель файла остановлен");
     }
 
-    /**
-     * Обработка команды из очереди (от консоли или файла)
-     */
-    private void processCommandInput(CommandInput commandInput) {
-        try {
-            String input = commandInput.input();
-            boolean isScript = commandInput.isScript();
+    private void consoleLoop(boolean isScript, String path) {
+        if (!isScript && initialRunShowUser) {
+            showUser();
+            initialRunShowUser = false;
+        }
 
-            // Создаем запрос
-            Request request = invoker.defineCommand(input, isScript).execute(user);
-
-            if (isRunning && CHANNEL != null && request != null) {
-                // Отправляем запрос в sendPool
-                sendPool.submit(() -> {
-                    Request response = null;
-                    int attempts = 0;
-                    while (response == null && attempts < 10 && isRunning) {
-                        response = sendAndWait(request.setRunnerId(runnerId));
-                        attempts++;
+        while (isRunning) {
+            try {
+                if (!br.ready()) {
+                    synchronized (cachedMessages) {
+                        while (!cachedMessages.isEmpty()) {
+                            Request cached = cachedMessages.removeLast();
+                            if (cached.requestType() != RequestType.PING) {
+                                logger.info(cached.feedback());
+                                if (!isScript && isRunning) showUser();
+                            }
+                        }
                     }
+                    Thread.sleep(5);
+                    continue;
+                }
 
+                String input = br.readLine();
+
+                if (isScript) {
+                    if (input == null) {
+                        logger.info("Файл {} обработан полностью", path);
+                        break;
+                    }
+                    if (input.trim().isEmpty()) continue;
+                    logger.info(input);
+                }
+
+                Thread.sleep(10);
+
+                Request request = invoker.defineCommand(input, isScript).execute(user);
+                if (isRunning && CHANNEL != null && request != null) {
+                    Request response = sendAndWait(request.setRunnerId(runnerId));
                     if (response != null) {
-                        // Кладем ответ в кеш
-                        synchronized (cacheLock) {
+                        synchronized (cachedMessages) {
                             cachedMessages.addFirst(response);
                         }
                     }
-                });
-            }
-
-        } catch (Exception e) {
-            logger.warn("Ошибка обработки команды: {}", e.getMessage());
-            if (!commandInput.isScript() && isRunning) {
-                showUser();
-            }
-        }
-    }
-
-    /**
-     * ПОТОК-ОБРАБОТЧИК ОТВЕТОВ ОТ СЕРВЕРА (Processor)
-     * Работает в processPool, обрабатывает полученные ответы
-     */
-    private void processServerResponse(Request response) {
-        try {
-            // Кладем ответ в кеш
-            synchronized (cacheLock) {
-                cachedMessages.addFirst(response);
-            }
-        } catch (Exception e) {
-            logger.error("Ошибка обработки ответа от сервера", e);
-        }
-    }
-
-    /**
-     * Обработка сообщений из кеша
-     */
-    private void processCachedMessages(boolean isScript) {
-        Request response = null;
-
-        synchronized (cacheLock) {
-            if (!cachedMessages.isEmpty()) {
-                response = cachedMessages.removeFirst();
-            }
-        }
-
-        if (response != null && response.requestType() != RequestType.PING) {
-            logger.info(response.feedback());
-            if (!isScript && isRunning) {
-                showUser();
-            }
-        }
-    }
-
-    @Override
-    public Closeable getTunnel() {
-        return CHANNEL;
-    }
-
-    @Override
-    public void setRunning(boolean condition) {
-        isRunning = condition;
-
-        if (!condition) {
-            logger.info("Остановка клиента...");
-
-            // Корректное завершение всех пулов
-            readPool.shutdown();
-            processPool.shutdown();
-            sendPool.shutdown();
-            consoleReaderPool.shutdown();
-            fileReaderPool.shutdown();
-
-            try {
-                if (!readPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    readPool.shutdownNow();
                 }
-                if (!processPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    processPool.shutdownNow();
-                }
-                if (!sendPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    sendPool.shutdownNow();
-                }
-                if (!consoleReaderPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    consoleReaderPool.shutdownNow();
-                }
-                if (!fileReaderPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    fileReaderPool.shutdownNow();
-                }
+
             } catch (InterruptedException e) {
-                readPool.shutdownNow();
-                processPool.shutdownNow();
-                sendPool.shutdownNow();
-                consoleReaderPool.shutdownNow();
-                fileReaderPool.shutdownNow();
                 Thread.currentThread().interrupt();
+                break;
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
+                logger.warn("{}", e.getMessage());
+                if (!isScript && isRunning) showUser();
             }
+        }
+    }
 
-            try {
-                if (CHANNEL != null && CHANNEL.isOpen()) {
-                    CHANNEL.close();
-                }
-            } catch (IOException e) {
-                logger.error("Ошибка закрытия канала", e);
-            }
-
-            logger.info("Клиент остановлен");
+    private void shutdownPools() {
+        pingScheduler.shutdown();
+        readPool.shutdown();
+        processPool.shutdown();
+        sendPool.shutdown();
+        try {
+            if (!pingScheduler.awaitTermination(2, TimeUnit.SECONDS)) pingScheduler.shutdownNow();
+            if (!readPool.awaitTermination(5, TimeUnit.SECONDS)) readPool.shutdownNow();
+            if (!processPool.awaitTermination(5, TimeUnit.SECONDS)) processPool.shutdownNow();
+            if (!sendPool.awaitTermination(5, TimeUnit.SECONDS)) sendPool.shutdownNow();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            pingScheduler.shutdownNow();
+            readPool.shutdownNow();
+            processPool.shutdownNow();
+            sendPool.shutdownNow();
         }
     }
 
     @Override
-    public Invoker getInvokerFather() {
-        return invoker;
-    }
+    public Closeable getTunnel() { return CHANNEL; }
 
     @Override
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public Invoker getInvoker() {
-        return invoker;
-    }
+    public void setRunning(boolean condition) { isRunning = condition; }
 
     @Override
-    public String toString() {
-        return "UdpClient";
-    }
+    public Invoker getInvokerFather() { return invoker; }
 
     @Override
-    public UUID getRunnerId() {
-        return runnerId;
-    }
+    public Logger getLogger() { return logger; }
 
-    /**
-     * Внутренний класс для хранения команды из очереди
-     */
-    private record CommandInput(String input, boolean isScript, String path) {
-    }
+    public int getPort() { return port; }
 
-    /**
-     * Фабрика потоков с кастомными именами для логирования
-     */
-    private static class CustomThreadFactory implements ThreadFactory {
-        private final String poolName;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
+    public Invoker getInvoker() { return invoker; }
 
-        public CustomThreadFactory(String poolName) {
-            this.poolName = poolName;
-        }
+    @Override
+    public String toString() { return "UdpClient"; }
 
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, poolName + "-thread-" + threadNumber.getAndIncrement());
-            t.setDaemon(true);
-            return t;
-        }
-    }
+    @Override
+    public UUID getRunnerId() { return runnerId; }
 }

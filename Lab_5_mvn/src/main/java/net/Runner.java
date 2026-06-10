@@ -14,7 +14,6 @@ import thread.ThreadServer;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.net.PortUnreachableException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -29,11 +28,11 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
     protected final int port;
     protected final Invoker invoker;
     protected BufferedReader br;
-    protected boolean isRunning;
+    protected volatile boolean isRunning;
     protected final UUID runnerId = UUID.randomUUID();
     protected boolean isUnreachable = false;
-    private boolean silentConnectionError = false;
-    private boolean silentConnection = false;
+    protected boolean silentConnectionError = false;
+    protected boolean silentConnection = false;
     protected boolean initialOnlineShowUser = true;
     protected boolean initialRunShowUser = true;
     protected final boolean isLab7;
@@ -75,14 +74,16 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         this.user = user;
     }
 
-    public void ping(Request request) throws PortUnreachableException {
+    public Request ping(Request request){
         Request request1 = Request.build()
                 .setRequestType(RequestType.PING)
                 .setRunnerId(request.runnerId())
                 .setRequestId(request.requestId());
 
-        sendAndWait(request1);
+        return sendAndWait(request1);
     }
+
+
 
     public Request sendAndWait(Request request) {
         long start = System.currentTimeMillis();
@@ -107,13 +108,18 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 //                    logger.debug("{} {}", runnerId, response.runnerId());
 
                 //online
+                log.debug("condition={}",runnerId.equals(response.runnerId()));
+                log.debug("runnerId={}",runnerId);
+                log.debug("response.runnerId()={}",response.runnerId());
                 if (runnerId.equals(response.runnerId())) {
 //                        log.debug("condition passed");
                     if (!silentConnection) {
+                        log.debug("до онлайна");
                         serverOnline();
                         silentConnection = true;
                     }
                     silentConnectionError = false;
+                    log.debug("response={}",response);
                     return response;
                 }
             }
@@ -140,20 +146,23 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         return null;
     }
 
-    private void runnerSentMsg(Request request) {
+    protected void runnerSentMsg(Request request) {
         String runner;
         if (this instanceof ThreadServer || this instanceof UdpServer) {
             runner = "клиенту #" + request.user();
         } else runner = "серверу";
 
-//        if (request.requestType() == RequestType.PING) log.debug("Отправлен пинг");
+        if (request.requestType() == RequestType.PING) {
+            log.debug("Отправлен пинг");
+            log.debug("request={}",request);
+        }
 
         if (request.requestType() != RequestType.PING) {
             log.info("Сообщение отправлено {}", runner);
         }
     }
 
-    private void serverOnline() {
+    protected void serverOnline() {
         if (initialOnlineShowUser) {
             if (isRunning) {
                 showUser();
@@ -174,7 +183,7 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
         System.out.print("$" + this.getUser() + ": ");
     }
 
-    private void runnerNotConnected() {
+    protected void runnerNotConnected() {
         if (initialOnlineShowUser) {
             initialOnlineShowUser = false;
         } else {

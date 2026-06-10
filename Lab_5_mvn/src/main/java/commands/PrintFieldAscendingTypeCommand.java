@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import organization.Organization;
 import security.User;
 import sorts.SortByType;
+import thread.ThreadClient;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,7 +32,8 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
         try {
             Validator.isValidArgument(this);
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
+
                 return createRequest(this);
             }
 
@@ -57,7 +59,7 @@ public class PrintFieldAscendingTypeCommand extends Command implements Serializa
             r= i.getMessage();
         }
 
-        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient)) {
             return createRequest(r);
         }
         return null;

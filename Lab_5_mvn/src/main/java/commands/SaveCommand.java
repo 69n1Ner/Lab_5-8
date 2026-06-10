@@ -8,6 +8,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.ThreadClient;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +30,8 @@ public class SaveCommand extends Command{
         try {
             Validator.isValidArgument(this);
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
+
                 return createRequest(this);
             }
 

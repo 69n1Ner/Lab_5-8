@@ -23,18 +23,20 @@ import sorts.SortById;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ThreadServer extends Runner {
     private DatagramSocket SOCKET;
     private final HashMap<UUID, SocketAddress> socketAddressMap = new HashMap<>();
     private static final Logger logger = LogManager.getLogger(ThreadServer.class);
 
+    private static final int RECEIVER_THREADS = 2;
+    private static final int PROCESSOR_THREADS = 4;
+
+    private final ExecutorService receiverPool = Executors.newFixedThreadPool(RECEIVER_THREADS);
+    private final ExecutorService processorPool = Executors.newFixedThreadPool(PROCESSOR_THREADS);
+    private final ForkJoinPool senderPool = new ForkJoinPool();
 
     public ThreadServer(Invoker invoker, int port, boolean isLab7) {
         super(port, invoker, isLab7);
@@ -45,7 +47,6 @@ public class ThreadServer extends Runner {
         Invoker invoker = new Invoker();
         ThreadServer server = new ThreadServer(invoker, 9898, true);
         OrganizationDao.setRunner(server);
-
         try {
             server.setUser(UserDao.getInstance().findByUserName("server"));
         } catch (NoSuchEntityException e) {
@@ -64,12 +65,12 @@ public class ThreadServer extends Runner {
         server.applyParams(true);
         server.connect();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            server.setRunning(false);
-            ((ExitCommand) server.getInvokerFather().getAllCommands().get("exit"))
-                    .setInterrupt(true)
-                    .execute(null);
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> ((ExitCommand) server
+                .getInvokerFather()
+                .getAllCommands()
+                .get("exit"))
+                .setInterrupt(true)
+                .execute(null)));
 
         server.run();
     }
@@ -89,21 +90,21 @@ public class ThreadServer extends Runner {
 
     @Override
     public void sendMessage(Request request) {
+        SocketAddress address;
+        synchronized (socketAddressMap) {
+            address = socketAddressMap.get(request.runnerId());
+        }
+        if (address == null) {
+            isUnreachable = true;
+            return;
+        }
         try {
             byte[] buf = ByteUtil.toByteArray(request, ARRAY_SIZE);
-            SocketAddress address;
-
-                address = socketAddressMap.get(request.runnerId());
-
-            isUnreachable = false;
-            if (address == null) {
-                isUnreachable = true;
-                return;
-            }
-
             DatagramPacket toClient = new DatagramPacket(buf, buf.length, address);
-
+            isUnreachable = false;
+            synchronized (SOCKET) {
                 SOCKET.send(toClient);
+            }
         } catch (IOException e) {
             logger.warn("{} {}", this.getClass().getSimpleName(), e);
         }
@@ -114,17 +115,19 @@ public class ThreadServer extends Runner {
         try {
             byte[] buf = new byte[ARRAY_SIZE];
             DatagramPacket fromClient = new DatagramPacket(buf, ARRAY_SIZE);
-
-            SOCKET.receive(fromClient);
-
+            synchronized (SOCKET) {
+                SOCKET.receive(fromClient);
+            }
             Request request = ByteUtil.fromBytesTo(fromClient.getData(), Request.class);
-
+            synchronized (socketAddressMap) {
                 socketAddressMap.put(request.runnerId(), fromClient.getSocketAddress());
-
+            }
             if (request.requestType() != RequestType.PING) {
-                System.out.println();
-                logger.info("Сообщение получено от клиента #{}#{}",
-                        fromClient.getSocketAddress(), request.user());
+                SocketAddress address;
+                synchronized (socketAddressMap) {
+                    address = socketAddressMap.get(request.runnerId());
+                }
+                logger.info("Сообщение получено от клиента #{}#{}", address, request.user());
                 logger.debug("request={}", request);
             }
             return request;
@@ -144,11 +147,10 @@ public class ThreadServer extends Runner {
     @Override
     public void run(boolean isScript, String path, boolean isLab7) {
         isRunning = true;
-        Path path1 = Path.of(path);
 
         if (isScript) {
             try {
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(path1.toFile())));
+                br = new BufferedReader(new InputStreamReader(new FileInputStream(Path.of(path).toFile())));
             } catch (FileNotFoundException e) {
                 logger.warn(e);
                 return;
@@ -157,250 +159,204 @@ public class ThreadServer extends Runner {
             br = new BufferedReader(new InputStreamReader(System.in));
         }
 
-        readPool.submit(()->readLoop(isScript));
+        if (!isScript && initialOnlineShowUser) {
+            showUser();
+            initialOnlineShowUser = false;
+        }
 
+        for (int i = 0; i < RECEIVER_THREADS; i++) {
+            receiverPool.submit(() -> receiveLoop(isScript));
+        }
+
+        consoleLoop(isScript, path);
+
+        shutdownPools();
+    }
+
+    private void receiveLoop(boolean isScript) {
         while (isRunning) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(5);
+                if (SOCKET == null || SOCKET.isClosed()) break;
 
-                if (!isScript && initialOnlineShowUser) {
-                    showUser();
-                    initialOnlineShowUser = false;
-                }
+                Request request = receiveMessage();
+                if (request == null) continue;
 
-                if (br.ready()) {
-                    String input = br.readLine();
-
-                    if (isScript) {
-                        if (input == null) {
-                            logger.info("Файл {} обработан полностью", path);
-                            break;
-                        }
-                        if (input.trim().isEmpty()) {
-                            continue;
-                        }
-                        logger.info(input);
-                    }
-
-                    // Отправка команд от сервера клиентам
-                    Request request = invoker.defineCommand(input, isScript).execute(user);
-                    if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
-                        sendAndWait(request.setRunnerId(runnerId));
-                    }
-
-                    if (!isScript && isRunning) {
-                        showUser();
-                        System.out.flush();
-                    }
-                }
+                processorPool.submit(() -> handleRequest(request, isScript));
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.warn(e);
-            } catch (SocketException e) {
-                if (!isRunning) break;
-                logger.warn("Ошибка сокета: {}", e.getMessage());
-            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
-                logger.warn("{}", e.getMessage());
-                if (!isScript && isRunning) {
-                    showUser();
-                }
+                break;
             }
         }
     }
 
-    /// reading
-    private void readLoop(boolean isScript) {
-
-        while (isRunning) {
-            try {
-                Request request = receiveMessage();
-
-                if (request != null) {
-                    if (request.requestType() != RequestType.PING) {
-                        processPool.submit(() -> processClientRequest(request,isScript));
-                    } else {
-                        sendPool.submit(() -> {
-                            Request response = Request.build()
-                                    .setRunnerId(request.runnerId())
-                                    .setRequestType(RequestType.PING);
-                            sendAndWait(response);
-                        });
-                    }
-                }
-            } catch (Exception e) {
-                if (isRunning) {
-                    logger.error("Ошибка в потоке-читателе", e);
-                }
-            }
-        }
-    }
-
-    /// processing
-    private void processClientRequest(Request request,boolean isScript) {
+    private void handleRequest(Request request, boolean isScript) {
         try {
+            if (request.requestType() == RequestType.PING) {
+                Request pong = Request.build()
+                        .setRunnerId(request.runnerId())
+                        .setRequestType(RequestType.PING);
+                submitSend(pong);
+                return;
+            }
+
             Request response;
 
-            /// authorization/registration user response with thread
             if (request.requestType() == RequestType.USER) {
                 response = handleUserRequest(request);
-            }
-
-            /// command response with thread
-            else if (request.requestType() == RequestType.COMMAND) {
-                response = handleCommandRequest(request);
-            }
-
-            /// undefined request type response
-            else {
+            } else if (request.requestType() == RequestType.COMMAND) {
+                Command command = request.command();
+                logger.info(command);
+                response = command.setInvokerFather(invoker).execute(request.user());
+            } else {
                 response = Request.build()
                         .setFeedback("Неизвестный тип реквеста")
                         .setRequestType(RequestType.FEEDBACK);
             }
-            /// sending with thread
+
             if (response != null) {
-                sendPool.submit(() -> sendResponse(response, request,isScript));
+                response = response.setRunnerId(request.runnerId());
+                submitSend(response);
+                if (!isScript && isRunning) {
+                    showUser();
+                }
             }
 
-        } catch (Exception e) {
-            logger.error("Ошибка обработки запроса от {}", request.user(), e);
+        } catch (RecursionLimitReached | XmlUtilException e) {
+            logger.warn("{}", e.getMessage());
         }
     }
 
-    /// authorization/registration user response
     private Request handleUserRequest(Request request) {
         boolean isRegistration = request.isScript();
         UserDao userDao = UserDao.getInstance();
         User user1 = request.user();
         StringBuilder feedback = new StringBuilder();
-        Request response = Request.build().setRequestType(RequestType.USER_WRONG);
+        Request result = Request.build().setRequestType(RequestType.USER_WRONG);
 
-        /// authorization
         if (!isRegistration) {
             Optional<User> optionalUser = userDao.findAll().stream()
                     .filter(u -> u.getUserName().equals(user1.getUserName()))
                     .findFirst();
-
             if (optionalUser.isEmpty()) {
                 feedback.append("Такого пользователя не существует");
             } else if (optionalUser.get().getPassword().equals(user1.getPassword())) {
                 feedback.append("Вы успешно авторизовались");
-                response = response.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
-                logger.debug("request1={}", response);
+                result = result.setRequestType(RequestType.USER_OK).setUser(optionalUser.get());
+                logger.debug("request1={}", result);
             } else {
                 feedback.append("Неверный пароль");
             }
         } else {
-            /// registration
-            synchronized (userDao) {
-                ObjWithFeedback<Integer> o = userDao.save(user1, null);
-                long id = o.object();
-                List<String> l = o.feedback();
-
-                if (id > 0 && l.isEmpty()) {
-                    feedback.append("Вы успешно зарегистрировались");
-                    ObjWithFeedback<User> u = userDao.findById(id);
-                    User user2 = u.object();
-                    List<String> lu = u.feedback();
-
-                    if (!lu.isEmpty()) {
-                        for (String s1 : lu) {
-                            feedback.append(s1);
-                        }
-                    } else {
-                        response = response.setRequestType(RequestType.USER_OK).setUser(user2);
-                    }
+            ObjWithFeedback<Integer> o = userDao.save(user1, null);
+            long id = o.object();
+            List<String> l = o.feedback();
+            if (id > 0 && l.isEmpty()) {
+                feedback.append("Вы успешно зарегистрировались");
+                ObjWithFeedback<User> u = userDao.findById(id);
+                User user2 = u.object();
+                List<String> lu = u.feedback();
+                if (!lu.isEmpty()) {
+                    lu.forEach(s -> feedback.append(s));
                 } else {
-                    feedback.append("Произошла ошибка при добавлении пользователя");
-                    for (String s : l) {
-                        feedback.append("\n").append(s);
-                    }
+                    result = result.setRequestType(RequestType.USER_OK).setUser(user2);
                 }
+            } else {
+                feedback.append("Произошла ошибка при добавлении пользователя");
+                l.forEach(s -> feedback.append("\n").append(s));
             }
         }
-        response = response.setFeedback(feedback.toString());
-        logger.debug("после фидбека response={}", response);
 
-        return response;
+        result = result.setFeedback(feedback.toString());
+        logger.debug("после фидбека request1={}", result);
+        return result;
     }
 
-    /// processing
-    private Request handleCommandRequest(Request request) {
-        Command command = request.command();
-        logger.info("Получена команда: {}", command);
+    private void submitSend(Request request) {
+        senderPool.submit(() -> {
+            try {
+                sendAndWait(request.setRunnerId(request.runnerId()));
+            } catch (Exception e) {
+                logger.warn("Ошибка отправки: {}", e.getMessage());
+            }
+        });
+    }
 
-        // Синхронизация доступа к invoker и коллекции
-        synchronized (OrganizationDao.getInstance()) {
-            return command.setInvokerFather(invoker).execute(request.user());
+    private void consoleLoop(boolean isScript, String path) {
+        while (isRunning) {
+            try {
+                Thread.sleep(5);
+                if (!br.ready()) continue;
+
+                String input = br.readLine();
+
+                if (isScript) {
+                    if (input == null) {
+                        logger.info("Файл {} обработан полностью", path);
+                        break;
+                    }
+                    if (input.trim().isEmpty()) continue;
+                    logger.info(input);
+                }
+
+                Request request = invoker.defineCommand(input, isScript).execute(user);
+                if (isRunning && SOCKET != null && !SOCKET.isClosed() && request != null) {
+                    sendAndWait(request.setRunnerId(runnerId));
+                }
+                if (!isScript && isRunning) {
+                    showUser();
+                    System.out.flush();
+                }
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (SocketException e) {
+                if (!isRunning) break;
+                logger.warn("Ошибка сокета: {}", e.getMessage());
+            } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
+                logger.warn("{}", e.getMessage());
+                if (!isScript && isRunning) showUser();
+            }
         }
     }
-    /// sending
-    private void sendResponse(Request response, Request originalRequest,boolean isScript) {
+
+    private void shutdownPools() {
+        receiverPool.shutdown();
+        processorPool.shutdown();
+        senderPool.shutdown();
         try {
-            response = response.setRunnerId(originalRequest.runnerId());
-            sendAndWait(response);
-
-            if (!isScript && isRunning) {
-                showUser();
-            }
-        } catch (Exception e) {
-            logger.error("Ошибка отправки ответа", e);
+            if (!receiverPool.awaitTermination(5, TimeUnit.SECONDS)) receiverPool.shutdownNow();
+            if (!processorPool.awaitTermination(5, TimeUnit.SECONDS)) processorPool.shutdownNow();
+            if (!senderPool.awaitTermination(5, TimeUnit.SECONDS)) senderPool.shutdownNow();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            receiverPool.shutdownNow();
+            processorPool.shutdownNow();
+            senderPool.shutdownNow();
         }
     }
 
     @Override
-    public Logger getLogger() {
-        return logger;
-    }
+    public Logger getLogger() { return logger; }
 
-    public Invoker getInvoker() {
-        return invoker;
-    }
+    public Invoker getInvoker() { return invoker; }
 
     @Override
-    public Closeable getTunnel() {
-        return SOCKET;
-    }
-
-    public void setRunning(boolean condition) {
-
-    }
+    public Closeable getTunnel() { return SOCKET; }
 
     @Override
-    public Invoker getInvokerFather() {
-        return invoker;
-    }
-
-    public BufferedReader getBr() {
-        return br;
-    }
+    public void setRunning(boolean condition) { isRunning = false; }
 
     @Override
-    public String toString() {
-        return "ThreadServer";
-    }
+    public Invoker getInvokerFather() { return invoker; }
+
+    public BufferedReader getBr() { return br; }
 
     @Override
-    public UUID getRunnerId() {
-        return runnerId;
-    }
+    public String toString() { return "UdpServer"; }
 
-    /**
-     * Фабрика потоков с кастомными именами для логирования
-     */
-    private static class CustomThreadFactory implements ThreadFactory {
-        private final String poolName;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-
-        public CustomThreadFactory(String poolName) {
-            this.poolName = poolName;
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, poolName + "-thread-" + threadNumber.getAndIncrement());
-            t.setDaemon(true);
-            return t;
-        }
-    }
+    @Override
+    public UUID getRunnerId() { return runnerId; }
 }

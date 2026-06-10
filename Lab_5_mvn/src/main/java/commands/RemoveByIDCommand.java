@@ -11,6 +11,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.ThreadClient;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +30,8 @@ public class RemoveByIDCommand extends Command implements Serializable {
         try {
             Validator.isValidArgument(this);
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
+
                 return createRequest(this);
             }
 
@@ -65,7 +67,8 @@ public class RemoveByIDCommand extends Command implements Serializable {
             r= i.getMessage();
         }
 
-        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient)) {
+
             return createRequest(r);
         }
         return null;

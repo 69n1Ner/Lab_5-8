@@ -37,29 +37,23 @@ public class ExecuteScriptCommand extends Command{
     public Request execute(User user) {
         try {
             String file = getArgument();
-//            logger.debug("file0={}",file);
-            if (file.contains("\"")){
-//                logger.debug("contains");
-                file = file.replace("\"","");
-//                logger.debug("file1={}",file);
+            if (file.contains("\"")) {
+                file = file.replace("\"", "");
                 Command command = this.setArgument(file);
                 Validator.isValidArgument(command);
-            }else Validator.isValidArgument(this);
+            } else {
+                Validator.isValidArgument(this);
+            }
 
             incrementCurrentRecursion();
-
             Runner runner = getInvokerFather().getRunner();
-            runner.run(true,file,runner.isLab7());
-            String t = "Скрипт " +file+  " выполнен";
-            logger.info(t);
+            runner.run(true, file, runner.isLab7()); // клиент вызовет runScript()
+            decrementCurrentRecursion();             // важно: сбрасываем после выполнения
+            logger.info("Скрипт {} выполнен", file);
 
-        }catch (InvalidInput | RecursionLimitReached i){
+        } catch (InvalidInput | RecursionLimitReached i) {
             logger.warn(i);
         }
-
-//        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
-//            return createRequest(r);
-//        }
         return null;
     }
 

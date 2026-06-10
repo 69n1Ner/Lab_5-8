@@ -12,6 +12,7 @@ import security.User;
 import thread.ThreadServer;
 
 import java.io.Closeable;
+import java.util.concurrent.TimeUnit;
 
 public class ExitCommand extends Command{
     private static final Logger logger = LogManager.getLogger(ExitCommand.class);
@@ -31,6 +32,23 @@ public class ExitCommand extends Command{
             runner.getReadPool().shutdown();
             runner.getProcessPool().shutdown();
             runner.getSendPool().shutdown();
+
+            try {
+                if (!runner.getReadPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getReadPool().shutdownNow();
+                }
+                if (!runner.getProcessPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getProcessPool().shutdownNow();
+                }
+                if (!runner.getSendPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getSendPool().shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                runner.getReadPool().shutdownNow();
+                runner.getProcessPool().shutdownNow();
+                runner.getSendPool().shutdownNow();
+                Thread.currentThread().interrupt();
+            }
 
             if (!isInterrupt){
                 return null;
