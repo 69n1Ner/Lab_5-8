@@ -85,6 +85,28 @@
                         </configuration>
                     </execution>
 
+
+                    <!-- === СБОРКА МНОГОПОТОЧНОГО СЕРВЕРА === -->
+                    <execution>
+                        <id>make-thread-server-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>thread.ThreadServer</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>lab5_8-thread-server</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+
                     <!-- === СБОРКА КЛИЕНТА === -->
                     <execution>
                         <id>make-client-jar</id>
@@ -104,6 +126,29 @@
                             </descriptorRefs>
                             <!-- Итоговое имя: lab5_8-client.jar -->
                             <finalName>lab5_8-client</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+
+                    <!-- === СБОРКА МНОГОПОТОЧНОГО КЛИЕНТА === -->
+                    <execution>
+                        <id>make-thread-client-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <!-- 🔹 Главный класс клиента -->
+                                    <mainClass>thread.ThreadClient</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <!-- Итоговое имя: lab5_8-client.jar -->
+                            <finalName>lab5_8-thread-client</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>

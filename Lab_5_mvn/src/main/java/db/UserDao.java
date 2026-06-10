@@ -143,7 +143,7 @@ public class UserDao implements Dao<User>{
     }
 
     @Override
-    public ObjWithFeedback<User> findById(Long id) throws NoSuchEntityException {
+    public ObjWithFeedback<User> findById(Long id) {
         ObjWithFeedback<User> ans = new ObjWithFeedback<>(null,new ArrayList<>());
         try {
             User user = CONTAINER.getById(id);

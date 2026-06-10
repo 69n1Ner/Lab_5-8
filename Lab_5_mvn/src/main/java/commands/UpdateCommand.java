@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 import security.User;
+import thread.ThreadClient;
 
 import java.io.Serializable;
 import java.util.List;
@@ -47,7 +48,8 @@ public class UpdateCommand extends Command  implements Serializable {
                 parametrizedOrg = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
+
                 String xmlOrg = XmlUtil.orgToXml(parametrizedOrg);
                 Command command = this.setXmlArgument(xmlOrg);
                 return createRequest(command);
@@ -95,7 +97,8 @@ public class UpdateCommand extends Command  implements Serializable {
             r=i.getMessage();
         }
 
-        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient)) {
+
             return createRequest(r);
         }
         return null;

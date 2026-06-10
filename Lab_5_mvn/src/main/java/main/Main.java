@@ -7,7 +7,7 @@
 //import net.Request;
 //import net.RequestType;
 //import net.UdpClient;
-//import net.UdpServer;
+//import net.ThreadServer;
 //import organization.Organization;
 //
 //import java.io.*;
@@ -35,11 +35,11 @@
 //    }
 //
 //
-//    public static void programExecute(Invoker invoker, UdpClient client, UdpServer server) {
+//    public static void programExecute(Invoker invoker, UdpClient client, ThreadServer server) {
 //        programExecute(invoker, null, client,server);
 //    }
 //
-//    public static void programExecute(Invoker invoker, String path, UdpClient client, UdpServer server) {
+//    public static void programExecute(Invoker invoker, String path, UdpClient client, ThreadServer server) {
 //        if (path == null) {
 //            run(invoker, new BufferedReader(new InputStreamReader(System.in, UTF_8)), false, client,server);
 //        } else {
@@ -52,7 +52,7 @@
 //        }
 //    }
 //
-//    public static void run(Invoker invoker, BufferedReader br, boolean isScript, UdpClient client, UdpServer server){
+//    public static void run(Invoker invoker, BufferedReader br, boolean isScript, UdpClient client, ThreadServer server){
 //        while (true) {
 //            if (!isScript) {
 //                System.out.print("$user: ");

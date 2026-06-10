@@ -102,7 +102,7 @@ public class OrganizationDao implements Dao<Organization>{
             try {
                 userDao.findById(user.getId());
                 userId = user.getId();
-            } catch (NoSuchEntityException | NullPointerException e) {
+            } catch ( NullPointerException e) {
                 log.debug("не нашел юзера");
                 feedback.append("Такого пользователя не нашлось, организация не будет добавлена");
                 return ans.addFeedback(feedback.toString());
@@ -175,8 +175,6 @@ public class OrganizationDao implements Dao<Organization>{
                     connection.rollback();
                     throw new SQLException("Не удалось вытащить ID у организации");
                 }
-            } catch (NoSuchEntityException e) {
-                throw new RuntimeException(e);
             }
 
         }catch (SQLException e){
@@ -305,7 +303,6 @@ public class OrganizationDao implements Dao<Organization>{
     private static ObjWithFeedback<Boolean> isCorrectUser(User user, boolean isClearCommand, Organization organization) {
         ObjWithFeedback<Boolean> ans = new ObjWithFeedback<>(false,new ArrayList<>());
         StringBuilder feedback = new StringBuilder();
-        try {
             ObjWithFeedback<User> u = UserDao.getInstance().findById(organization.getUser().getId());
             User user1 = u.object();
             List<String> lu = u.feedback();
@@ -331,10 +328,6 @@ public class OrganizationDao implements Dao<Organization>{
             log.debug("user correct1");
 
 
-        } catch (NoSuchEntityException e) {
-//            log.debug(NoSuchEntityException.getMsg());
-            return ans.addFeedback(e.getMessage());
-        }
         return ans.setObject(true);
     }
 
@@ -534,14 +527,10 @@ public class OrganizationDao implements Dao<Organization>{
                     organization.setAnnualTurnover(resultSet.getInt("annual_turnover"));
 
                     UserDao userDao = UserDao.getInstance();
-                    try {
                         ObjWithFeedback<User> u = userDao.findById(resultSet.getLong("user_id"));
                         User user = u.object();
 
                         organization.setUser(user);
-                    } catch (NoSuchEntityException e) {
-                        throw new RuntimeException(e);
-                    }
 
                     Coordinates coordinates = new Coordinates();
                     coordinates.setX(resultSet.getLong("coordinates_x"));

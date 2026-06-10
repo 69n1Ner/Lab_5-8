@@ -6,11 +6,13 @@ io\Validator$1.class
 commands\Command.class
 commands\HelpCommand.class
 commands\SaveCommand.class
+thread\NamedThreadFactory.class
 io\LocalDateAdapter.class
 commands\ArgumentType.class
 main\Container.class
 io\Validator.class
 commands\GetLoggerable.class
+thread\ThreadClient.class
 exceptions\SameOrganizationExistsException.class
 commands\InfoCommand.class
 net\Unique.class

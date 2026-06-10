@@ -9,8 +9,10 @@ import net.UdpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.ThreadServer;
 
 import java.io.Closeable;
+import java.util.concurrent.TimeUnit;
 
 public class ExitCommand extends Command{
     private static final Logger logger = LogManager.getLogger(ExitCommand.class);
@@ -27,6 +29,26 @@ public class ExitCommand extends Command{
             Validator.isValidArgument(this);
             Runner runner = getInvokerFather().getRunner();
             runner.setRunning(false);
+            runner.getReadPool().shutdown();
+            runner.getProcessPool().shutdown();
+            runner.getSendPool().shutdown();
+
+            try {
+                if (!runner.getReadPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getReadPool().shutdownNow();
+                }
+                if (!runner.getProcessPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getProcessPool().shutdownNow();
+                }
+                if (!runner.getSendPool().awaitTermination(1, TimeUnit.SECONDS)) {
+                    runner.getSendPool().shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                runner.getReadPool().shutdownNow();
+                runner.getProcessPool().shutdownNow();
+                runner.getSendPool().shutdownNow();
+                Thread.currentThread().interrupt();
+            }
 
             if (!isInterrupt){
                 return null;
@@ -35,7 +57,7 @@ public class ExitCommand extends Command{
             Closeable tunnel = runner.getTunnel();
             if (tunnel != null) {
                 try {
-                    if (runner instanceof UdpServer) {
+                    if (runner instanceof  UdpServer || runner instanceof ThreadServer) {
                         if (!runner.isLab7()) {
                             runner.getInvokerFather().getAllCommands().get("save").execute(null);
                         }

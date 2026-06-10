@@ -9,6 +9,7 @@ import net.UdpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
+import thread.ThreadClient;
 
 import java.io.Serializable;
 
@@ -25,7 +26,7 @@ public class InfoCommand extends Command implements Serializable {
         try {
             Validator.isValidArgument(this);
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
                 return createRequest(this);
             }
 

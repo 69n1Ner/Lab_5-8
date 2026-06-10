@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import organization.Organization;
 import security.User;
+import thread.ThreadClient;
 
 import java.io.Serializable;
 import java.util.List;
@@ -42,7 +43,8 @@ public class RemoveLowerCommand extends Command implements Serializable {
                 newOrganization = XmlUtil.readOrganizationFromString(getXmlArgument());
             }
 
-            if (getInvokerFather().getRunner() instanceof UdpClient){
+            if (getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient){
+
                 String xmlOrg = XmlUtil.orgToXml(newOrganization);
                 Command command = this.setXmlArgument(xmlOrg);
                 return createRequest(command);
@@ -92,7 +94,8 @@ public class RemoveLowerCommand extends Command implements Serializable {
             r= e.getMessage();
         }
 
-        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient)) {
+        if (isRequest() &&!(getInvokerFather().getRunner() instanceof UdpClient || getInvokerFather().getRunner() instanceof ThreadClient)) {
+
             return createRequest(r);
         }
         return null;
