@@ -205,10 +205,12 @@ public class ThreadServer extends Runner {
 
             if (request.requestType() == RequestType.USER) {
                 response = handleUserRequest(request);
+
             } else if (request.requestType() == RequestType.COMMAND) {
                 Command command = request.command();
                 logger.info(command);
                 response = command.setInvokerFather(invoker).execute(request.user());
+
             } else {
                 response = Request.build()
                         .setFeedback("Неизвестный тип реквеста")
@@ -258,7 +260,7 @@ public class ThreadServer extends Runner {
                 User user2 = u.object();
                 List<String> lu = u.feedback();
                 if (!lu.isEmpty()) {
-                    lu.forEach(s -> feedback.append(s));
+                    lu.forEach(feedback::append);
                 } else {
                     result = result.setRequestType(RequestType.USER_OK).setUser(user2);
                 }
@@ -341,8 +343,6 @@ public class ThreadServer extends Runner {
     @Override
     public Logger getLogger() { return logger; }
 
-    public Invoker getInvoker() { return invoker; }
-
     @Override
     public Closeable getTunnel() { return SOCKET; }
 
@@ -352,11 +352,8 @@ public class ThreadServer extends Runner {
     @Override
     public Invoker getInvokerFather() { return invoker; }
 
-    public BufferedReader getBr() { return br; }
 
     @Override
-    public String toString() { return "UdpServer"; }
+    public String toString() { return "ThreadServer"; }
 
-    @Override
-    public UUID getRunnerId() { return runnerId; }
 }

@@ -11,7 +11,6 @@ import net.Runner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import security.User;
-import thread.NamedThreadFactory;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -234,10 +233,10 @@ public class ThreadClient extends Runner {
         br = new BufferedReader(new InputStreamReader(System.in));
 
         for (int i = 0; i < 2; i++) {
-            processPool.submit(() -> processLoop(isScript));
+            processPool.submit(this::processLoop);
         }
 
-        consoleLoop(isScript, path);
+        consoleLoop();
         shutdownPools();
     }
 
@@ -264,7 +263,7 @@ public class ThreadClient extends Runner {
                     }
 
                 } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException e) {
-                    logger.warn("{}", e.getMessage());
+                    logger.warn(e.getMessage());
                 }
             }
 
@@ -293,7 +292,7 @@ public class ThreadClient extends Runner {
         }
     }
 
-    private void processLoop(boolean isScript) {
+    private void processLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 if (waitingForResponse) {
@@ -301,16 +300,18 @@ public class ThreadClient extends Runner {
                     continue;
                 }
 
+                Request head;
                 synchronized (incomingQueue) {
-                    Request head = incomingQueue.peek();
+                    head = incomingQueue.peek();
                     if (head == null || head.requestType() == RequestType.PING) {
                         Thread.sleep(10);
                         continue;
                     }
                     incomingQueue.poll();
-                    synchronized (cachedMessages) {
-                        cachedMessages.addFirst(head);
-                    }
+                }
+
+                synchronized (cachedMessages) {
+                    cachedMessages.addFirst(head);
                 }
 
             } catch (InterruptedException e) {
@@ -320,8 +321,8 @@ public class ThreadClient extends Runner {
         }
     }
 
-    private void consoleLoop(boolean isScript, String path) {
-        if (!isScript && initialRunShowUser) {
+    private void consoleLoop() {
+        if (initialRunShowUser) {
             showUser();
             initialRunShowUser = false;
         }
@@ -334,7 +335,7 @@ public class ThreadClient extends Runner {
                             Request cached = cachedMessages.removeLast();
                             if (cached.requestType() != RequestType.PING) {
                                 logger.info(cached.feedback());
-                                if (!isScript && isRunning) showUser();
+                                if (isRunning) showUser();
                             }
                         }
                     }
@@ -344,18 +345,12 @@ public class ThreadClient extends Runner {
 
                 String input = br.readLine();
 
-                if (isScript) {
-                    if (input == null) {
-                        logger.info("Файл {} обработан полностью", path);
-                        break;
-                    }
-                    if (input.trim().isEmpty()) continue;
-                    logger.info(input);
-                }
+                if (input.trim().isEmpty()) continue;
+                logger.info(input);
 
                 Thread.sleep(10);
 
-                Request request = invoker.defineCommand(input, isScript).execute(user);
+                Request request = invoker.defineCommand(input, false).execute(user);
                 if (isRunning && CHANNEL != null && request != null) {
                     Request response = sendAndWait(request.setRunnerId(runnerId));
                     if (response != null) {
@@ -369,8 +364,8 @@ public class ThreadClient extends Runner {
                 Thread.currentThread().interrupt();
                 break;
             } catch (NoSuchEntityException | RecursionLimitReached | XmlUtilException | IOException e) {
-                logger.warn("{}", e.getMessage());
-                if (!isScript && isRunning) showUser();
+                logger.warn(e.getMessage());
+                if (isRunning) showUser();
             }
         }
     }
@@ -406,13 +401,7 @@ public class ThreadClient extends Runner {
     @Override
     public Logger getLogger() { return logger; }
 
-    public int getPort() { return port; }
-
-    public Invoker getInvoker() { return invoker; }
-
     @Override
-    public String toString() { return "UdpClient"; }
+    public String toString() { return "ThreadClient"; }
 
-    @Override
-    public UUID getRunnerId() { return runnerId; }
 }
