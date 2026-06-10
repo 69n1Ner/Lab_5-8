@@ -13,7 +13,7 @@ public class ConnectionManager {
         try {
             return DriverManager.getConnection(URL_KEY,USER_KEY,PASSWORD_KEY);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("База данных не может быть найдена");
         }
     }
 

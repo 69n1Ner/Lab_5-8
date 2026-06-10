@@ -167,7 +167,9 @@ public class OrganizationDao implements Dao<Organization>{
                     organization.setUser(user1);
 
 //                    log.debug("организация после добавления, org={}",organization);
-                    CONTAINER.add(organization);
+                    synchronized (CONTAINER) {
+                        CONTAINER.add(organization);
+                    }
 //                    log.debug("organizationID={}",organizationID);
                     return ans.setObject(organizationID);
 
@@ -284,7 +286,9 @@ public class OrganizationDao implements Dao<Organization>{
                     isUpdated = resultSet.getInt("id");
 //                    log.debug("isUpdated={}",isUpdated);
                     connection.commit();
-                    CONTAINER.update(organization,ID);
+                    synchronized (CONTAINER){
+                        CONTAINER.update(organization,ID);
+                    }
                     return ans.setObject(isUpdated > 0);
                 }else {
                     connection.rollback();
@@ -363,7 +367,9 @@ public class OrganizationDao implements Dao<Organization>{
 
             if (deletedRows > 0) {
                 connection.commit();
-                CONTAINER.removeById(id);
+                synchronized (CONTAINER) {
+                    CONTAINER.removeById(id);
+                }
                 return ans.setObject(true);
             } else {
                 connection.rollback();
@@ -384,7 +390,7 @@ public class OrganizationDao implements Dao<Organization>{
         return delete(id,user,false);
     }
 
-    public ObjWithFeedback<Integer> clear(User user){
+    public synchronized ObjWithFeedback<Integer> clear(User user){
         ObjWithFeedback<Integer> ans = new ObjWithFeedback<>(-1,new ArrayList<>());
         StringBuilder feedback = new StringBuilder();
         List<Organization> list = findAll();
@@ -419,14 +425,18 @@ public class OrganizationDao implements Dao<Organization>{
 
     @Override
     public List<Organization> findAll() {
-        return CONTAINER.getAll();
+        synchronized (CONTAINER) {
+            return CONTAINER.getAll();
+        }
     }
 
     @Override
-    public ObjWithFeedback<Organization> findById(Long id) throws NoSuchEntityException {
+    public ObjWithFeedback<Organization> findById(Long id)  {
         ObjWithFeedback<Organization> ans = new ObjWithFeedback<>(null,new ArrayList<>());
         try {
-            return ans.setObject(CONTAINER.getById(id));
+            synchronized (CONTAINER) {
+                return ans.setObject(CONTAINER.getById(id));
+            }
         } catch (NoSuchEntityException e) {
             return ans.addFeedback(e.getMessage());
         }
@@ -446,7 +456,9 @@ public class OrganizationDao implements Dao<Organization>{
     }
 
     public static int getContainerSize(){
-        return CONTAINER.size();
+        synchronized (CONTAINER) {
+            return CONTAINER.size();
+        }
     }
 
     private static int getType(Connection connection,String locationType){

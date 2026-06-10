@@ -25,9 +25,7 @@ import java.util.concurrent.*;
 
 public class ThreadClient extends Runner {
     private DatagramChannel CHANNEL;
-    private final Deque<Request> cachedMessages = new ArrayDeque<>();
     private final BlockingQueue<Request> incomingQueue = new LinkedBlockingQueue<>();
-    private volatile boolean waitingForResponse = false;
     private ScheduledExecutorService pingScheduler;
     private static final Logger logger = LogManager.getLogger(ThreadClient.class);
 
@@ -57,7 +55,6 @@ public class ThreadClient extends Runner {
         long start = System.currentTimeMillis();
         long timeout = 1000;
 
-        waitingForResponse = true;
         sendMessage(request);
 
         if (request.requestType() != RequestType.PING) {
@@ -66,49 +63,46 @@ public class ThreadClient extends Runner {
             logger.debug("Отправлен пинг");
         }
 
-        try {
-            while (System.currentTimeMillis() - start < timeout) {
-                try {
-                    Request response = incomingQueue.poll(15, TimeUnit.MILLISECONDS);
-                    if (response == null) continue;
+        while (System.currentTimeMillis() - start < timeout) {
+            try {
+                Request response = incomingQueue.poll(15, TimeUnit.MILLISECONDS);
+                if (response == null) continue;
 
-                    if (!runnerId.equals(response.runnerId())) {
-                        incomingQueue.put(response);
-                        continue;
-                    }
-
-                    if (response.requestType() == RequestType.PING
-                            && request.requestType() != RequestType.PING) {
-                        incomingQueue.put(response);
-                        continue;
-                    }
-
-                    if (!silentConnection) {
-                        serverOnline();
-                        silentConnection = true;
-                    }
-                    silentConnectionError = false;
-                    return response;
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return null;
+                if (!runnerId.equals(response.runnerId())) {
+                    logger.debug("response={}",response);
+                    incomingQueue.put(response);
+                    continue;
                 }
-            }
 
-            silentConnection = false;
-            if (request.requestType() != RequestType.PING) {
-                runnerNotConnected();
-            }
-            if (!silentConnectionError) {
-                runnerNotConnected();
-                silentConnectionError = true;
-            }
-            return null;
+                if (response.requestType() == RequestType.PING
+                        && request.requestType() != RequestType.PING) {
+                    incomingQueue.put(response);
+                    continue;
+                }
 
-        } finally {
-            waitingForResponse = false;
+                if (!silentConnection) {
+                    serverOnline();
+                    silentConnection = true;
+                }
+                silentConnectionError = false;
+                return response;
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
         }
+
+        silentConnection = false;
+        if (request.requestType() != RequestType.PING) {
+            runnerNotConnected();
+        }
+        if (!silentConnectionError) {
+            runnerNotConnected();
+            silentConnectionError = true;
+        }
+        return null;
+
     }
 
     public User authorize() {
@@ -232,9 +226,6 @@ public class ThreadClient extends Runner {
         isRunning = true;
         br = new BufferedReader(new InputStreamReader(System.in));
 
-        for (int i = 0; i < 2; i++) {
-            processPool.submit(this::processLoop);
-        }
 
         consoleLoop();
         shutdownPools();
@@ -292,34 +283,6 @@ public class ThreadClient extends Runner {
         }
     }
 
-    private void processLoop() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                if (waitingForResponse) {
-                    Thread.sleep(5);
-                    continue;
-                }
-
-                Request head;
-                synchronized (incomingQueue) {
-                    head = incomingQueue.peek();
-                    if (head == null || head.requestType() == RequestType.PING) {
-                        Thread.sleep(10);
-                        continue;
-                    }
-                    incomingQueue.poll();
-                }
-
-                synchronized (cachedMessages) {
-                    cachedMessages.addFirst(head);
-                }
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-    }
 
     private void consoleLoop() {
         if (initialRunShowUser) {
@@ -330,15 +293,6 @@ public class ThreadClient extends Runner {
         while (isRunning) {
             try {
                 if (!br.ready()) {
-                    synchronized (cachedMessages) {
-                        while (!cachedMessages.isEmpty()) {
-                            Request cached = cachedMessages.removeLast();
-                            if (cached.requestType() != RequestType.PING) {
-                                logger.info(cached.feedback());
-                                if (isRunning) showUser();
-                            }
-                        }
-                    }
                     Thread.sleep(5);
                     continue;
                 }
@@ -354,9 +308,7 @@ public class ThreadClient extends Runner {
                 if (isRunning && CHANNEL != null && request != null) {
                     Request response = sendAndWait(request.setRunnerId(runnerId));
                     if (response != null) {
-                        synchronized (cachedMessages) {
-                            cachedMessages.addFirst(response);
-                        }
+                        logger.info(response.feedback());
                     }
                 }
 

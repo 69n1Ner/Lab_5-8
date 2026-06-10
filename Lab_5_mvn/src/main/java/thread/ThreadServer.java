@@ -17,6 +17,7 @@ import net.RequestType;
 import net.Runner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.postgresql.util.PSQLException;
 import security.User;
 import sorts.SortById;
 

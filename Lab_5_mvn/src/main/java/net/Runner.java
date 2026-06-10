@@ -101,13 +101,11 @@ public abstract class Runner implements Messageable, GetLoggerable, Unique {
 //            logger.debug("msg sent");
 //            logger.debug("not unreachable");
 
-            //receiving ping msg
             var response = receiveMessage();
 //                logger.debug("before if");
             if (response != null) {
 //                    logger.debug("{} {}", runnerId, response.runnerId());
 
-                //online
                 log.debug("condition={}",runnerId.equals(response.runnerId()));
                 log.debug("runnerId={}",runnerId);
                 log.debug("response.runnerId()={}",response.runnerId());

@@ -67,7 +67,9 @@ public class UserDao implements Dao<User>{
                 if (resultSet.next()){
                     userID = resultSet.getInt(1);
                     connection.commit();
-                    CONTAINER.add(user.setId((long) userID));
+                    synchronized (CONTAINER) {
+                        CONTAINER.add(user.setId((long) userID));
+                    }
                     return ans.setObject(userID);
                 }else {
                     connection.rollback();
@@ -120,7 +122,9 @@ public class UserDao implements Dao<User>{
                 if (resultSet.next()){
                     userId = resultSet.getInt(1);
                     connection.commit();
-                    CONTAINER.update(user,id);
+                    synchronized (CONTAINER) {
+                        CONTAINER.update(user, id);
+                    }
                     return ans.setObject(userId > 0);
                 }else {
                     connection.rollback();
@@ -139,22 +143,28 @@ public class UserDao implements Dao<User>{
 
     @Override
     public List<User> findAll() {
-        return CONTAINER.getAll();
+        synchronized (CONTAINER) {
+            return CONTAINER.getAll();
+        }
     }
 
     @Override
     public ObjWithFeedback<User> findById(Long id) {
         ObjWithFeedback<User> ans = new ObjWithFeedback<>(null,new ArrayList<>());
         try {
-            User user = CONTAINER.getById(id);
-            return ans.setObject(user);
+            synchronized (CONTAINER) {
+                User user = CONTAINER.getById(id);
+                return ans.setObject(user);
+            }
         } catch (NoSuchEntityException e) {
             return ans.addFeedback(e.getMessage());
         }
     }
 
     public User findByUserName(String userName) throws NoSuchEntityException {
-        return CONTAINER.findByUserName(userName);
+        synchronized (CONTAINER) {
+            return CONTAINER.findByUserName(userName);
+        }
     }
 
     @Override
@@ -171,7 +181,9 @@ public class UserDao implements Dao<User>{
 
             if (deletedRows > 0) {
                 connection.commit();
-                CONTAINER.removeById(id);
+                synchronized (CONTAINER) {
+                    CONTAINER.removeById(id);
+                }
                 return ans.setObject(true);
             } else {
                 connection.rollback();
